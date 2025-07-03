@@ -176,6 +176,8 @@
                     pattern="09[0-9]{9}"
                     required
                     autocomplete="tel"
+                    value="{{ phone|default:'' }}"
+                    {% if disable_form %}disabled{% endif %}
                 >
                 <div class="phone-format">
                     💡 شماره موبایل باید با 09 شروع شده و 11 رقم باشد<br>
@@ -183,7 +185,7 @@
                 </div>
             </div>
             
-            <button type="submit" class="sms-btn">
+            <button type="submit" class="sms-btn" {% if disable_form %}disabled style="opacity:0.5;cursor:not-allowed;"{% endif %}>
                 📤 ارسال کد تایید
             </button>
             
@@ -192,9 +194,18 @@
             </div>
         </form>
         
-        <div class="back-link">
-            <a href="{% url 'accounts:login' %}">🔙 بازگشت به صفحه ورود اصلی</a>
-        </div>
+        {% if show_signup_link %}
+            <div class="divider">
+                <span>یا</span>
+            </div>
+            <div class="signup-section">
+                <h4>📝 عضو نیستید؟</h4>
+                <p>برای استفاده از خدمات ما، ابتدا ثبت‌نام کنید</p>
+                <a href="{% url 'accounts:customer_registration' %}" class="signup-btn">
+                    📝 ثبت‌نام جدید
+                </a>
+            </div>
+        {% endif %}
     </div>
 </div>
 

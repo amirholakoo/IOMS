@@ -28,6 +28,9 @@ urlpatterns = [
     
     # 👥 مدیریت مشتریان
     path('customers/', views.customers_list_view, name='customers_list'),
+    path('customers/<int:customer_id>/edit/', views.edit_customer_view, name='edit_customer'),
+    path('customers/<int:customer_id>/delete/', views.delete_customer_view, name='delete_customer'),
+    path('customers/requests/', views.customers_requested_list_view, name='customers_requested_list'),
     
     # 💰 مدیریت مالی
     path('finance/', views.finance_overview_view, name='finance_overview'),

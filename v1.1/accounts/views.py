@@ -79,6 +79,145 @@ def customer_login_view(request):
     return redirect('accounts:customer_sms_login')
 
 
+def customer_registration_view(request):
+    """
+    📝 ثبت‌نام مشتری جدید
+    """
+    phone = request.POST.get('phone', '').strip() if request.method == 'POST' else request.GET.get('phone', '').strip()
+    disable_form = False
+    form_data = request.POST if request.method == 'POST' else {}
+
+    # جلوگیری قطعی از حلقه: اگر هر کاربری با این شماره وجود داشت، فرم غیرفعال و پیام مناسب نمایش داده شود
+    if phone:
+        from .models import User
+        existing_user = User.objects.filter(phone=phone, role=User.UserRole.CUSTOMER).first()
+        if existing_user:
+            if existing_user.status == User.UserStatus.PENDING:
+                messages.warning(request, 'درخواست ثبت‌نام شما قبلاً ثبت شده و در انتظار تایید مدیریت است. لطفاً صبور باشید، به زودی توسط مدیر بررسی خواهد شد.')
+            else:
+                messages.error(request, 'این شماره قبلاً ثبت شده است و امکان ثبت‌نام مجدد وجود ندارد.')
+            disable_form = True
+            return render(request, 'accounts/customer_registration.html', {
+                'form_data': form_data,
+                'phone': phone,
+                'disable_form': disable_form
+            })
+    if request.method == 'POST' and not disable_form:
+        first_name = request.POST.get('first_name', '').strip()
+        last_name = request.POST.get('last_name', '').strip()
+        email = request.POST.get('email', '').strip()
+        address = request.POST.get('address', '').strip()
+        economic_code = request.POST.get('economic_code', '').strip()
+        national_id = request.POST.get('national_id', '').strip()
+        postcode = request.POST.get('postcode', '').strip()
+        errors = []
+        if not phone:
+            errors.append('📱 شماره تلفن الزامی است')
+        elif not phone.startswith('09') or len(phone) != 11:
+            errors.append('📱 شماره تلفن باید با 09 شروع شده و 11 رقم باشد')
+        if not first_name:
+            errors.append('👤 نام الزامی است')
+        if not last_name:
+            errors.append('👤 نام خانوادگی الزامی است')
+        if Customer.objects.filter(phone=phone).exclude(status='Requested').exists():
+            errors.append('👤 مشتری با این شماره قبلاً ثبت شده است و فعال است')
+        if email and User.objects.filter(email=email).exists():
+            errors.append('📧 این ایمیل قبلاً ثبت شده است')
+        if errors:
+            for error in errors:
+                messages.error(request, error)
+            return render(request, 'accounts/customer_registration.html', {
+                'form_data': request.POST,
+                'phone': phone,
+                'disable_form': False
+            })
+        try:
+            customer = Customer.objects.filter(phone=phone, status='Requested').first()
+            if customer:
+                customer.customer_name = f"{first_name} {last_name}"
+                customer.address = address
+                customer.economic_code = economic_code
+                customer.national_id = national_id
+                customer.postcode = postcode
+                customer.status = 'Active'
+                customer.comments = 'ثبت‌نام تکمیل شد و فعال گردید.'
+                customer.save()
+            else:
+                base_customer_name = f"{first_name} {last_name}"
+                customer_name = base_customer_name
+                counter = 1
+                while Customer.objects.filter(customer_name=customer_name).exists():
+                    customer_name = f"{base_customer_name} ({counter})"
+                    counter += 1
+                customer = Customer.objects.create(
+                    customer_name=customer_name,
+                    phone=phone,
+                    address=address,
+                    economic_code=economic_code,
+                    national_id=national_id,
+                    postcode=postcode,
+                    status='Active',
+                    comments='ثبت‌نام جدید و فعال'
+                )
+            base_username = f"{first_name}_{last_name}".lower().replace(' ', '_')
+            username = base_username
+            counter = 1
+            while User.objects.filter(username=username).exists():
+                username = f"{base_username}_{counter}"
+                counter += 1
+            user = User.objects.create_user(
+                username=username,
+                email=email,
+                password=None,
+                first_name=first_name,
+                last_name=last_name,
+                phone=phone,
+                role=User.UserRole.CUSTOMER,
+                status=User.UserStatus.ACTIVE,
+                is_active=True,
+                date_joined=timezone.now()
+            )
+            ActivityLog.log_activity(
+                user=None,
+                action='CREATE',
+                description=f'📝 ثبت‌نام جدید مشتری: {first_name} {last_name} - {phone}',
+                content_object=user,
+                severity='MEDIUM',
+                ip_address=get_client_ip(request),
+                user_agent=request.META.get('HTTP_USER_AGENT'),
+                registration_data={
+                    'phone': phone,
+                    'first_name': first_name,
+                    'last_name': last_name,
+                    'email': email,
+                    'address': address,
+                    'economic_code': economic_code,
+                    'national_id': national_id,
+                    'postcode': postcode
+                }
+            )
+            if request.user.is_authenticated and request.user.is_superuser:
+                messages.success(request, '✅ مشتری جدید با موفقیت ثبت شد و فعال است.')
+                request.session['show_success'] = True
+                return redirect('core:customers_list')
+            else:
+                messages.success(request, '✅ ثبت‌نام شما با موفقیت انجام شد. منتظر تایید مدیریت باشید.')
+                return redirect('accounts:customer_sms_login')
+        except Exception as e:
+            messages.error(request, f'❌ خطا در ثبت‌نام: {str(e)}')
+            return render(request, 'accounts/customer_registration.html', {
+                'form_data': request.POST,
+                'phone': phone,
+                'disable_form': False
+            })
+    # حالت GET یا فرم غیرفعال
+    return render(request, 'accounts/customer_registration.html', {
+        'form_data': form_data,
+        'phone': phone,
+        'disable_form': disable_form
+    })
+
+
 @login_required
 def customer_dashboard_view(request):
     """🔵 داشبورد مخصوص مشتریان"""
@@ -230,6 +369,30 @@ def check_password_strength(request):
     return JsonResponse({'score': min(score, 100), 'level': 'خوب'})
 
 
+def terms_and_request_view(request):
+    """
+    نمایش شرایط استفاده و ثبت درخواست مشتری جدید
+    """
+    phone = request.GET.get('phone') or request.session.get('registration_phone', '')
+    if request.method == 'POST':
+        # ثبت درخواست مشتری جدید با شماره موبایل
+        from core.models import Customer
+        if phone:
+            # اگر قبلاً درخواست داده نشده باشد
+            if not Customer.objects.filter(phone=phone, status='Requested').exists():
+                Customer.objects.create(
+                    customer_name=f'درخواست جدید ({phone})',
+                    phone=phone,
+                    status='Requested',
+                    comments='🟢 درخواست ثبت‌نام جدید از طریق فرم شرایط استفاده'
+                )
+            messages.success(request, '✅ درخواست شما با موفقیت ثبت شد و پس از تایید مدیریت، ثبت‌نام تکمیل خواهد شد.')
+            return redirect('accounts:customer_sms_login')
+        else:
+            messages.error(request, 'شماره موبایل معتبر نیست.')
+    return render(request, 'accounts/terms_and_request.html', {'phone': phone})
+
+
 def customer_sms_login_view(request):
     """
     📱 ورود مشتری با SMS - مرحله اول: ارسال شماره تلفن
@@ -240,7 +403,17 @@ def customer_sms_login_view(request):
     print(f"🚨 DEBUG: Method: {request.method}")
     print(f"🚨 DEBUG: URL: {request.path}")
     print("="*60)
-    
+
+    # منطق جلوگیری از حلقه ثبت‌نام برای شماره‌هایی با وضعیت pending
+    phone = request.POST.get('phone', '').strip() if request.method == 'POST' else request.GET.get('phone', '').strip()
+    if phone:
+        from .models import User
+        pending_user = User.objects.filter(phone=phone, status=User.UserStatus.PENDING, role=User.UserRole.CUSTOMER).first()
+        if pending_user:
+            # فقط پیام نمایش داده شود و فرم غیرفعال باشد
+            messages.warning(request, 'درخواست شما در حال بررسی است. لطفاً منتظر تأیید بمانید.')
+            return render(request, 'accounts/customer_sms_login.html', {'phone': phone, 'disable_form': True})
+
     if request.method == 'POST':
         phone = request.POST.get('phone', '').strip()
         print(f"🚨 DEBUG: Phone from POST: '{phone}'")
@@ -315,10 +488,9 @@ def customer_sms_login_view(request):
             return redirect('accounts:customer_sms_verify')
             
         except User.DoesNotExist:
-            print(f"❌ DEBUG: User.DoesNotExist for phone: {phone}")
-            print("❌ DEBUG: This is where the error message comes from!")
-            messages.error(request, '❌ کاربری با این شماره تلفن یافت نشد. لطفاً با پشتیبانی تماس بگیرید')
-            return render(request, 'accounts/customer_sms_login.html')
+            # به جای پیام خطا، هدایت به صفحه شرایط استفاده
+            request.session['registration_phone'] = phone
+            return redirect(f"{reverse('accounts:terms_and_request')}?phone={phone}")
         
         except Exception as e:
             print(f"❌ DEBUG: Exception occurred: {e}")
@@ -505,3 +677,33 @@ def get_client_ip(request):
     else:
         ip = request.META.get('REMOTE_ADDR')
     return ip
+
+
+@login_required
+@super_admin_permission_required('manage_customers')
+@require_http_methods(["GET", "POST"])
+def edit_customer_view(request, customer_id):
+    customer = get_object_or_404(Customer, id=customer_id)
+    if request.method == "POST":
+        phone = request.POST.get('phone', customer.phone)
+        # بررسی یکتایی شماره موبایل (غیر از مشتری فعلی و غیر از Requested)
+        if Customer.objects.filter(phone=phone).exclude(id=customer.id).exclude(status='Requested').exists():
+            messages.error(request, 'شماره موبایل تکراری است و قبلاً برای مشتری فعال ثبت شده است.')
+            return redirect('core:edit_customer', customer_id=customer.id)
+        customer.customer_name = request.POST.get('customer_name', customer.customer_name)
+        customer.phone = phone
+        customer.address = request.POST.get('address', customer.address)
+        customer.national_id = request.POST.get('national_id', customer.national_id)
+        customer.economic_code = request.POST.get('economic_code', customer.economic_code)
+        customer.postcode = request.POST.get('postcode', customer.postcode)
+        customer.status = request.POST.get('status', customer.status)
+        customer.comments = request.POST.get('comments', customer.comments)
+        customer.save()
+        messages.success(request, '✅ اطلاعات مشتری با موفقیت ویرایش شد.')
+        return redirect('core:customers_list')
+    context = {
+        'customer': customer,
+        'status_choices': Customer.STATUS_CHOICES,
+        'title': '✏️ ویرایش مشتری'
+    }
+    return render(request, 'core/edit_customer.html', context)

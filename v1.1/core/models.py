@@ -37,6 +37,7 @@ class Customer(BaseModel):
         ('Inactive', '⏸️ غیرفعال'),
         ('Suspended', '🚫 معلق'),
         ('Blocked', '🔒 مسدود'),
+        ('Requested', '📝 در انتظار تایید'),
     ]
     
     # 📊 وضعیت مشتری
@@ -67,6 +68,7 @@ class Customer(BaseModel):
     phone = models.CharField(
         max_length=20, 
         blank=True,
+        unique=True,
         verbose_name="📞 شماره تلفن",
         help_text="شماره تلفن تماس مشتری (همراه یا ثابت)"
     )

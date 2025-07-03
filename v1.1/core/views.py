@@ -268,9 +268,7 @@ def orders_list_view(request):
 @login_required
 @super_admin_permission_required('manage_customers')
 def customers_list_view(request):
-    """👥 لیست مشتریان با فیلتر و جستجو"""
-    
-    # 📜 ثبت لاگ مشاهده مشتریان
+    """👥 لیست مشتریان با فیلتر و جستجو (فقط مشتریان غیر از Requested)"""
     ActivityLog.log_activity(
         user=request.user,
         action='VIEW',
@@ -279,15 +277,10 @@ def customers_list_view(request):
         user_agent=request.META.get('HTTP_USER_AGENT', ''),
         severity='LOW'
     )
-    
-    # شروع با تمام مشتریان
-    customers = Customer.objects.all()
-    
-    # دریافت پارامترهای فیلتر از URL
+    # فقط مشتریان غیر از Requested
+    customers = Customer.objects.exclude(status='Requested')
     search_query = request.GET.get('search', '').strip()
     status_filter = request.GET.get('status', '').strip()
-    
-    # اعمال فیلتر جستجو
     if search_query:
         customers = customers.filter(
             Q(customer_name__icontains=search_query) |
@@ -296,19 +289,13 @@ def customers_list_view(request):
             Q(economic_code__icontains=search_query) |
             Q(address__icontains=search_query)
         )
-    
-    # اعمال فیلتر وضعیت
     if status_filter:
         customers = customers.filter(status=status_filter)
-    
-    # مرتب‌سازی
     customers = customers.order_by('-created_at')
-    
-    # 📄 صفحه‌بندی
     paginator = Paginator(customers, 25)
     page = request.GET.get('page')
     page_obj = paginator.get_page(page)
-    
+    show_success = request.session.pop('show_success', False)
     context = {
         'title': '👥 مدیریت مشتریان',
         'page_obj': page_obj,
@@ -316,6 +303,34 @@ def customers_list_view(request):
         'status_filter': status_filter,
         'status_choices': Customer.STATUS_CHOICES,
         'total_customers': customers.count(),
+        'show_success': show_success,
+    }
+    return render(request, 'core/customers_list.html', context)
+
+
+@login_required
+@super_admin_permission_required('manage_customers')
+def customers_requested_list_view(request):
+    """👥 لیست درخواست‌های ثبت‌نام مشتریان (Requested) فقط برای سوپرادمین"""
+    ActivityLog.log_activity(
+        user=request.user,
+        action='VIEW',
+        description='مشاهده لیست درخواست‌های ثبت‌نام مشتریان',
+        ip_address=get_client_ip(request),
+        user_agent=request.META.get('HTTP_USER_AGENT', ''),
+        severity='LOW'
+    )
+    customers = Customer.objects.filter(status='Requested').order_by('-created_at')
+    paginator = Paginator(customers, 25)
+    page = request.GET.get('page')
+    page_obj = paginator.get_page(page)
+    context = {
+        'title': '📝 درخواست‌های ثبت‌نام مشتریان',
+        'page_obj': page_obj,
+        'status_choices': Customer.STATUS_CHOICES,
+        'total_customers': customers.count(),
+        'show_success': False,
+        'requested_list': True,
     }
     return render(request, 'core/customers_list.html', context)
 
@@ -1490,3 +1505,38 @@ def update_order_status_view(request, order_id):
             'success': False,
             'message': f'خطا در تغییر وضعیت سفارش: {str(e)}'
         })
+
+
+@login_required
+@super_admin_permission_required('manage_customers')
+@require_http_methods(["GET", "POST"])
+def edit_customer_view(request, customer_id):
+    customer = get_object_or_404(Customer, id=customer_id)
+    if request.method == "POST":
+        customer.customer_name = request.POST.get('customer_name', customer.customer_name)
+        customer.phone = request.POST.get('phone', customer.phone)
+        customer.address = request.POST.get('address', customer.address)
+        customer.national_id = request.POST.get('national_id', customer.national_id)
+        customer.economic_code = request.POST.get('economic_code', customer.economic_code)
+        customer.postcode = request.POST.get('postcode', customer.postcode)
+        customer.status = request.POST.get('status', customer.status)
+        customer.comments = request.POST.get('comments', customer.comments)
+        customer.save()
+        messages.success(request, '✅ اطلاعات مشتری با موفقیت ویرایش شد.')
+        return redirect('core:customers_list')
+    context = {
+        'customer': customer,
+        'status_choices': Customer.STATUS_CHOICES,
+        'title': '✏️ ویرایش مشتری'
+    }
+    return render(request, 'core/edit_customer.html', context)
+
+
+@login_required
+@super_admin_permission_required('manage_customers')
+@require_http_methods(["POST"])
+def delete_customer_view(request, customer_id):
+    customer = get_object_or_404(Customer, id=customer_id)
+    customer.delete()
+    messages.success(request, '🗑️ مشتری با موفقیت حذف شد.')
+    return redirect('core:customers_list')

@@ -98,9 +98,9 @@
                 <a href="{% url 'core:admin_dashboard' %}" class="btn btn-light me-2">
                     ↩️ بازگشت به داشبورد
                 </a>
-                <button class="btn btn-outline-light">
+                <a href="{% url 'accounts:customer_registration' %}" class="btn btn-success">
                     ➕ افزودن مشتری
-                </button>
+                </a>
             </div>
         </div>
     </div>
@@ -200,7 +200,34 @@
     <!-- Customers List -->
     <div class="customers-list">
         <div class="container">
-            {% if page_obj %}
+            {% if show_success %}
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                ✅ مشتری جدید با موفقیت ثبت شد و فعال است.
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="بستن"></button>
+            </div>
+            {% endif %}
+            {% if requested_list %}
+            <div class="alert alert-warning mt-3">
+                📝 این لیست فقط درخواست‌های ثبت‌نام مشتریان جدید (در انتظار تایید) را نمایش می‌دهد.
+            </div>
+            <div class="mb-3 text-end">
+                <a href="{% url 'core:customers_list' %}" class="btn btn-outline-primary">بازگشت به لیست مشتریان فعال</a>
+            </div>
+            {% endif %}
+            {% if not page_obj or page_obj.paginator.count == 0 %}
+                <div class="text-center py-5">
+                    <div class="empty-state">
+                        {% if requested_list %}
+                            <h3>درخواستی برای ثبت‌نام مشتری جدید وجود ندارد.</h3>
+                            <p class="text-muted">همه درخواست‌ها بررسی شده‌اند.</p>
+                        {% else %}
+                            <h3>🔍 مشتری یافت نشد</h3>
+                            <p class="text-muted">هیچ مشتری با معیارهای جستجو پیدا نشد.</p>
+                        {% endif %}
+                        <a href="{% url 'core:customers_list' %}" class="btn btn-primary">نمایش همه مشتریان</a>
+                    </div>
+                </div>
+            {% else %}
                 <div class="row">
                     {% for customer in page_obj %}
                         <div class="col-md-6 col-lg-4 mb-4">
@@ -215,16 +242,22 @@
                                             ● {{ customer.get_status_display|default:"نامشخص" }}
                                         </small>
                                     </div>
+                                    {% if customer.status == 'Requested' and request.user.is_superuser %}
+                                        <a href="{% url 'accounts:customer_registration' %}?phone={{ customer.phone }}" class="btn btn-warning btn-sm ms-2">ثبت‌نام</a>
+                                    {% endif %}
                                     <div class="dropdown">
                                         <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="dropdown">
                                             ⋮
                                         </button>
                                         <ul class="dropdown-menu">
                                             <li><a class="dropdown-item" href="#" onclick="viewCustomer({{ customer.id }})">👁️ مشاهده</a></li>
-                                            <li><a class="dropdown-item" href="#" onclick="editCustomer({{ customer.id }})">✏️ ویرایش</a></li>
+                                            <li><a class="dropdown-item" href="{% url 'core:edit_customer' customer.id %}">✏️ ویرایش</a></li>
                                             <li><a class="dropdown-item" href="#" onclick="customerOrders({{ customer.id }})">🛒 سفارشات</a></li>
                                             <li><hr class="dropdown-divider"></li>
-                                            <li><a class="dropdown-item text-danger" href="#" onclick="deleteCustomer({{ customer.id }})">🗑️ حذف</a></li>
+                                            <li><form method="post" action="{% url 'core:delete_customer' customer.id %}" style="display:inline;">
+                                                {% csrf_token %}
+                                                <button type="submit" class="dropdown-item text-danger" onclick="return confirm('آیا از حذف این مشتری اطمینان دارید؟')">🗑️ حذف</button>
+                                            </form></li>
                                         </ul>
                                     </div>
                                 </div>
@@ -286,14 +319,6 @@
                         </ul>
                     </nav>
                 {% endif %}
-            {% else %}
-                <div class="text-center py-5">
-                    <div class="empty-state">
-                        <h3>🔍 مشتری یافت نشد</h3>
-                        <p class="text-muted">هیچ مشتری با معیارهای جستجو پیدا نشد.</p>
-                        <a href="{% url 'core:customers_list' %}" class="btn btn-primary">نمایش همه مشتریان</a>
-                    </div>
-                </div>
             {% endif %}
         </div>
     </div>
@@ -307,21 +332,9 @@ function viewCustomer(customerId) {
     showNotification('⚠️ صفحه جزئیات مشتری در حال توسعه است', 'info');
 }
 
-// Edit customer
-function editCustomer(customerId) {
-    showNotification('⚠️ قابلیت ویرایش مشتری در حال توسعه است', 'info');
-}
-
 // View customer orders
 function customerOrders(customerId) {
     showNotification('⚠️ صفحه سفارشات مشتری در حال توسعه است', 'info');
-}
-
-// Delete customer
-function deleteCustomer(customerId) {
-    if (confirm('آیا از حذف این مشتری اطمینان دارید؟')) {
-        showNotification('⚠️ قابلیت حذف مشتری در حال توسعه است', 'warning');
-    }
 }
 
 // Create new order for customer
@@ -342,25 +355,6 @@ function exportCustomers() {
 // Send bulk SMS
 function sendBulkSMS() {
     showNotification('⚠️ قابلیت پیامک گروهی در حال توسعه است', 'info');
-}
-
-// Show notification
-function showNotification(message, type = 'info') {
-    const notification = document.createElement('div');
-    notification.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
-    notification.style.cssText = 'top: 20px; right: 20px; z-index: 1050; min-width: 300px;';
-    notification.innerHTML = `
-        ${message}
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    `;
-    
-    document.body.appendChild(notification);
-    
-    setTimeout(() => {
-        if (notification.parentElement) {
-            notification.remove();
-        }
-    }, 5000);
 }
 </script>
 {% endblock %} 

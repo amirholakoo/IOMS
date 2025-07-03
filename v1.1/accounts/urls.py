@@ -20,6 +20,9 @@ urlpatterns = [
     path('customer/sms-verify/', views.customer_sms_verify_view, name='customer_sms_verify'),
     path('customer/resend-sms/', views.resend_sms_code_view, name='resend_sms_code'),
     path('customer/dashboard/', views.customer_dashboard_view, name='customer_dashboard'),
+
+    # 🔵 ثبت نام مشتریان
+    path('customer/registration/', views.customer_registration_view, name='customer_registration'),
     
     # 📊 داشبورد
     path('dashboard/', views.dashboard_view, name='dashboard'),
@@ -36,4 +39,5 @@ urlpatterns = [
     # 🔗 API endpoints
     path('api/permissions/', views.user_permissions_api, name='user_permissions_api'),
     path('api/check-password/', views.check_password_strength, name='check_password_strength'),
+    path('customer/terms/', views.terms_and_request_view, name='terms_and_request'),
 ] 
