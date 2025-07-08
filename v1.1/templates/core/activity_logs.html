@@ -316,225 +316,60 @@
 
     <!-- Activity Logs -->
     <div id="logs-container">
-        <!-- Sample Log Entry 1 -->
-        <div class="log-entry severity-high">
-            <div class="log-header">
-                <div class="log-user">
-                    <div class="user-avatar">SA</div>
-                    <div>
-                        <strong>Super Admin</strong>
-                        <div class="small text-muted">super_admin_test</div>
+        {% if logs and logs|length > 0 %}
+            {% for log in logs %}
+            <div class="log-entry severity-{{ log.severity|lower }}">
+                <div class="log-header">
+                    <div class="log-user">
+                        <div class="user-avatar">{{ log.user.get_initials|default:'SY' }}</div>
+                        <div>
+                            <strong>{{ log.user.get_full_name|default:log.user.username|default:'سیستم' }}</strong>
+                            <div class="small text-muted">{{ log.user.username|default:'system' }}</div>
+                        </div>
+                    </div>
+                    <div class="d-flex gap-2 align-items-center">
+                        <span class="action-badge action-{{ log.action|lower }}">{{ log.get_action_icon }} {{ log.get_action_display }}</span>
+                        <span class="severity-badge severity-{{ log.severity|lower }}">{{ log.get_severity_display }}</span>
                     </div>
                 </div>
-                <div class="d-flex gap-2 align-items-center">
-                    <span class="action-badge action-price_update">💰 تغییر قیمت</span>
-                    <span class="severity-badge severity-high">🟠 مهم</span>
+                <div class="log-description">
+                    <strong>{{ log.description }}</strong>
                 </div>
-            </div>
-            
-            <div class="log-description">
-                <strong>تغییر قیمت محصول R001 از 150,000 به 175,000 تومان</strong>
-            </div>
-            
-            <div class="log-meta">
-                <div class="meta-item">
-                    <span>🕐</span>
-                    <span>1403/04/08 15:45:23</span>
-                </div>
-                <div class="meta-item">
-                    <span>🌐</span>
-                    <span>192.168.1.100</span>
-                </div>
-                <div class="meta-item">
-                    <span>🖥️</span>
-                    <span>Chrome/Windows</span>
-                </div>
-                <div class="meta-item">
-                    <span>📦</span>
-                    <span>محصول: R001</span>
-                </div>
-            </div>
-            
-            <div class="log-details">
-                <strong>جزئیات تغییر:</strong><br>
-                • قیمت قبلی: 150,000 تومان<br>
-                • قیمت جدید: 175,000 تومان<br>
-                • تغییر: +25,000 تومان (+16.67%)<br>
-                • محصول: ریل شماره R001 - درجه A+
-            </div>
-        </div>
-
-        <!-- Sample Log Entry 2 -->
-        <div class="log-entry severity-low">
-            <div class="log-header">
-                <div class="log-user">
-                    <div class="user-avatar">AU</div>
-                    <div>
-                        <strong>Admin User</strong>
-                        <div class="small text-muted">admin_user</div>
+                <div class="log-meta">
+                    <div class="meta-item">
+                        <span>🕐</span>
+                        <span>{{ log.created_at|date:'Y/m/d H:i:s' }}</span>
                     </div>
-                </div>
-                <div class="d-flex gap-2 align-items-center">
-                    <span class="action-badge action-view">👁️ مشاهده</span>
-                    <span class="severity-badge severity-low">🟢 کم</span>
-                </div>
-            </div>
-            
-            <div class="log-description">
-                <strong>مشاهده لیست محصولات</strong>
-            </div>
-            
-            <div class="log-meta">
-                <div class="meta-item">
-                    <span>🕐</span>
-                    <span>1403/04/08 15:42:15</span>
-                </div>
-                <div class="meta-item">
-                    <span>🌐</span>
-                    <span>192.168.1.105</span>
-                </div>
-                <div class="meta-item">
-                    <span>🖥️</span>
-                    <span>Firefox/Linux</span>
-                </div>
-                <div class="meta-item">
-                    <span>📄</span>
-                    <span>صفحه: /core/products/</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- Sample Log Entry 3 -->
-        <div class="log-entry severity-medium">
-            <div class="log-header">
-                <div class="log-user">
-                    <div class="user-avatar">FU</div>
-                    <div>
-                        <strong>Finance User</strong>
-                        <div class="small text-muted">finance_user</div>
+                    {% if log.ip_address %}
+                    <div class="meta-item">
+                        <span>🌐</span>
+                        <span>{{ log.ip_address }}</span>
                     </div>
-                </div>
-                <div class="d-flex gap-2 align-items-center">
-                    <span class="action-badge action-create">✅ ایجاد</span>
-                    <span class="severity-badge severity-medium">🟡 متوسط</span>
-                </div>
-            </div>
-            
-            <div class="log-description">
-                <strong>ایجاد سفارش جدید #ORD-005</strong>
-            </div>
-            
-            <div class="log-meta">
-                <div class="meta-item">
-                    <span>🕐</span>
-                    <span>1403/04/08 15:38:42</span>
-                </div>
-                <div class="meta-item">
-                    <span>🌐</span>
-                    <span>192.168.1.110</span>
-                </div>
-                <div class="meta-item">
-                    <span>🖥️</span>
-                    <span>Safari/MacOS</span>
-                </div>
-                <div class="meta-item">
-                    <span>🛒</span>
-                    <span>سفارش: ORD-005</span>
-                </div>
-            </div>
-            
-            <div class="log-details">
-                <strong>اطلاعات سفارش:</strong><br>
-                • مشتری: شرکت کاغذ پارس<br>
-                • مبلغ: 3,200,000 تومان<br>
-                • تعداد اقلام: 3 محصول<br>
-                • روش پرداخت: قسطی
-            </div>
-        </div>
-
-        <!-- Sample Log Entry 4 -->
-        <div class="log-entry severity-critical">
-            <div class="log-header">
-                <div class="log-user">
-                    <div class="user-avatar">SY</div>
-                    <div>
-                        <strong>سیستم</strong>
-                        <div class="small text-muted">system</div>
+                    {% endif %}
+                    {% if log.user_agent %}
+                    <div class="meta-item">
+                        <span>🖥️</span>
+                        <span>{{ log.user_agent|truncatechars:30 }}</span>
                     </div>
-                </div>
-                <div class="d-flex gap-2 align-items-center">
-                    <span class="action-badge action-error">⚠️ خطا</span>
-                    <span class="severity-badge severity-critical">🔴 بحرانی</span>
-                </div>
-            </div>
-            
-            <div class="log-description">
-                <strong>خطا در اتصال به پایگاه داده</strong>
-            </div>
-            
-            <div class="log-meta">
-                <div class="meta-item">
-                    <span>🕐</span>
-                    <span>1403/04/08 15:35:18</span>
-                </div>
-                <div class="meta-item">
-                    <span>🖥️</span>
-                    <span>Server</span>
-                </div>
-                <div class="meta-item">
-                    <span>⚠️</span>
-                    <span>خطای سیستمی</span>
-                </div>
-            </div>
-            
-            <div class="log-details">
-                <strong>جزئیات خطا:</strong><br>
-                • نوع خطا: Database Connection Timeout<br>
-                • مدت زمان: 30 ثانیه<br>
-                • وضعیت: برطرف شده<br>
-                • اقدام: اتصال مجدد خودکار
-            </div>
-        </div>
-
-        <!-- Sample Log Entry 5 -->
-        <div class="log-entry severity-low">
-            <div class="log-header">
-                <div class="log-user">
-                    <div class="user-avatar">SA</div>
-                    <div>
-                        <strong>Super Admin</strong>
-                        <div class="small text-muted">super_admin_test</div>
+                    {% endif %}
+                    {% if log.content_object %}
+                    <div class="meta-item">
+                        <span>🔗</span>
+                        <span>{{ log.content_object }}</span>
                     </div>
+                    {% endif %}
                 </div>
-                <div class="d-flex gap-2 align-items-center">
-                    <span class="action-badge action-login">🔑 ورود</span>
-                    <span class="severity-badge severity-low">🟢 کم</span>
+                {% if log.extra_data %}
+                <div class="log-details">
+                    <strong>اطلاعات اضافی:</strong><br>
+                    <pre>{{ log.extra_data|safe }}</pre>
                 </div>
+                {% endif %}
             </div>
-            
-            <div class="log-description">
-                <strong>ورود موفق به سیستم</strong>
-            </div>
-            
-            <div class="log-meta">
-                <div class="meta-item">
-                    <span>🕐</span>
-                    <span>1403/04/08 15:30:05</span>
-                </div>
-                <div class="meta-item">
-                    <span>🌐</span>
-                    <span>192.168.1.100</span>
-                </div>
-                <div class="meta-item">
-                    <span>🖥️</span>
-                    <span>Chrome/Windows</span>
-                </div>
-                <div class="meta-item">
-                    <span>🔐</span>
-                    <span>روش: رمز عبور</span>
-                </div>
-            </div>
-        </div>
+            {% endfor %}
+        {% else %}
+            <div class="alert alert-info mt-4">هیچ لاگی برای نمایش وجود ندارد.</div>
+        {% endif %}
     </div>
 
     <!-- Load More Button -->

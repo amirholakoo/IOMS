@@ -44,6 +44,7 @@ urlpatterns = [
     # 📦 مدیریت محصولات
     path('products/', views.products_list_view, name='products_list'),
     path('products/<int:product_id>/', views.product_detail_view, name='product_detail'),
+    path('products/<int:product_id>/modal/', views.product_detail_modal_view, name='product_detail_modal'),
     
     # 📜 مدیریت لاگ‌های فعالیت
     path('activity-logs/', views.activity_logs_view, name='activity_logs'),
@@ -62,6 +63,7 @@ urlpatterns = [
     path('api/dashboard-stats/', views.dashboard_stats_api, name='dashboard_stats_api'),
     path('api/product-qr/<str:qr_code>/', views.product_qr_api, name='product_qr_api'),
     path('api/update-price/', views.update_price_api, name='update_price_api'),
+    path('api/delete-product/', views.product_delete_api, name='product_delete_api'),
     
     # ⏰ مدیریت ساعات کاری - فقط Super Admin
     path('working-hours/', views.working_hours_management_view, name='working_hours_management'),

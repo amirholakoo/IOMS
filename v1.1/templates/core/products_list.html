@@ -380,21 +380,93 @@ function selectAll() {
 
 // View product details
 function viewProduct(productId) {
-    window.location.href = `/core/products/${productId}/`;
+    // Remove any existing modal
+    const existingModal = document.getElementById('productDetailModal');
+    if (existingModal) existingModal.remove();
+    fetch(`/core/products/${productId}/modal/?modal=1`, {
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    })
+    .then(response => response.text())
+    .then(html => {
+        const modalDiv = document.createElement('div');
+        modalDiv.innerHTML = html;
+        document.body.appendChild(modalDiv);
+        // Try to show with Bootstrap if available
+        if (window.bootstrap && modalDiv.querySelector('.modal')) {
+            const modal = new bootstrap.Modal(modalDiv.querySelector('.modal'));
+            modal.show();
+        } else {
+            // Fallback: show modal by setting display
+            const modal = modalDiv.querySelector('.modal');
+            if (modal) modal.style.display = 'block';
+        }
+    })
+    .catch(() => {
+        showNotification('Could not load product details.', 'error');
+    });
 }
 
 // Edit product
 function editProduct(productId) {
-    // Implement edit functionality
-    showNotification('⚠️ قابلیت ویرایش در حال توسعه است', 'warning');
+    window.location.href = `/core/inventory/${productId}/edit/`;
 }
 
 // Delete single product
 function deleteProduct(productId) {
-    if (confirm('آیا از حذف این محصول اطمینان دارید؟')) {
-        // Implement delete functionality
-        showNotification('⚠️ قابلیت حذف در حال توسعه است', 'warning');
+    if (confirm('Are you sure you want to delete this product?')) {
+        fetch(`/core/api/delete-product/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCSRFToken(),
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ product_id: productId })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                if (typeof showNotification === 'function') {
+                    showNotification(data.message, 'success');
+                } else {
+                    alert(data.message);
+                }
+                // Remove the row from the table
+                const row = document.querySelector(`button[onclick="deleteProduct(${productId})"]`).closest('tr');
+                if (row) row.remove();
+            } else {
+                if (typeof showNotification === 'function') {
+                    showNotification(data.message, 'error');
+                } else {
+                    alert(data.message);
+                }
+            }
+        })
+        .catch(() => {
+            if (typeof showNotification === 'function') {
+                showNotification('Server error. Please try again.', 'error');
+            } else {
+                alert('Server error. Please try again.');
+            }
+        });
     }
+}
+
+// Helper to get CSRF token
+function getCSRFToken() {
+    let csrfToken = null;
+    const cookies = document.cookie.split(';');
+    for (let i = 0; i < cookies.length; i++) {
+        const cookie = cookies[i].trim();
+        if (cookie.substring(0, 10) === 'csrftoken=') {
+            csrfToken = decodeURIComponent(cookie.substring(10));
+            break;
+        }
+    }
+    if (!csrfToken) {
+        const input = document.querySelector('[name=csrfmiddlewaretoken]');
+        if (input) csrfToken = input.value;
+    }
+    return csrfToken;
 }
 
 // Delete selected products

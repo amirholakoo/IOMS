@@ -383,15 +383,12 @@ function getCookie(name) {
 
     <!-- Super Admin Price Management Section -->
     {% if user.role == 'super_admin' %}
-    <!-- Price Management Section for Super Admin -->
-    {% if user.role == 'super_admin' and products_for_price_management %}
     <div class="price-management-section">
-        <h3 class="mb-4">💰 مدیریت قیمت محصولات</h3>
+        <h3 class="mb-4">💰 مدیریت قیمت محصولات (ویژه Super Admin)</h3>
         <div class="alert alert-info">
             <i class="fas fa-info-circle"></i>
             فقط Super Admin قابلیت تغییر قیمت محصولات را دارد
         </div>
-        
         <div class="product-table">
             <table class="table table-hover mb-0">
                 <thead>
@@ -405,114 +402,72 @@ function getCookie(name) {
                     </tr>
                 </thead>
                 <tbody>
-                    {% for product in products_for_price_management %}
-                    <tr id="product-row-{{ product.id }}">
-                        <td>
-                            <strong>{{ product.reel_number }}</strong>
-                            <br>
-                            <small class="text-muted">🏆 {{ product.grade }}</small>
-                        </td>
-                        <td>
-                            <span class="location-badge location-{{ product.location }}">
-                                {{ product.get_location_display }}
-                            </span>
-                        </td>
-                        <td>
-                            <small>
-                                📏 {{ product.width }}mm<br>
-                                📐 {{ product.length }}m<br>
-                                ⚖️ {{ product.gsm }} g/m²
-                            </small>
-                        </td>
-                        <td>
-                            <strong class="text-success" id="current-price-{{ product.id }}">
-                                {{ product.price|floatformat:0 }} تومان
-                            </strong>
-                            {% if product.price_updated_at %}
-                            <br>
-                            <small class="text-muted">
-                                📅 {{ product.price_updated_at|date:"Y/m/d H:i" }}
-                                {% if product.price_updated_by %}
-                                <br>👤 {{ product.price_updated_by.get_full_name|default:product.price_updated_by.username }}
+                    {% if products_for_price_management and products_for_price_management|length > 0 %}
+                        {% for product in products_for_price_management %}
+                        <tr id="product-row-{{ product.id }}">
+                            <td>
+                                <strong>{{ product.reel_number }}</strong>
+                                <br>
+                                <small class="text-muted">🏆 {{ product.grade }}</small>
+                            </td>
+                            <td>
+                                <span class="location-badge location-{{ product.location }}">
+                                    {{ product.get_location_display }}
+                                </span>
+                            </td>
+                            <td>
+                                <small>
+                                    📏 {{ product.width }}mm<br>
+                                    📐 {{ product.length }}m<br>
+                                    ⚖️ {{ product.gsm }} g/m²
+                                </small>
+                            </td>
+                            <td>
+                                <strong class="text-success" id="current-price-{{ product.id }}">
+                                    {{ product.price|floatformat:0 }} تومان
+                                </strong>
+                                {% if product.price_updated_at %}
+                                <br>
+                                <small class="text-muted">
+                                    📅 {{ product.price_updated_at|date:"Y/m/d H:i" }}
+                                    {% if product.price_updated_by %}
+                                    <br>👤 {{ product.price_updated_by.get_full_name|default:product.price_updated_by.username }}
+                                    {% endif %}
+                                </small>
                                 {% endif %}
-                            </small>
-                            {% endif %}
-                        </td>
-                        <td>
-                            <input type="number" 
-                                   class="form-control price-input" 
-                                   id="new-price-{{ product.id }}"
-                                   value="{{ product.price|floatformat:0 }}"
-                                   min="0"
-                                   step="1000"
-                                   placeholder="قیمت جدید">
-                        </td>
-                        <td>
-                            <button class="btn update-btn" 
-                                    onclick="updatePrice({{ product.id }}, '{{ product.reel_number }}')">
-                                💰 بروزرسانی
-                            </button>
-                        </td>
-                    </tr>
-                    {% endfor %}
+                            </td>
+                            <td>
+                                <input type="number" 
+                                       class="form-control price-input" 
+                                       id="new-price-{{ product.id }}"
+                                       value="{{ product.price|floatformat:0 }}"
+                                       min="0"
+                                       step="1000"
+                                       placeholder="قیمت جدید">
+                            </td>
+                            <td>
+                                <button class="btn update-btn" 
+                                        onclick="updatePrice({{ product.id }}, '{{ product.reel_number }}')">
+                                    💰 بروزرسانی
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="6" class="text-center text-muted py-4">
+                                هیچ محصولی برای مدیریت قیمت وجود ندارد.
+                            </td>
+                        </tr>
+                    {% endif %}
                 </tbody>
             </table>
         </div>
-        
         <div class="mt-3">
             <p class="text-muted">
                 <i class="fas fa-lightbulb"></i>
                 نکته: تغییرات قیمت بلافاصله اعمال و در سیستم لاگ ثبت می‌شود
             </p>
-        </div>
-    </div>
-    {% endif %}
-        <h3 class="mb-4">💰 مدیریت قیمت محصولات (ویژه Super Admin)</h3>
-        <div class="row mb-3">
-            <div class="col-md-6">
-                <input type="text" id="productSearch" class="form-control" placeholder="🔍 جستجو بر اساس شماره رول یا درجه...">
-            </div>
-            <div class="col-md-3">
-                <select id="locationFilter" class="form-select">
-                    <option value="">همه انبارها</option>
-                    <option value="Anbar_Akhal">انبار آخال</option>
-                    <option value="Anbar_Muhvateh_Kordan">انبار محوطه کردان</option>
-                    <option value="Anbar_Taleghani">انبار طالقانی</option>
-                    <option value="Anbar_Khatam">انبار خاتم</option>
-                    <option value="Anbar_Khayyam">انبار خیام</option>
-                    <option value="Anbar_Khorasan">انبار خراسان</option>
-                    <option value="Anbar_Tehran">انبار تهران</option>
-                </select>
-            </div>
-            <div class="col-md-3">
-                <button class="btn btn-primary w-100" onclick="loadProducts()">🔄 بروزرسانی</button>
-            </div>
-        </div>
-        
-        <div class="product-table">
-            <div class="table-responsive">
-                <table class="table table-hover mb-0" id="productsTable">
-                    <thead>
-                        <tr>
-                            <th>شماره رول</th>
-                            <th>مکان</th>
-                            <th>وضعیت</th>
-                            <th>قیمت فعلی</th>
-                            <th>قیمت جدید</th>
-                            <th>عملیات</th>
-                        </tr>
-                    </thead>
-                    <tbody id="productsTableBody">
-                        <tr>
-                            <td colspan="6" class="text-center py-4">
-                                <div class="spinner-border text-primary" role="status">
-                                    <span class="visually-hidden">در حال بارگذاری...</span>
-                                </div>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
         </div>
     </div>
     {% endif %}

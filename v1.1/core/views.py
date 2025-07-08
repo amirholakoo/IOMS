@@ -16,7 +16,7 @@ from payments.models import Payment
 from accounts.models import User
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.views.decorators.http import require_http_methods
+from django.views.decorators.http import require_http_methods, require_POST
 from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
 import json
@@ -2483,6 +2483,51 @@ def customer_detail_modal_view(request, customer_id):
         html = render_to_string('core/partials/customer_detail_modal.html', {'customer': customer}, request=request)
         return HttpResponse(html)
     return redirect('core:customers_list')
+
+@login_required
+@super_admin_permission_required('manage_inventory')
+def product_detail_modal_view(request, product_id):
+    product = get_object_or_404(Product, id=product_id)
+    product_logs = ActivityLog.objects.filter(
+        content_type__model='product',
+        object_id=product.id
+    ).select_related('user')[:20]
+    context = {
+        'product': product,
+        'product_info': product.get_product_info(),
+        'product_logs': product_logs,
+    }
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.GET.get('modal'):
+        html = render_to_string('core/partials/product_detail_modal.html', context, request=request)
+        return HttpResponse(html)
+    from django.shortcuts import redirect
+    return redirect('core:products_list')
+
+@login_required
+@super_admin_permission_required('manage_inventory')
+@require_POST
+def product_delete_api(request):
+    try:
+        data = json.loads(request.body)
+        product_id = data.get('product_id')
+        if not product_id:
+            return JsonResponse({'success': False, 'message': 'No product ID provided.'}, status=400)
+        product = Product.objects.filter(id=product_id).first()
+        if not product:
+            return JsonResponse({'success': False, 'message': 'Product not found.'}, status=404)
+        reel_number = product.reel_number
+        product.delete()
+        ActivityLog.log_activity(
+            user=request.user,
+            action='DELETE',
+            description=f'Product {reel_number} deleted',
+            severity='HIGH',
+            ip_address=get_client_ip(request),
+            user_agent=request.META.get('HTTP_USER_AGENT', '')
+        )
+        return JsonResponse({'success': True, 'message': f'Product {reel_number} deleted successfully.'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': f'Error: {str(e)}'}, status=500)
 
 
 
