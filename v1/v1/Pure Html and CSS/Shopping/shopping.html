@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>خرید محصولات - فروشگاه کاغذ</title>
+    <link rel="stylesheet" href="../Index/styles.css">
+    <link rel="stylesheet" href="shopping.css">
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@100..900&display=swap" rel="stylesheet">
+    <script src="../Admin/persian-numbers.js"></script>
+</head>
+
+<body>
+    <!-- Header Section -->
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">
+                <span class="logo-icon">📄</span>
+                <span class="logo-text">فروشگاه کاغذ</span>
+            </div>
+            <div class="user-info">
+                <div class="user-name" id="userName">کاربر</div>
+                <button class="logout-btn" onclick="logout()">خروج</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="shopping-container">
+
+            <!-- Cash Products Section -->
+            <section class="product-section cash-section">
+                <div class="section-header">
+                    <span class="section-icon">💵</span>
+                    <h2 class="section-title">محصولات نقدی</h2>
+                </div>
+                <div class="table-container">
+                    <table class="product-table">
+                        <thead>
+                            <tr>
+                                <th>نام محصول</th>
+                                <th>قیمت</th>
+                                <th>موجودی</th>
+                                <th>عملیات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="cashTableBody">
+                            <!-- Products will be loaded here by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Credit Products Section -->
+            <section class="product-section credit-section">
+                <div class="section-header">
+                    <span class="section-icon">💳</span>
+                    <h2 class="section-title">محصولات نسیه</h2>
+                </div>
+                <div class="table-container">
+                    <table class="product-table">
+                        <thead>
+                            <tr>
+                                <th>نام محصول</th>
+                                <th>قیمت</th>
+                                <th>موجودی</th>
+                                <th>عملیات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="creditTableBody">
+                            <!-- Products will be loaded here by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Selected Products Summary -->
+            <section class="summary-section">
+                <div class="summary-header">
+                    <span class="summary-icon">🛒</span>
+                    <h2 class="summary-title">سبد خرید</h2>
+                </div>
+
+                <div class="selected-products" id="selectedProducts">
+                    <p class="no-selection">هیچ محصولی انتخاب نشده است</p>
+                </div>
+
+                <div class="summary-actions">
+                    <button class="action-btn clear-btn" onclick="clearSelection()">
+                        <span class="btn-icon">🗑️</span>
+                        <span class="btn-text">پاک کردن همه</span>
+                    </button>
+                    <button class="action-btn checkout-btn" onclick="proceedToCheckout()">
+                        <span class="btn-icon">💳</span>
+                        <span class="btn-text">ادامه خرید</span>
+                    </button>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <p>&copy; ۱۴۰۳ فروشگاه کاغذ. تمامی حقوق محفوظ است.</p>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script src="shopping.js"></script>
+</body>
+
+</html>

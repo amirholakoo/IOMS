@@ -1,0 +1,109 @@
+<div class="customer-detail">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="text-center mb-4">
+                <div class="customer-avatar-large mx-auto mb-3">
+                    {{ customer.customer_name|first|upper }}
+                </div>
+                <h4 class="mb-1">{{ customer.customer_name }}</h4>
+                <span class="badge bg-{{ customer.status|lower }}">{{ customer.get_status_display }}</span>
+            </div>
+            
+            <div class="customer-info-grid">
+                {% if customer.phone %}
+                <div class="info-item">
+                    <div class="info-label">📞 شماره تلفن:</div>
+                    <div class="info-value">{{ customer.phone }}</div>
+                </div>
+                {% endif %}
+                
+                {% if customer.national_id %}
+                <div class="info-item">
+                    <div class="info-label">🆔 شناسه ملی:</div>
+                    <div class="info-value">{{ customer.national_id }}</div>
+                </div>
+                {% endif %}
+                
+                {% if customer.economic_code %}
+                <div class="info-item">
+                    <div class="info-label">💼 کد اقتصادی:</div>
+                    <div class="info-value">{{ customer.economic_code }}</div>
+                </div>
+                {% endif %}
+                
+                {% if customer.postcode %}
+                <div class="info-item">
+                    <div class="info-label">📮 کد پستی:</div>
+                    <div class="info-value">{{ customer.postcode }}</div>
+                </div>
+                {% endif %}
+                
+                {% if customer.address %}
+                <div class="info-item">
+                    <div class="info-label">📍 آدرس:</div>
+                    <div class="info-value">{{ customer.address }}</div>
+                </div>
+                {% endif %}
+                
+                {% if customer.comments %}
+                <div class="info-item">
+                    <div class="info-label">💬 توضیحات:</div>
+                    <div class="info-value">{{ customer.comments }}</div>
+                </div>
+                {% endif %}
+                
+                <div class="info-item">
+                    <div class="info-label">📅 تاریخ ایجاد:</div>
+                    <div class="info-value">{{ customer.created_at|date:"Y/m/d H:i" }}</div>
+                </div>
+                
+                <div class="info-item">
+                    <div class="info-label">🔄 آخرین بروزرسانی:</div>
+                    <div class="info-value">{{ customer.updated_at|date:"Y/m/d H:i" }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.customer-avatar-large {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: linear-gradient(45deg, #007bff, #28a745);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: bold;
+    font-size: 2rem;
+}
+
+.customer-info-grid {
+    display: grid;
+    gap: 1rem;
+}
+
+.info-item {
+    display: flex;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 0.5rem;
+}
+
+.info-label {
+    font-weight: bold;
+    min-width: 120px;
+    color: #666;
+}
+
+.info-value {
+    flex: 1;
+    color: #333;
+}
+
+.badge.bg-active { background-color: #28a745 !important; }
+.badge.bg-inactive { background-color: #6c757d !important; }
+.badge.bg-suspended { background-color: #dc3545 !important; }
+.badge.bg-blocked { background-color: #343a40 !important; }
+</style> 

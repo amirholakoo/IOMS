@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>پنل مدیریت - کارخانه کاغذ و مقوای همایون</title>
+    <link rel="stylesheet" href="../Index/styles.css">
+    <link rel="stylesheet" href="admin.css">
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <!-- Mobile Header -->
+    <header class="mobile-header">
+        <button class="menu-btn" onclick="toggleMenu()">☰</button>
+        <h1>پنل مدیریت</h1>
+        <button class="home-btn" onclick="goHome()">🏠</button>
+    </header>
+
+    <!-- Mobile Menu Overlay -->
+    <div class="menu-overlay" id="menuOverlay" onclick="closeMenu()"></div>
+
+    <!-- Mobile Menu -->
+    <nav class="mobile-menu" id="mobileMenu">
+        <div class="menu-header">
+            <h2>منوی مدیریت</h2>
+            <button class="close-btn" onclick="closeMenu()">×</button>
+        </div>
+        <ul class="menu-list">
+            <li><a href="#" onclick="showSection('dashboard')">📊 داشبورد</a></li>
+            <li><a href="#" onclick="showSection('cms')">👥 مدیریت کاربران</a></li>
+            <li><a href="#" onclick="showSection('inventory')">📦 مدیریت موجودی</a></li>
+            <li><a href="#" onclick="showSection('orders')">📋 مدیریت سفارشات</a></li>
+            <li><a href="#" onclick="showSection('working-hours')">🕐 ساعت کاری</a></li>
+            <li><a href="#" onclick="showSection('main-page')">🏠 مدیریت صفحه اصلی</a></li>
+        </ul>
+        <div class="menu-footer">
+            <button class="logout-btn" onclick="adminLogout()">🚪 خروج</button>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Desktop Header -->
+        <header class="desktop-header">
+            <h1 id="sectionTitle">داشبورد مدیریت</h1>
+            <div class="user-info">
+                <span>مدیر سیستم</span>
+            </div>
+        </header>
+
+        <div class="content-wrapper">
+            <!-- Dashboard Section -->
+            <section id="dashboard" class="content-section active">
+                <div class="section-header">
+                    <h2>داشبورد مدیریت</h2>
+                </div>
+
+                <!-- Stats Grid -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">👥</div>
+                        <div class="stat-content">
+                            <div class="stat-number">۵</div>
+                            <div class="stat-label">کل کاربران</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">📦</div>
+                        <div class="stat-content">
+                            <div class="stat-number">۸</div>
+                            <div class="stat-label">کل محصولات</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">📋</div>
+                        <div class="stat-content">
+                            <div class="stat-number">۳</div>
+                            <div class="stat-label">کل سفارشات</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">💰</div>
+                        <div class="stat-content">
+                            <div class="stat-number">۲,۷۵۰,۰۰۰</div>
+                            <div class="stat-label">کل درآمد (تومان)</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="section-header">
+                    <h3>عملیات سریع</h3>
+                </div>
+                <div class="stats-grid">
+                    <div class="stat-card" style="cursor: pointer;" onclick="showSection('cms')">
+                        <div class="stat-icon">👥</div>
+                        <div class="stat-content">
+                            <div class="stat-label">مدیریت کاربران</div>
+                        </div>
+                    </div>
+                    <div class="stat-card" style="cursor: pointer;" onclick="showSection('inventory')">
+                        <div class="stat-icon">📦</div>
+                        <div class="stat-content">
+                            <div class="stat-label">مدیریت موجودی</div>
+                        </div>
+                    </div>
+                    <div class="stat-card" style="cursor: pointer;" onclick="showSection('orders')">
+                        <div class="stat-icon">📋</div>
+                        <div class="stat-content">
+                            <div class="stat-label">مدیریت سفارشات</div>
+                        </div>
+                    </div>
+                    <div class="stat-card" style="cursor: pointer;" onclick="showSection('working-hours')">
+                        <div class="stat-icon">🕐</div>
+                        <div class="stat-content">
+                            <div class="stat-label">ساعت کاری</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- CMS Section - User Management -->
+            <section id="cms" class="content-section">
+                <div class="section-header">
+                    <h2>مدیریت کاربران</h2>
+                    <button class="action-btn primary-btn" onclick="showAddUserModal()">
+                        <span class="btn-icon">➕</span>
+                        <span class="btn-text">افزودن کاربر جدید</span>
+                    </button>
+                </div>
+
+                <!-- User Filters -->
+                <div class="filters-container">
+                    <div class="filter-group">
+                        <label for="userStatusFilter">وضعیت:</label>
+                        <select id="userStatusFilter" onchange="filterUsers()">
+                            <option value="">همه</option>
+                            <option value="approved">تایید شده</option>
+                            <option value="pending">در انتظار</option>
+                            <option value="deactivate">غیرفعال</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="userSearch">جستجو:</label>
+                        <input type="text" id="userSearch" placeholder="نام، شماره تلفن..." onkeyup="filterUsers()">
+                    </div>
+                </div>
+
+                <!-- Users Table -->
+                <div class="table-container">
+                    <table class="admin-table" id="usersTable">
+                        <thead>
+                            <tr>
+                                <th>نام و نام خانوادگی</th>
+                                <th>شماره تلفن</th>
+                                <th>وضعیت</th>
+                                <th>تاریخ ثبت‌نام</th>
+                                <th>آخرین ورود</th>
+                                <th>عملیات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="usersTableBody">
+                            <!-- Users will be loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Inventory Section -->
+            <section id="inventory" class="content-section">
+                <div class="section-header">
+                    <h2>مدیریت موجودی</h2>
+                    <button class="action-btn primary-btn" onclick="showAddProductModal()">
+                        <span class="btn-icon">➕</span>
+                        <span class="btn-text">افزودن محصول جدید</span>
+                    </button>
+                </div>
+
+                <!-- Inventory Filters -->
+                <div class="filters-container">
+                    <div class="filter-group">
+                        <label for="stockFilter">موجودی:</label>
+                        <select id="stockFilter" onchange="filterProducts()">
+                            <option value="">همه</option>
+                            <option value="high">زیاد</option>
+                            <option value="medium">متوسط</option>
+                            <option value="low">کم</option>
+                            <option value="out">ناموجود</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="productSearch">جستجو:</label>
+                        <input type="text" id="productSearch" placeholder="نام محصول..." onkeyup="filterProducts()">
+                    </div>
+                </div>
+
+                <!-- Products Table -->
+                <div class="table-container">
+                    <table class="admin-table" id="productsTable">
+                        <thead>
+                            <tr>
+                                <th>نام محصول</th>
+                                <th>ویژگی‌ها</th>
+                                <th>قیمت نقدی (تومان)</th>
+                                <th>قیمت نسیه (تومان)</th>
+                                <th>موجودی</th>
+                                <th>وضعیت</th>
+                                <th>عملیات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="productsTableBody">
+                            <!-- Products will be loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Orders Section -->
+            <section id="orders" class="content-section">
+                <div class="section-header">
+                    <h2>مدیریت سفارش‌ها</h2>
+                    <button class="action-btn primary-btn" onclick="showOrderStats()">
+                        <span class="btn-icon">📈</span>
+                        <span class="btn-text">آمار سفارشات</span>
+                    </button>
+                </div>
+
+                <!-- Order Filters -->
+                <div class="filters-container">
+                    <div class="filter-group">
+                        <label for="orderStatusFilter">وضعیت سفارش:</label>
+                        <select id="orderStatusFilter" onchange="filterOrders()">
+                            <option value="">همه</option>
+                            <option value="pending">در انتظار</option>
+                            <option value="confirmed">تایید شده</option>
+                            <option value="processing">در حال پردازش</option>
+                            <option value="shipped">ارسال شده</option>
+                            <option value="delivered">تحویل داده شده</option>
+                            <option value="cancelled">لغو شده</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="paymentTypeFilter">نوع پرداخت:</label>
+                        <select id="paymentTypeFilter" onchange="filterOrders()">
+                            <option value="">همه</option>
+                            <option value="cash">نقدی</option>
+                            <option value="credit">نسیه</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="dateFromFilter">از تاریخ:</label>
+                        <input type="date" id="dateFromFilter" onchange="filterOrders()">
+                    </div>
+                    <div class="filter-group">
+                        <label for="dateToFilter">تا تاریخ:</label>
+                        <input type="date" id="dateToFilter" onchange="filterOrders()">
+                    </div>
+                    <div class="filter-group">
+                        <label for="orderSearch">جستجو:</label>
+                        <input type="text" id="orderSearch" placeholder="شماره سفارش، نام مشتری..."
+                            onkeyup="filterOrders()">
+                    </div>
+                </div>
+
+                <!-- Orders Table -->
+                <div class="table-container">
+                    <table class="admin-table" id="ordersTable">
+                        <thead>
+                            <tr>
+                                <th>شماره سفارش</th>
+                                <th>مشتری</th>
+                                <th>محصولات</th>
+                                <th>مبلغ کل</th>
+                                <th>نوع پرداخت</th>
+                                <th>وضعیت</th>
+                                <th>تاریخ سفارش</th>
+                                <th>عملیات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ordersTableBody">
+                            <!-- Orders will be loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Working Hours Section -->
+            <section id="working-hours" class="content-section">
+                <div class="section-header">
+                    <h2>مدیریت ساعت کاری</h2>
+                    <button class="action-btn primary-btn" onclick="showWorkingHoursModal()">
+                        <span class="btn-icon">⚙️</span>
+                        <span class="btn-text">تنظیم ساعت کاری</span>
+                    </button>
+                </div>
+
+                <div class="working-hours-info">
+                    <div class="info-card">
+                        <div class="info-header">
+                            <h3>ساعت کاری فعلی</h3>
+                            <span class="status-indicator" id="workingHoursStatus">فعال</span>
+                        </div>
+                        <div class="info-content">
+                            <div class="time-range">
+                                <span class="time-label">از:</span>
+                                <span class="time-value" id="currentStartTime">08:00</span>
+                            </div>
+                            <div class="time-range">
+                                <span class="time-label">تا:</span>
+                                <span class="time-value" id="currentEndTime">18:00</span>
+                            </div>
+                            <div class="working-status">
+                                <span class="status-label">وضعیت فعلی:</span>
+                                <span class="status-value" id="currentWorkingStatus">باز</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Main Page Management Section -->
+            <section id="main-page" class="content-section">
+                <div class="section-header">
+                    <h2>مدیریت صفحه اصلی</h2>
+                    <button class="action-btn primary-btn" onclick="showMainPageEditModal()">
+                        <span class="btn-icon">✏️</span>
+                        <span class="btn-text">ویرایش قیمت و موجودی</span>
+                    </button>
+                </div>
+
+                <div class="main-page-info">
+                    <div class="info-card">
+                        <div class="info-header">
+                            <h3>اطلاعات فعلی صفحه اصلی</h3>
+                            <span class="status-indicator">فعال</span>
+                        </div>
+                        <div class="info-content">
+                            <div class="price-inventory-grid">
+                                <div class="price-inventory-section">
+                                    <h4>بخش نقدی</h4>
+                                    <div class="price-inventory-item">
+                                        <span class="item-label">قیمت نقدی:</span>
+                                        <span class="item-value" id="currentCashPrice">۲،۵۰۰،۰۰۰ تومان</span>
+                                    </div>
+                                    <div class="price-inventory-item">
+                                        <span class="item-label">موجودی نقدی:</span>
+                                        <span class="item-value" id="currentCashStock">۱۵۰ کیلو</span>
+                                    </div>
+                                </div>
+                                <div class="price-inventory-section">
+                                    <h4>بخش نسیه</h4>
+                                    <div class="price-inventory-item">
+                                        <span class="item-label">قیمت نسیه:</span>
+                                        <span class="item-value" id="currentCreditPrice">۲،۸۰۰،۰۰۰ تومان</span>
+                                    </div>
+                                    <div class="price-inventory-item">
+                                        <span class="item-label">موجودی نسیه:</span>
+                                        <span class="item-value" id="currentCreditStock">۲۰۰ کیلو</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Modals -->
+    <!-- Add User Modal -->
+    <div id="addUserModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>افزودن کاربر جدید</h3>
+                <button class="modal-close" onclick="closeModal('addUserModal')">×</button>
+            </div>
+            <form class="modal-form" id="addUserForm">
+                <div class="form-group">
+                    <label for="userName">نام و نام خانوادگی:</label>
+                    <input type="text" id="userName" required>
+                </div>
+                <div class="form-group">
+                    <label for="userPhone">شماره تلفن:</label>
+                    <input type="tel" id="userPhone" pattern="[0-9]{11}" placeholder="09123456789" required>
+                </div>
+                <div class="form-group">
+                    <label for="userStatus">وضعیت:</label>
+                    <select id="userStatus" required>
+                        <option value="approved">تایید شده</option>
+                        <option value="pending">در انتظار</option>
+                        <option value="deactivate">غیرفعال</option>
+                    </select>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="action-btn secondary-btn"
+                        onclick="closeModal('addUserModal')">انصراف</button>
+                    <button type="submit" class="action-btn primary-btn">افزودن کاربر</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit User Modal -->
+    <div id="editUserModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>ویرایش کاربر</h3>
+                <button class="modal-close" onclick="closeModal('editUserModal')">×</button>
+            </div>
+            <form class="modal-form" id="editUserForm">
+                <input type="hidden" id="editUserId">
+                <div class="form-group">
+                    <label for="editUserName">نام و نام خانوادگی:</label>
+                    <input type="text" id="editUserName" required>
+                </div>
+                <div class="form-group">
+                    <label for="editUserPhone">شماره تلفن:</label>
+                    <input type="tel" id="editUserPhone" pattern="[0-9]{11}" required>
+                </div>
+                <div class="form-group">
+                    <label for="editUserStatus">وضعیت:</label>
+                    <select id="editUserStatus" required>
+                        <option value="approved">تایید شده</option>
+                        <option value="pending">در انتظار</option>
+                        <option value="deactivate">غیرفعال</option>
+                    </select>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="action-btn secondary-btn"
+                        onclick="closeModal('editUserModal')">انصراف</button>
+                    <button type="submit" class="action-btn primary-btn">ذخیره تغییرات</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Product Modal -->
+    <div id="addProductModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>افزودن محصول جدید</h3>
+                <button class="modal-close" onclick="closeModal('addProductModal')">×</button>
+            </div>
+            <form class="modal-form" id="addProductForm">
+                <div class="form-group">
+                    <label for="productName">نام محصول:</label>
+                    <input type="text" id="productName" required>
+                </div>
+                <div class="form-group">
+                    <label for="productPaperType">نوع کاغذ:</label>
+                    <select id="productPaperType" required>
+                        <option value="کاغذ تحریر">کاغذ تحریر</option>
+                        <option value="کاغذ رنگی">کاغذ رنگی</option>
+                        <option value="کاغذ گلاسه">کاغذ گلاسه</option>
+                        <option value="کاغذ کاهی">کاغذ کاهی</option>
+                        <option value="کاغذ مقوا">کاغذ مقوا</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="productGrammage">گرماژ:</label>
+                    <select id="productGrammage" required>
+                        <option value="70 گرم">70 گرم</option>
+                        <option value="80 گرم">80 گرم</option>
+                        <option value="90 گرم">90 گرم</option>
+                        <option value="100 گرم">100 گرم</option>
+                        <option value="120 گرم">120 گرم</option>
+                        <option value="150 گرم">150 گرم</option>
+                        <option value="200 گرم">200 گرم</option>
+                        <option value="250 گرم">250 گرم</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="productSize">اندازه:</label>
+                    <select id="productSize" required>
+                        <option value="A4 (210×297)">A4 (210×297)</option>
+                        <option value="A3 (297×420)">A3 (297×420)</option>
+                        <option value="A5 (148×210)">A5 (148×210)</option>
+                        <option value="A2 (420×594)">A2 (420×594)</option>
+                        <option value="B4 (250×353)">B4 (250×353)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="productColor">رنگ:</label>
+                    <select id="productColor" required>
+                        <option value="سفید">سفید</option>
+                        <option value="کاهی">کاهی</option>
+                        <option value="آبی">آبی</option>
+                        <option value="قرمز">قرمز</option>
+                        <option value="سبز">سبز</option>
+                        <option value="زرد">زرد</option>
+                        <option value="صورتی">صورتی</option>
+                        <option value="نارنجی">نارنجی</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="productCashPrice">قیمت نقدی (تومان):</label>
+                    <input type="number" id="productCashPrice" min="0" required>
+                </div>
+                <div class="form-group">
+                    <label for="productCreditPrice">قیمت نسیه (تومان):</label>
+                    <input type="number" id="productCreditPrice" min="0" required>
+                </div>
+                <div class="form-group">
+                    <label for="productStock">موجودی:</label>
+                    <input type="number" id="productStock" min="0" required>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="action-btn secondary-btn"
+                        onclick="closeModal('addProductModal')">انصراف</button>
+                    <button type="submit" class="action-btn primary-btn">افزودن محصول</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Product Modal -->
+    <div id="editProductModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>ویرایش محصول</h3>
+                <button class="modal-close" onclick="closeModal('editProductModal')">×</button>
+            </div>
+            <form class="modal-form" id="editProductForm">
+                <input type="hidden" id="editProductId">
+                <div class="form-group">
+                    <label for="editProductName">نام محصول:</label>
+                    <input type="text" id="editProductName" required>
+                </div>
+                <div class="form-group">
+                    <label for="editProductCashPrice">قیمت نقدی (تومان):</label>
+                    <input type="number" id="editProductCashPrice" min="0" required>
+                </div>
+                <div class="form-group">
+                    <label for="editProductCreditPrice">قیمت نسیه (تومان):</label>
+                    <input type="number" id="editProductCreditPrice" min="0" required>
+                </div>
+                <div class="form-group">
+                    <label for="editProductStock">موجودی:</label>
+                    <input type="number" id="editProductStock" min="0" required>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="action-btn secondary-btn"
+                        onclick="closeModal('editProductModal')">انصراف</button>
+                    <button type="submit" class="action-btn primary-btn">ذخیره تغییرات</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Order Status Modal -->
+    <div id="orderStatusModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>تغییر وضعیت سفارش</h3>
+                <button class="modal-close" onclick="closeModal('orderStatusModal')">×</button>
+            </div>
+            <form class="modal-form" id="orderStatusForm">
+                <input type="hidden" id="orderStatusId">
+                <div class="form-group">
+                    <label for="newOrderStatus">وضعیت جدید:</label>
+                    <select id="newOrderStatus" required>
+                        <option value="pending">در انتظار</option>
+                        <option value="confirmed">تایید شده</option>
+                        <option value="processing">در حال پردازش</option>
+                        <option value="shipped">ارسال شده</option>
+                        <option value="delivered">تحویل داده شده</option>
+                        <option value="cancelled">لغو شده</option>
+                    </select>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="action-btn secondary-btn"
+                        onclick="closeModal('orderStatusModal')">انصراف</button>
+                    <button type="submit" class="action-btn primary-btn">تغییر وضعیت</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Working Hours Modal -->
+    <div id="workingHoursModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>تنظیم ساعت کاری</h3>
+                <button class="modal-close" onclick="closeModal('workingHoursModal')">×</button>
+            </div>
+            <form class="modal-form" id="workingHoursForm">
+                <div class="form-group">
+                    <label for="startHour">ساعت شروع:</label>
+                    <select id="startHour" required>
+                        <option value="0">00</option>
+                        <option value="1">01</option>
+                        <option value="2">02</option>
+                        <option value="3">03</option>
+                        <option value="4">04</option>
+                        <option value="5">05</option>
+                        <option value="6">06</option>
+                        <option value="7">07</option>
+                        <option value="8" selected>08</option>
+                        <option value="9">09</option>
+                        <option value="10">10</option>
+                        <option value="11">11</option>
+                        <option value="12">12</option>
+                        <option value="13">13</option>
+                        <option value="14">14</option>
+                        <option value="15">15</option>
+                        <option value="16">16</option>
+                        <option value="17">17</option>
+                        <option value="18">18</option>
+                        <option value="19">19</option>
+                        <option value="20">20</option>
+                        <option value="21">21</option>
+                        <option value="22">22</option>
+                        <option value="23">23</option>
+                    </select>
+                    <span class="time-separator">:</span>
+                    <select id="startMinute" required>
+                        <option value="0" selected>00</option>
+                        <option value="15">15</option>
+                        <option value="30">30</option>
+                        <option value="45">45</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="endHour">ساعت پایان:</label>
+                    <select id="endHour" required>
+                        <option value="0">00</option>
+                        <option value="1">01</option>
+                        <option value="2">02</option>
+                        <option value="3">03</option>
+                        <option value="4">04</option>
+                        <option value="5">05</option>
+                        <option value="6">06</option>
+                        <option value="7">07</option>
+                        <option value="8">08</option>
+                        <option value="9">09</option>
+                        <option value="10">10</option>
+                        <option value="11">11</option>
+                        <option value="12">12</option>
+                        <option value="13">13</option>
+                        <option value="14">14</option>
+                        <option value="15">15</option>
+                        <option value="16">16</option>
+                        <option value="17">17</option>
+                        <option value="18" selected>18</option>
+                        <option value="19">19</option>
+                        <option value="20">20</option>
+                        <option value="21">21</option>
+                        <option value="22">22</option>
+                        <option value="23">23</option>
+                    </select>
+                    <span class="time-separator">:</span>
+                    <select id="endMinute" required>
+                        <option value="0" selected>00</option>
+                        <option value="15">15</option>
+                        <option value="30">30</option>
+                        <option value="45">45</option>
+                    </select>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="action-btn secondary-btn"
+                        onclick="closeModal('workingHoursModal')">انصراف</button>
+                    <button type="submit" class="action-btn primary-btn">ذخیره تنظیمات</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Main Page Edit Modal -->
+    <div id="mainPageEditModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>ویرایش قیمت و موجودی صفحه اصلی</h3>
+                <button class="modal-close" onclick="closeModal('mainPageEditModal')">×</button>
+            </div>
+            <form class="modal-form" id="mainPageEditForm">
+                <div class="form-section">
+                    <h4>بخش نقدی</h4>
+                    <div class="form-group">
+                        <label for="cashPrice">قیمت نقدی (تومان):</label>
+                        <input type="number" id="cashPrice" min="0" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="cashStock">موجودی نقدی (کیلو):</label>
+                        <input type="number" id="cashStock" min="0" required>
+                    </div>
+                </div>
+                <div class="form-section">
+                    <h4>بخش نسیه</h4>
+                    <div class="form-group">
+                        <label for="creditPrice">قیمت نسیه (تومان):</label>
+                        <input type="number" id="creditPrice" min="0" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="creditStock">موجودی نسیه (کیلو):</label>
+                        <input type="number" id="creditStock" min="0" required>
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="action-btn secondary-btn"
+                        onclick="closeModal('mainPageEditModal')">انصراف</button>
+                    <button type="submit" class="action-btn primary-btn">ذخیره تغییرات</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Order Details Modal -->
+    <div id="orderDetailsModal" class="modal">
+        <div class="modal-content large-modal">
+            <div class="modal-header">
+                <h3>جزئیات سفارش</h3>
+                <button class="modal-close" onclick="closeModal('orderDetailsModal')">×</button>
+            </div>
+            <div class="modal-body" id="orderDetailsContent">
+                <!-- Order details will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Persian Numbers Utility - Must be loaded before other scripts -->
+    <script src="persian-numbers.js"></script>
+    <script src="admin.js"></script>
+</body>
+
+</html>

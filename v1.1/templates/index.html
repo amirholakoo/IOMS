@@ -29,6 +29,80 @@
 
     <!-- Main Content - Shown during working hours -->
     <main class="main-content" id="mainContent">
+        <!-- 🔄 Unpaid Orders Section -->
+        {% if user.is_authenticated and unpaid_orders %}
+        <section id="unpaidOrdersSection" class="section unpaid-orders-section">
+            <div class="section-header">
+                <h2 class="section-title">
+                    <span class="section-icon">🔄</span>
+                    سفارشات ناتمام
+                </h2>
+                <p class="section-subtitle">سفارشات نقدی که هنوز به مرحله پرداخت نرسیده‌اند</p>
+            </div>
+            
+            <div class="unpaid-orders-container">
+                {% for order in unpaid_orders %}
+                <div class="unpaid-order-card">
+                    <div class="order-header">
+                        <div class="order-info">
+                            <h4 class="order-number">سفارش #{{ order.order_number }}</h4>
+                            <p class="order-date">{{ order.created_at|date:"Y/m/d H:i" }}</p>
+                        </div>
+                        <div class="order-status">
+                            {% if order.payment_method == 'Terms' %}
+                                <span class="status-badge pending">⏳ در انتظار تایید ادمین</span>
+                            {% else %}
+                                <span class="status-badge pending">⏳ منتظر پرداخت نقدی</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="order-details">
+                        <div class="order-items">
+                            <h5>محصولات انتخاب شده:</h5>
+                            <ul class="items-list">
+                                {% for item in order.order_items.all %}
+                                <li class="item">
+                                    <span class="item-name">{{ item.product.reel_number }}</span>
+                                    <span class="item-details">
+                                        {{ item.product.width }}mm × {{ item.product.gsm }}g/m² × {{ item.product.length }}m
+                                    </span>
+                                    <span class="item-price">{{ item.total_price|floatformat:0 }} تومان</span>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        
+                        <div class="order-summary">
+                            <div class="summary-row">
+                                <span class="summary-label">تعداد محصولات:</span>
+                                <span class="summary-value">{{ order.order_items.count }} عدد</span>
+                            </div>
+                            <div class="summary-row">
+                                <span class="summary-label">مبلغ کل:</span>
+                                <span class="summary-value total-amount">{{ order.final_amount|floatformat:0 }} تومان</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="order-actions">
+                        {% if order.payment_method == 'Cash' %}
+                        <a href="{% url 'payments:payment_summary' order.id %}" class="btn btn-primary complete-order-btn">
+                            <span class="btn-icon">💳</span>
+                            <span class="btn-text">تکمیل پرداخت</span>
+                        </a>
+                        {% endif %}
+                        <button class="btn btn-outline-secondary view-order-btn" onclick="viewOrderDetails({{ order.id }})">
+                            <span class="btn-icon">👁️</span>
+                            <span class="btn-text">مشاهده جزئیات</span>
+                        </button>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+        {% endif %}
+        
         <section id="cashSection" class="section cash-section">
             <div class="section-header">
                 <h2 class="section-title">محصولات موجود</h2>
@@ -71,7 +145,13 @@
                             {% if products %}
                             {% for product in products %}
                             <tr class="stock-row" data-type="cash" data-product-id="{{ product.id }}">
-                                <td><input type="checkbox" class="stock-checkbox" data-section="cash"></td>
+                                <td>
+                                  <button class="selection-btn" data-section="cash" type="button">
+                                    <span class="selection-icon">⭕</span>
+                                    <span>انتخاب</span>
+                                  </button>
+                                  <input type="checkbox" class="stock-checkbox" data-section="cash" style="display:none;">
+                                </td>
                                 <td>{{ product.reel_number }}</td>
                                 <td>{{ product.width }}</td>
                                 <td>{{ product.gsm }}</td>
@@ -105,7 +185,7 @@
             </div>
 
             <div class="button-container">
-                <button class="purchase-btn cash-btn" onclick="handleCashPurchase()" id="cashPurchaseBtn" disabled>
+                <button class="purchase-btn cash-btn" type="button" onclick="handleCashPurchase()" id="cashPurchaseBtn" disabled>
                     <span class="btn-icon">💰</span>
                     <span class="btn-text">خرید نقدی</span>
                 </button>
@@ -158,7 +238,13 @@
                             {% if products %}
                             {% for product in products %}
                             <tr class="stock-row" data-type="credit" data-product-id="{{ product.id }}">
-                                <td><input type="checkbox" class="stock-checkbox" data-section="credit"></td>
+                                <td>
+                                  <button class="selection-btn" data-section="credit" type="button">
+                                    <span class="selection-icon">⭕</span>
+                                    <span>انتخاب</span>
+                                  </button>
+                                  <input type="checkbox" class="stock-checkbox" data-section="credit" style="display:none;">
+                                </td>
                                 <td>{{ product.reel_number }}</td>
                                 <td>{{ product.width }}</td>
                                 <td>{{ product.gsm }}</td>
@@ -192,7 +278,7 @@
             </div>
 
             <div class="button-container">
-                <button class="purchase-btn credit-btn" onclick="handleCreditPurchase()" id="creditPurchaseBtn"
+                <button class="purchase-btn credit-btn" type="button" onclick="handleCreditPurchase()" id="creditPurchaseBtn"
                     disabled>
                     <span class="btn-icon">📋</span>
                     <span class="btn-text">خرید نسیه</span>
@@ -306,359 +392,4 @@
 
 {% block extra_js %}
 <script src="{% static 'js/index.js' %}"></script>
-<script>
-    // Toggle mobile menu
-    function toggleMenu() {
-        const navList = document.getElementById('navbarMenu');
-        navList.classList.toggle('show');
-    }
-
-    // 🔔 Custom Popup System
-    function createPopup(message, type = 'info', title = '', duration = 3000) {
-        // Remove existing popup if any
-        const existingPopup = document.querySelector('.popup-overlay');
-        if (existingPopup) {
-            existingPopup.remove();
-        }
-
-        // Set default titles and icons based on type
-        const popupConfig = {
-            success: {
-                title: title || 'موفقیت!',
-                icon: '✅'
-            },
-            error: {
-                title: title || 'خطا!',
-                icon: '❌'
-            },
-            warning: {
-                title: title || 'هشدار!',
-                icon: '⚠️'
-            },
-            info: {
-                title: title || 'اطلاع!',
-                icon: 'ℹ️'
-            }
-        };
-
-        const config = popupConfig[type] || popupConfig.info;
-
-        // Create popup HTML
-        const popupHTML = `
-            <div class="popup-overlay" id="customPopup">
-                <div class="popup-container ${type}">
-                    <button class="popup-close" onclick="closePopup()">×</button>
-                    <div class="popup-icon">${config.icon}</div>
-                    <div class="popup-title">${config.title}</div>
-                    <div class="popup-message">${message}</div>
-                    <div class="popup-progress">
-                        <div class="popup-progress-bar" id="progressBar"></div>
-                    </div>
-                </div>
-            </div>
-        `;
-
-        // Add to body
-        document.body.insertAdjacentHTML('beforeend', popupHTML);
-
-        // Show popup with animation
-        const popup = document.getElementById('customPopup');
-        setTimeout(() => {
-            popup.classList.add('show');
-        }, 10);
-
-        // Start progress bar animation
-        const progressBar = document.getElementById('progressBar');
-        setTimeout(() => {
-            progressBar.style.width = '0%';
-        }, 100);
-
-        // Auto close after duration
-        setTimeout(() => {
-            closePopup();
-        }, duration);
-
-        return popup;
-    }
-
-    function closePopup() {
-        const popup = document.querySelector('.popup-overlay');
-        if (popup) {
-            popup.classList.remove('show');
-            setTimeout(() => {
-                popup.remove();
-            }, 300);
-        }
-    }
-
-    // Replace alert with custom popup
-    function showAlert(message, type = 'info', title = '') {
-        return createPopup(message, type, title, 3000);
-    }
-
-    // Smooth scrolling for anchor links
-    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-        anchor.addEventListener('click', function (e) {
-            e.preventDefault();
-            const target = document.querySelector(this.getAttribute('href'));
-            if (target) {
-                target.scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'start'
-                });
-            }
-        });
-    });
-
-    // Stock table selection functionality
-    let selectedItems = {
-        cash: 0,
-        credit: 0
-    };
-
-    // Initialize selection buttons
-    function initializeSelectionButtons() {
-        // Replace all checkbox cells with custom quantity controls
-        const checkboxCells = document.querySelectorAll('td input.stock-checkbox');
-
-        checkboxCells.forEach(checkbox => {
-            const section = checkbox.dataset.section;
-            const cell = checkbox.closest('td');
-
-            // Create quantity control structure
-            cell.innerHTML = `
-                <div class="quantity-container">
-                    <div class="quantity-controls">
-                        <button class="qty-btn minus-btn" data-section="${section}" data-action="minus">-</button>
-                        <input type="number" class="qty-input" data-section="${section}" min="0" value="0" step="1">
-                        <button class="qty-btn plus-btn" data-section="${section}" data-action="plus">+</button>
-                    </div>
-                </div>
-            `;
-        });
-
-        // Add event listeners to all quantity buttons and inputs
-        const qtyButtons = document.querySelectorAll('.qty-btn');
-        qtyButtons.forEach(button => {
-            button.addEventListener('click', function (e) {
-                e.preventDefault();
-                e.stopPropagation();
-                handleQuantityChange(this);
-            });
-        });
-
-        const qtyInputs = document.querySelectorAll('.qty-input');
-        qtyInputs.forEach(input => {
-            input.addEventListener('change', function (e) {
-                handleQuantityInputChange(this);
-            });
-
-            input.addEventListener('input', function (e) {
-                handleQuantityInputChange(this);
-            });
-        });
-    }
-
-    function handleQuantityChange(button) {
-        const section = button.dataset.section;
-        const action = button.dataset.action;
-        const row = button.closest('.stock-row');
-        const input = row.querySelector('.qty-input');
-        let currentValue = parseInt(input.value) || 0;
-
-        if (action === 'plus') {
-            currentValue++;
-        } else if (action === 'minus' && currentValue > 0) {
-            currentValue--;
-        }
-
-        input.value = currentValue;
-
-        // Add animation class
-        input.classList.add('updated');
-        setTimeout(() => {
-            input.classList.remove('updated');
-        }, 300);
-
-        updateRowSelection(row, section, currentValue);
-    }
-
-    function handleQuantityInputChange(input) {
-        const section = input.dataset.section;
-        const row = input.closest('.stock-row');
-        let value = parseInt(input.value);
-
-        // Validate input
-        if (isNaN(value) || value < 0) {
-            value = 0;
-            input.value = 0;
-        }
-
-        // Add animation class for manual input changes
-        input.classList.add('updated');
-        setTimeout(() => {
-            input.classList.remove('updated');
-        }, 300);
-
-        updateRowSelection(row, section, value);
-    }
-
-    function updateRowSelection(row, section, quantity) {
-        if (quantity > 0) {
-            row.classList.add('selected');
-        } else {
-            row.classList.remove('selected');
-        }
-
-        // Update total selected count
-        updateTotalSelectedCount(section);
-    }
-
-    function updateTotalSelectedCount(section) {
-        const inputs = document.querySelectorAll(`[data-section="${section}"] .qty-input`);
-        let totalSelected = 0;
-
-        inputs.forEach(input => {
-            const quantity = parseInt(input.value) || 0;
-            if (quantity > 0) {
-                totalSelected++;
-            }
-        });
-
-        selectedItems[section] = totalSelected;
-        updateSelectionCount(section);
-    }
-
-    function updateSelectionCount(section) {
-        const countElement = document.getElementById(section + 'SelectedCount');
-        const purchaseBtn = document.getElementById(section + 'PurchaseBtn');
-
-        countElement.textContent = selectedItems[section];
-
-        // Enable/disable purchase button based on selection
-        if (selectedItems[section] > 0) {
-            purchaseBtn.disabled = false;
-            purchaseBtn.classList.remove('disabled');
-        } else {
-            purchaseBtn.disabled = true;
-            purchaseBtn.classList.add('disabled');
-        }
-    }
-
-    // بررسی ساعات کاری - نسخه ساده
-    function checkWorkingHours() {
-        // فعلاً همیشه باز نمایش داده شود
-        // در آینده می‌توان از API برای بررسی ساعات کاری استفاده کرد
-        document.getElementById('mainContent').style.display = 'block';
-        document.getElementById('closedContent').style.display = 'none';
-    }
-
-    // محاسبه داینامیک تعداد محصولات
-    function updateProductCounts() {
-        // محاسبه تعداد محصولات نقدی
-        const cashRows = document.querySelectorAll('#cashStockTable .stock-row');
-        const cashCount = cashRows.length;
-        const cashTotalElement = document.getElementById('cashTotalCount');
-        if (cashTotalElement) {
-            cashTotalElement.textContent = cashCount;
-        }
-
-        // محاسبه تعداد محصولات نسیه
-        const creditRows = document.querySelectorAll('#creditStockTable .stock-row');
-        const creditCount = creditRows.length;
-        const creditTotalElement = document.getElementById('creditTotalCount');
-        if (creditTotalElement) {
-            creditTotalElement.textContent = creditCount;
-        }
-    }
-
-    // Add event listeners to all checkboxes
-    document.addEventListener('DOMContentLoaded', function () {
-        // Initialize the beautiful selection buttons
-        initializeSelectionButtons();
-
-        // Initialize button states
-        updateSelectionCount('cash');
-        updateSelectionCount('credit');
-
-        // بررسی ساعات کاری در بارگذاری صفحه
-        checkWorkingHours();
-
-        // Add row click functionality (optional - click on row to select)
-        const stockRows = document.querySelectorAll('.stock-row');
-        stockRows.forEach(row => {
-            row.addEventListener('click', function (e) {
-                // Only trigger if not clicking on the quantity controls directly
-                if (!e.target.closest('.quantity-controls')) {
-                    const plusBtn = this.querySelector('.plus-btn');
-                    if (plusBtn) {
-                        handleQuantityChange(plusBtn);
-                    }
-                }
-            });
-        });
-    });
-
-    function handleCashPurchase() {
-        const selectedRows = document.querySelectorAll('#cashStockTable .stock-row.selected');
-        if (selectedRows.length === 0) {
-            showAlert('لطفا حداقل یک مورد را انتخاب کنید', 'error', 'انتخاب محصول');
-            return;
-        }
-
-        let purchaseList = [];
-        let totalItems = 0;
-
-        selectedRows.forEach(row => {
-            const cells = row.querySelectorAll('td');
-            const qtyInput = row.querySelector('.qty-input');
-            const quantity = parseInt(qtyInput.value) || 0;
-
-            if (quantity > 0) {
-                totalItems += quantity;
-                purchaseList.push({
-                    width: cells[1].textContent,
-                    grammage: cells[2].textContent,
-                    stock: cells[3].textContent,
-                    unitPrice: cells[4].textContent,
-                    selectedQuantity: quantity
-                });
-            }
-        });
-
-        console.log('خرید نقدی:', purchaseList);
-        showAlert(`${selectedRows.length} نوع محصول با مجموع ${totalItems} عدد برای خرید نقدی انتخاب شد`, 'success', 'خرید موفق');
-    }
-
-    function handleCreditPurchase() {
-        const selectedRows = document.querySelectorAll('#creditStockTable .stock-row.selected');
-        if (selectedRows.length === 0) {
-            showAlert('لطفا حداقل یک مورد را انتخاب کنید', 'error', 'انتخاب محصول');
-            return;
-        }
-
-        let purchaseList = [];
-        let totalItems = 0;
-
-        selectedRows.forEach(row => {
-            const cells = row.querySelectorAll('td');
-            const qtyInput = row.querySelector('.qty-input');
-            const quantity = parseInt(qtyInput.value) || 0;
-
-            if (quantity > 0) {
-                totalItems += quantity;
-                purchaseList.push({
-                    width: cells[1].textContent,
-                    grammage: cells[2].textContent,
-                    stock: cells[3].textContent,
-                    unitPrice: cells[4].textContent,
-                    selectedQuantity: quantity
-                });
-            }
-        });
-
-        console.log('خرید نسیه:', purchaseList);
-        showAlert(`${selectedRows.length} نوع محصول با مجموع ${totalItems} عدد برای خرید نسیه انتخاب شد`, 'success', 'خرید موفق');
-    }
-</script>
 {% endblock %}

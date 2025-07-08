@@ -170,6 +170,34 @@
         margin-bottom: 2rem;
         box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
     }
+    
+    .action-btn-strong {
+        font-weight: bold;
+        font-size: 1.1rem;
+        box-shadow: 0 4px 16px rgba(111,66,193,0.08);
+        border-width: 2px;
+        transition: all 0.2s;
+    }
+    .action-btn-create {
+        background: linear-gradient(45deg, #28a745, #20c997);
+        color: white;
+        border-color: #28a745;
+    }
+    .action-btn-create:hover {
+        background: linear-gradient(45deg, #20c997, #28a745);
+        color: #fff;
+        border-color: #20c997;
+    }
+    .action-btn-update {
+        background: linear-gradient(45deg, #007bff, #0056b3);
+        color: white;
+        border-color: #007bff;
+    }
+    .action-btn-update:hover {
+        background: linear-gradient(45deg, #0056b3, #007bff);
+        color: #fff;
+        border-color: #0056b3;
+    }
 </style>
 {% endblock %}
 
@@ -241,33 +269,19 @@
     <!-- Quick Actions -->
     <div class="quick-actions">
         <h4 class="mb-4">⚡ عملیات سریع</h4>
-        <div class="row">
-            <div class="col-md-3">
-                <a href="#" class="action-btn" onclick="addNewProduct()">
-                    <div class="mb-2">➕</div>
-                    <strong>افزودن محصول</strong>
-                    <small class="d-block text-muted">ثبت محصول جدید</small>
+        <div class="row justify-content-center">
+            <div class="col-md-4 mb-3">
+                <a href="{% url 'core:add_product' %}" class="action-btn action-btn-strong action-btn-create">
+                    <div class="mb-2" style="font-size:2rem;">➕</div>
+                    <strong style="font-size:1.2rem;">افزودن محصول جدید</strong>
+                    <small class="d-block text-muted">ثبت محصول جدید در انبار</small>
                 </a>
             </div>
-            <div class="col-md-3">
-                <a href="#" class="action-btn" onclick="updateInventory()">
-                    <div class="mb-2">🔄</div>
-                    <strong>بروزرسانی موجودی</strong>
-                    <small class="d-block text-muted">تغییر تعداد موجودی</small>
-                </a>
-            </div>
-            <div class="col-md-3">
-                <a href="#" class="action-btn" onclick="transferProducts()">
-                    <div class="mb-2">🔄</div>
-                    <strong>انتقال بین انبار</strong>
-                    <small class="d-block text-muted">جابجایی محصولات</small>
-                </a>
-            </div>
-            <div class="col-md-3">
-                <a href="#" class="action-btn" onclick="scanQR()">
-                    <div class="mb-2">📱</div>
-                    <strong>اسکن QR کد</strong>
-                    <small class="d-block text-muted">شناسایی سریع محصول</small>
+            <div class="col-md-4 mb-3">
+                <a href="{% url 'core:products_list' %}" class="action-btn action-btn-strong action-btn-update">
+                    <div class="mb-2" style="font-size:2rem;">🔄</div>
+                    <strong style="font-size:1.2rem;">بروزرسانی موجودی</strong>
+                    <small class="d-block text-muted">تغییر تعداد یا وضعیت محصول</small>
                 </a>
             </div>
         </div>
@@ -475,81 +489,6 @@
 
 {% block extra_js %}
 <script>
-// Add new product
-function addNewProduct() {
-    showNotification('➕ فرم افزودن محصول جدید در حال توسعه است', 'info');
-}
-
-// Update inventory
-function updateInventory() {
-    showNotification('🔄 فرم بروزرسانی موجودی در حال توسعه است', 'info');
-}
-
-// Transfer products between warehouses
-function transferProducts() {
-    showNotification('🔄 فرم انتقال محصولات در حال توسعه است', 'info');
-}
-
-// Scan QR code
-function scanQR() {
-    showNotification('📱 قابلیت اسکن QR کد در حال توسعه است', 'info');
-}
-
-// Generate inventory report
-function generateReport() {
-    showNotification('📊 تولید گزارش موجودی در حال توسعه است', 'info');
-}
-
-// View all warehouses
-function viewAllWarehouses() {
-    showNotification('🏢 صفحه تمام انبارها در حال توسعه است', 'info');
-}
-
-// Show notification
-function showNotification(message, type = 'info') {
-    const notification = document.createElement('div');
-    notification.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
-    notification.style.cssText = 'top: 20px; right: 20px; z-index: 1050; min-width: 300px;';
-    notification.innerHTML = `
-        ${message}
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    `;
-    
-    document.body.appendChild(notification);
-    
-    setTimeout(() => {
-        if (notification.parentElement) {
-            notification.remove();
-        }
-    }, 5000);
-}
-
-// Real-time inventory updates
-setInterval(() => {
-    // Simulate real-time updates
-    updateInventoryStats();
-}, 60000); // Update every minute
-
-function updateInventoryStats() {
-    // This would fetch real data from the server
-    console.log('🔄 Updating inventory statistics...');
-}
-
-// Initialize page
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('📦 Inventory management page loaded');
-    
-    // Add hover effects to warehouse cards
-    const warehouseCards = document.querySelectorAll('.warehouse-card');
-    warehouseCards.forEach(card => {
-        card.addEventListener('mouseenter', function() {
-            this.style.transform = 'translateY(-3px)';
-        });
-        
-        card.addEventListener('mouseleave', function() {
-            this.style.transform = 'translateY(0)';
-        });
-    });
-});
+// حذف توابع addNewProduct و updateInventory و showNotification و ...
 </script>
 {% endblock %} 

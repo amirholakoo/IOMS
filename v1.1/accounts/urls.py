@@ -23,6 +23,7 @@ urlpatterns = [
 
     # 🔵 ثبت نام مشتریان
     path('customer/registration/', views.customer_registration_view, name='customer_registration'),
+    path('customer/register-requested/', views.register_requested_customer_view, name='register_requested_customer'),
     
     # 📊 داشبورد
     path('dashboard/', views.dashboard_view, name='dashboard'),

@@ -240,66 +240,8 @@ function preventDoubleClick(func) {
         isProcessing = false;
     }, 2000);
 }
-
-// Working Hours Management
-let workingHoursTimer = null;
-
-// Initialize page
-function initializePage() {
-    checkWorkingHours();
-    // Check every 5 minutes
-    workingHoursTimer = setInterval(checkWorkingHours, 5 * 60 * 1000);
-}
-
-// Check if site should be open
-function checkWorkingHours() {
-    const saved = localStorage.getItem('workingHours');
-
-    if (!saved) {
-        // Default working hours if not set by admin
-        showMainContent();
-        return;
-    }
-
-    const workingHours = JSON.parse(saved);
-
-    if (!workingHours.isActive) {
-        showClosedContent();
-        return;
-    }
-
-    const now = new Date();
-    const currentHour = now.getHours();
-    const currentMinute = now.getMinutes();
-    const currentTime = currentHour * 60 + currentMinute;
-
-    const startTime = workingHours.startHour * 60 + workingHours.startMinute;
-    const endTime = workingHours.endHour * 60 + workingHours.endMinute;
-
-    if (currentTime >= startTime && currentTime <= endTime) {
-        showMainContent();
-    } else {
-        showClosedContent();
-        updateWorkingHoursDisplay(workingHours);
-    }
-}
-
-// Show main content
-function showMainContent() {
-    const mainContent = document.getElementById('mainContent');
-    const closedContent = document.getElementById('closedContent');
-    const pageSubtitle = document.getElementById('pageSubtitle');
-    
-    if (mainContent) mainContent.style.display = 'block';
-    if (closedContent) closedContent.style.display = 'none';
-    if (pageSubtitle) pageSubtitle.textContent = 'قیمت و موجودی';
-    
-    // Load data from localStorage
-    loadMainPageData();
-}
-
-// Load main page data from localStorage
-function loadMainPageData() {
+// Load main page content from localStorage
+function loadMainPageContent() {
     const saved = localStorage.getItem('mainPageContent');
     if (saved) {
         const mainPageContent = JSON.parse(saved);
@@ -328,33 +270,39 @@ function loadMainPageData() {
     }
 }
 
-// Show closed content
-function showClosedContent() {
-    const mainContent = document.getElementById('mainContent');
-    const closedContent = document.getElementById('closedContent');
-    const pageSubtitle = document.getElementById('pageSubtitle');
+function checkWorkingHoursAndLoadPage() {
+    const saved = localStorage.getItem('workingHours');
+    if (!saved) {
+        // اگر تنظیمی وجود نداشت، فرض کنیم سیستم غیرفعال است
+        window.location.href = 'closed.html';
+        return;
+    }
 
-    if (mainContent) mainContent.style.display = 'none';
-    if (closedContent) closedContent.style.display = 'block';
-    if (pageSubtitle) pageSubtitle.textContent = 'سایت بسته است';
-}
+    const workingHours = JSON.parse(saved);
 
-// Update working hours display in closed content
-function updateWorkingHoursDisplay(workingHours) {
-    const display = document.getElementById('workingHoursDisplay');
-    if (display && workingHours) {
-        const startTime = `${workingHours.startHour.toString().padStart(2, '0')}:${workingHours.startMinute.toString().padStart(2, '0')}`;
-        const endTime = `${workingHours.endHour.toString().padStart(2, '0')}:${workingHours.endMinute.toString().padStart(2, '0')}`;
-        display.textContent = `از ${startTime} تا ${endTime}`;
+    // اگر ادمین سیستم را غیرفعال کرده باشد
+    if (!workingHours.isActive) {
+        window.location.href = 'closed.html';
+        return;
+    }
+
+    // بررسی ساعت ایران
+    const iranTime = getIranTimeManual();
+    const currentTime = iranTime.hour * 60 + iranTime.minute;
+
+    const startTime = Number(workingHours.startHour) * 60 + Number(workingHours.startMinute);
+    const endTime = Number(workingHours.endHour) * 60 + Number(workingHours.endMinute);
+
+    // بررسی اینکه آیا داخل ساعت کاری هست یا نه
+    const isOpen = currentTime >= startTime && currentTime <= endTime;
+
+    if (!isOpen) {
+        window.location.href = 'closed.html';
+    } else {
+        // ادامه‌ی بارگذاری صفحه اصلی
+        loadMainPageContent();
     }
 }
 
-// Initialize when page loads
-window.addEventListener('load', initializePage);
-
-// Cleanup timer when page unloads
-window.addEventListener('beforeunload', function () {
-    if (workingHoursTimer) {
-        clearInterval(workingHoursTimer);
-    }
-});
+// اجرای چک در هنگام بارگذاری
+window.addEventListener('load', checkWorkingHoursAndLoadPage);

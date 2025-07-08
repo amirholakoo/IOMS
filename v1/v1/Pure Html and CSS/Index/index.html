@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>کارخانه کاغذ و مقوای همایون</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div class="container">
+        <header class="header">
+            <h1 class="main-title">کارخانه کاغذ و مقوای همایون</h1>
+        </header>
+
+        <!-- Main Content - Shown during working hours -->
+        <main class="main-content" id="mainContent">
+            <section class="section cash-section">
+                <div class="section-header">
+                    <h2 class="section-title">نقدی</h2>
+                </div>
+
+                <div class="info-grid">
+                    <div class="info-card">
+                        <div class="info-label">قیمت نقدی</div>
+                        <div class="info-value" id="cashPrice">۲,۵۰۰,۰۰۰ تومان</div>
+                    </div>
+
+                    <div class="info-card">
+                        <div class="info-label">موجودی نقدی</div>
+                        <div class="info-value" id="cashStock">۱۵۰ کیلو</div>
+                    </div>
+                </div>
+
+                <div class="button-container">
+                    <button class="purchase-btn cash-btn" onclick="handleCashPurchase()">
+                        <span class="btn-icon">💰</span>
+                        <span class="btn-text">خرید نقدی</span>
+                    </button>
+                </div>
+            </section>
+
+            <section class="section credit-section">
+                <div class="section-header">
+                    <h2 class="section-title">نسیه</h2>
+                </div>
+
+                <div class="info-grid">
+                    <div class="info-card">
+                        <div class="info-label">قیمت نسیه</div>
+                        <div class="info-value" id="creditPrice">۲,۸۰۰,۰۰۰ تومان</div>
+                    </div>
+
+                    <div class="info-card">
+                        <div class="info-label">موجودی نسیه</div>
+                        <div class="info-value" id="creditStock">۲۰۰ کیلو</div>
+                    </div>
+                </div>
+
+                <div class="button-container">
+                    <button class="purchase-btn credit-btn" onclick="handleCreditPurchase()">
+                        <span class="btn-icon">📋</span>
+                        <span class="btn-text">خرید نسیه</span>
+                    </button>
+                </div>
+            </section>
+        </main>
+
+        <!-- Closed Content - Shown outside working hours -->
+        <main class="closed-content" id="closedContent" style="display: none;">
+            <div class="closed-container">
+                <div class="closed-icon">🔒</div>
+                <h2 class="closed-title">سایت در حال حاضر بسته است</h2>
+
+                <p class="closed-message">
+                    متأسفانه در حال حاضر خارج از ساعت کاری هستیم.
+                    لطفاً در ساعت کاری مجدداً مراجعه فرمایید.
+                </p>
+
+                <div class="working-hours-info">
+                    <h3 class="working-hours-title">ساعت کاری:</h3>
+                    <div class="working-hours-time" id="workingHoursDisplay">
+                        از 08:00 تا 18:00
+                    </div>
+                </div>
+
+                <div class="contact-info-closed">
+                    <h4>اطلاعات تماس:</h4>
+                    <p>📞 تلفن: 021-12345678</p>
+                    <p>📧 ایمیل: info@homayounpaper.com</p>
+                    <p>📍 آدرس: تهران، خیابان ولیعصر</p>
+                </div>
+
+                <button class="refresh-btn" onclick="checkWorkingHours()">
+                    <span class="btn-icon">🔄</span>
+                    <span class="btn-text">بررسی مجدد</span>
+                </button>
+            </div>
+        </main>
+
+        <!-- Footer - Always visible -->
+        <footer class="footer">
+            <div class="footer-content">
+                <div class="footer-section contact-info">
+                    <h3 class="footer-title">اطلاعات تماس</h3>
+                    <div class="contact-items">
+                        <div class="contact-item">
+                            <span class="contact-icon">📞</span>
+                            <div class="contact-details">
+                                <span class="contact-label">تلفن تماس:</span>
+                                <span class="contact-value">۰۲۱-۱۲۳۴۵۶۷۸</span>
+                            </div>
+                        </div>
+                        <div class="contact-item">
+                            <span class="contact-icon">📱</span>
+                            <div class="contact-details">
+                                <span class="contact-label">موبایل:</span>
+                                <span class="contact-value">۰۹۱۲-۳۴۵-۶۷۸۹</span>
+                            </div>
+                        </div>
+                        <div class="contact-item email-item">
+                            <span class="contact-icon">📧</span>
+                            <div class="contact-details">
+                                <span class="contact-label">ایمیل:</span>
+                                <span class="contact-value">info@homayounpaper.com</span>
+                            </div>
+                        </div>
+                        <div class="contact-item">
+                            <span class="contact-icon">📍</span>
+                            <div class="contact-details">
+                                <span class="contact-label">آدرس:</span>
+                                <span class="contact-value">تهران، خیابان ولیعصر، پلاک ۱۲۳</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="footer-section working-hours">
+                    <h3 class="footer-title">ساعات کاری</h3>
+                    <div class="hours-info">
+                        <div class="hours-item">
+                            <span class="hours-label">شنبه تا چهارشنبه:</span>
+                            <span class="hours-value">۰۸:۰۰ - ۱۸:۰۰</span>
+                        </div>
+                        <div class="hours-item">
+                            <span class="hours-label">پنج‌شنبه:</span>
+                            <span class="hours-value">۰۸:۰۰ - ۱۶:۰۰</span>
+                        </div>
+                        <div class="hours-item">
+                            <span class="hours-label">جمعه:</span>
+                            <span class="hours-value">تعطیل</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="footer-section about-us">
+                    <h3 class="footer-title">درباره ما</h3>
+                    <p class="about-text">
+                        کارخانه کاغذ و مقوای همایون با بیش از ۲۰ سال تجربه در تولید و فروش
+                        انواع کاغذ و مقوا، ارائه‌دهنده بهترین محصولات با کیفیت و قیمت مناسب می‌باشد.
+                    </p>
+                    <div class="social-links">
+                        <a href="#" class="social-link">📘</a>
+                        <a href="#" class="social-link">📷</a>
+                        <a href="#" class="social-link">📞</a>
+                    </div>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>

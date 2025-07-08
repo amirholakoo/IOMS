@@ -19,18 +19,24 @@ urlpatterns = [
     
     # 📦 مدیریت موجودی
     path('inventory/', views.inventory_list_view, name='inventory_list'),
+    path('inventory/add/', views.add_product_view, name='add_product'),
+    path('inventory/<int:product_id>/edit/', views.edit_product_view, name='edit_product'),
     
     # 📋 مدیریت سفارشات
     path('orders/', views.orders_list_view, name='orders_list'),
+    path('my-orders/', views.customer_orders_view, name='customer_orders'),
     path('orders/<int:order_id>/confirm/', views.confirm_order_view, name='confirm_order'),
     path('orders/<int:order_id>/cancel/', views.cancel_order_view, name='cancel_order'),
     path('orders/<int:order_id>/update-status/', views.update_order_status_view, name='update_order_status'),
     
     # 👥 مدیریت مشتریان
     path('customers/', views.customers_list_view, name='customers_list'),
+    path('customers/create/', views.create_customer_view, name='create_customer'),
     path('customers/<int:customer_id>/edit/', views.edit_customer_view, name='edit_customer'),
     path('customers/<int:customer_id>/delete/', views.delete_customer_view, name='delete_customer'),
-    path('customers/requests/', views.customers_requested_list_view, name='customers_requested_list'),
+    path('customers/<int:customer_id>/create-order/', views.create_order_for_customer_view, name='create_order_for_customer'),
+    path('customers/<int:customer_id>/view/', views.customer_detail_modal_view, name='customer_detail_modal'),
+    path('customers/<int:customer_id>/edit-modal/', views.customer_edit_modal_view, name='customer_edit_modal'),
     
     # 💰 مدیریت مالی
     path('finance/', views.finance_overview_view, name='finance_overview'),
@@ -60,4 +66,8 @@ urlpatterns = [
     # ⏰ مدیریت ساعات کاری - فقط Super Admin
     path('working-hours/', views.working_hours_management_view, name='working_hours_management'),
     path('api/set-working-hours/', views.set_working_hours_view, name='set_working_hours'),
+    
+    path('save-selected-products/', views.save_selected_products_view, name='save_selected_products'),
+    path('selected-products/', views.selected_products_view, name='selected_products'),
+    path('process-order/', views.process_order_view, name='process_order'),
 ] 

@@ -1,270 +1,413 @@
-// Working hours configuration
-const WORKING_HOURS = {
-    // Days: 0 = Sunday, 1 = Monday, ..., 6 = Saturday
-    // In Iran: Saturday = 6, Sunday = 0, Monday = 1, ..., Friday = 5
-    saturday: { start: 8, end: 18 },    // شنبه
-    sunday: { start: 8, end: 18 },      // یکشنبه  
-    monday: { start: 8, end: 18 },      // دوشنبه
-    tuesday: { start: 8, end: 18 },     // سه‌شنبه
-    wednesday: { start: 8, end: 18 },   // چهارشنبه
-    thursday: { start: 8, end: 16 },    // پنج‌شنبه
-    friday: null                         // جمعه - تعطیل
+// Product selection tracking
+let selectedItems = {
+    cash: 0,
+    credit: 0
 };
 
-// Price and stock data (این داده‌ها باید از سرور دریافت شوند)
-let priceData = {
-    cash: {
-        price: 2500000,
-        stock: 150
-    },
-    credit: {
-        price: 2800000,
-        stock: 200
-    }
-};
+const MAX_TOTAL_SELECTION = 6;
 
 // Initialize the page
 document.addEventListener('DOMContentLoaded', function () {
-    updatePriceDisplay();
-    checkWorkingHours();
-
-    // Update working hours display
-    updateWorkingHoursDisplay();
-
-    // Set up auto-refresh for working hours check
-    setInterval(checkWorkingHours, 60000); // Check every minute
-
-    // Set up price update interval (if connected to real-time data)
-    setInterval(updatePricesFromServer, 300000); // Update every 5 minutes
+    initializeSelectionButtons();
+    updateSelectionCount('cash');
+    updateSelectionCount('credit');
+    updateProductCounts();
+    // Add row click functionality
+    const stockRows = document.querySelectorAll('.stock-row');
+    stockRows.forEach(row => {
+        row.addEventListener('click', function (e) {
+            if (!e.target.closest('.quantity-controls')) {
+                const plusBtn = this.querySelector('.plus-btn');
+                if (plusBtn) {
+                    handleQuantityChange(plusBtn);
+                }
+            }
+        });
+    });
 });
 
-// Check if current time is within working hours
-function checkWorkingHours() {
-    const now = new Date();
-    const currentDay = now.getDay(); // 0 = Sunday, 1 = Monday, etc.
-    const currentHour = now.getHours();
-
-    // Convert day number to our working hours key
-    const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
-    const todaySchedule = WORKING_HOURS[dayNames[currentDay]];
-
-    const mainContent = document.getElementById('mainContent');
-    const closedContent = document.getElementById('closedContent');
-
-    if (!todaySchedule) {
-        // Today is closed (Friday)
-        showClosedContent();
-        return false;
-    }
-
-    if (currentHour >= todaySchedule.start && currentHour < todaySchedule.end) {
-        // We're open
-        showMainContent();
-        return true;
-    } else {
-        // We're closed
-        showClosedContent();
-        return false;
-    }
+// Toggle mobile menu
+function toggleMenu() {
+    const navList = document.getElementById('navbarMenu');
+    navList.classList.toggle('show');
 }
 
-function showMainContent() {
-    document.getElementById('mainContent').style.display = 'flex';
-    document.getElementById('closedContent').style.display = 'none';
+// Custom Popup System
+function createPopup(message, type = 'info', title = '', duration = 3000) {
+    const existingPopup = document.querySelector('.popup-overlay');
+    if (existingPopup) {
+        existingPopup.remove();
+    }
+    const popupConfig = {
+        success: { title: title || 'موفقیت!', icon: '✅' },
+        error: { title: title || 'خطا!', icon: '❌' },
+        warning: { title: title || 'هشدار!', icon: '⚠️' },
+        info: { title: title || 'اطلاع!', icon: 'ℹ️' }
+    };
+    const config = popupConfig[type] || popupConfig.info;
+    const popupHTML = `
+        <div class="popup-overlay" id="customPopup">
+            <div class="popup-container ${type}">
+                <button class="popup-close" onclick="closePopup()">×</button>
+                <div class="popup-icon">${config.icon}</div>
+                <div class="popup-title">${config.title}</div>
+                <div class="popup-message">${message}</div>
+                <div class="popup-progress">
+                    <div class="popup-progress-bar" id="progressBar"></div>
+                </div>
+            </div>
+        </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', popupHTML);
+    const popup = document.getElementById('customPopup');
+    setTimeout(() => { popup.classList.add('show'); }, 10);
+    const progressBar = document.getElementById('progressBar');
+    setTimeout(() => { progressBar.style.width = '0%'; }, 100);
+    setTimeout(() => { closePopup(); }, duration);
+    return popup;
 }
-
-function showClosedContent() {
-    document.getElementById('mainContent').style.display = 'none';
-    document.getElementById('closedContent').style.display = 'flex';
-}
-
-// Update working hours display in the closed content
-function updateWorkingHoursDisplay() {
-    const workingHoursElement = document.getElementById('workingHoursDisplay');
-    if (workingHoursElement) {
-        // You can customize this based on your needs
-        workingHoursElement.textContent = 'شنبه تا چهارشنبه: 08:00 - 18:00، پنج‌شنبه: 08:00 - 16:00';
+function closePopup() {
+    const popup = document.querySelector('.popup-overlay');
+    if (popup) {
+        popup.classList.remove('show');
+        setTimeout(() => { popup.remove(); }, 300);
     }
 }
-
-// Update price display on the page
-function updatePriceDisplay() {
-    // Update cash price and stock
-    const cashPriceElement = document.getElementById('cashPrice');
-    const cashStockElement = document.getElementById('cashStock');
-
-    if (cashPriceElement) {
-        cashPriceElement.textContent = formatPrice(priceData.cash.price) + ' تومان';
-    }
-
-    if (cashStockElement) {
-        cashStockElement.textContent = priceData.cash.stock + ' کیلو';
-    }
-
-    // Update credit price and stock
-    const creditPriceElement = document.getElementById('creditPrice');
-    const creditStockElement = document.getElementById('creditStock');
-
-    if (creditPriceElement) {
-        creditPriceElement.textContent = formatPrice(priceData.credit.price) + ' تومان';
-    }
-
-    if (creditStockElement) {
-        creditStockElement.textContent = priceData.credit.stock + ' کیلو';
-    }
+function showAlert(message, type = 'info', title = '') {
+    return createPopup(message, type, title, 3000);
 }
-
-// Format price with Persian number separators
-function formatPrice(price) {
-    return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '٬');
+// Product selection functions
+function initializeSelectionButtons() {
+    const selectionButtons = document.querySelectorAll('.selection-btn');
+    selectionButtons.forEach(button => {
+        button.addEventListener('click', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            handleSelectionButtonClick(this);
+        });
+    });
+    const checkboxes = document.querySelectorAll('.stock-checkbox');
+    checkboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', function () {
+            handleCheckboxChange(this);
+        });
+    });
 }
-
-// Handle cash purchase - redirect to login
-function handleCashPurchase() {
-    if (!checkWorkingHours()) {
-        alert('متأسفانه در حال حاضر خارج از ساعت کاری هستیم.');
+function handleSelectionButtonClick(button) {
+    const section = button.dataset.section;
+    const row = button.closest('.stock-row');
+    const checkbox = row.querySelector('.stock-checkbox');
+    if (button.classList.contains('selected')) {
+        button.classList.remove('selected');
+        button.querySelector('.selection-icon').textContent = '⭕';
+        button.querySelector('span:last-child').textContent = 'انتخاب';
+        checkbox.checked = false;
+        selectedItems[section]--;
+        row.classList.remove('selected');
+        updateSelectionCount(section);
         return;
     }
-
-    if (priceData.cash.stock <= 0) {
-        alert('متأسفانه موجودی نقدی تمام شده است.');
+    if (selectedItems[section] >= 6) {
+        showAlert('حداکثر 6 مورد قابل انتخاب است!', 'warning');
         return;
     }
-
-    // // هدایت به صفحه لاگین برای خرید نقدی
-    const confirmed = confirm(`آیا مایل به خرید نقدی به قیمت ${formatPrice(priceData.cash.price)} تومان هستید؟`);
-
-    if (confirmed) {
-        // ذخیره نوع خرید در localStorage برای استفاده بعد از لاگین
-        localStorage.setItem('purchaseType', 'cash');
-        localStorage.setItem('purchasePrice', priceData.cash.price);
-
-        // هدایت به صفحه لاگین
-        window.location.href = '/accounts/customer/sms-login/';
-    }
-}
-
-// Handle credit purchase - redirect to login
-function handleCreditPurchase() {
-    if (!checkWorkingHours()) {
-        alert('متأسفانه در حال حاضر خارج از ساعت کاری هستیم.');
-        return;
-    }
-
-    if (priceData.credit.stock <= 0) {
-        alert('متأسفانه موجودی نسیه تمام شده است.');
-        return;
-    }
-
-    // هدایت به صفحه لاگین برای خرید نسیه
-    const confirmed = confirm(`آیا مایل به خرید نسیه به قیمت ${formatPrice(priceData.credit.price)} تومان هستید؟`);
-
-    if (confirmed) {
-        // ذخیره نوع خرید در localStorage برای استفاده بعد از لاگین
-        localStorage.setItem('purchaseType', 'credit');
-        localStorage.setItem('purchasePrice', priceData.credit.price);
-
-        // هدایت به صفحه لاگین
-        window.location.href = '/accounts/customer/sms-login/';
-    }
-}
-
-// Update prices from server (placeholder function)
-async function updatePricesFromServer() {
-    try {
-        // This would typically be an API call to your Django backend
-        // const response = await fetch('/api/prices/');
-        // const data = await response.json();
-        // priceData = data;
-        // updatePriceDisplay();
-
-        console.log('Price update check (placeholder)');
-    } catch (error) {
-        console.error('Error updating prices:', error);
-    }
-}
-
-// Add loading animation for buttons
-function addLoadingToButton(button) {
-    const originalText = button.innerHTML;
-    button.innerHTML = '<span class="loading">در حال پردازش...</span>';
-    button.disabled = true;
-
-    // Simulate loading time
+    // --- Confirmation Popup ---
+    // Extract product info from row cells
+    const cells = row.querySelectorAll('td');
+    const reelNumber = cells[1]?.textContent.trim();
+    const width = cells[2]?.textContent.trim();
+    const gsm = cells[3]?.textContent.trim();
+    const length = cells[4]?.textContent.trim();
+    const price = cells[5]?.textContent.trim();
+    // Build message
+    const msg = `<div style='text-align:right;'>
+      <b>آیا مطمئن هستید که می‌خواهید این محصول را انتخاب کنید؟</b><br><br>
+      <ul style='list-style:none;padding:0;'>
+        <li>شماره ریل: <b>${reelNumber}</b></li>
+        <li>عرض: <b>${width}</b> mm</li>
+        <li>گرماژ: <b>${gsm}</b> g/m²</li>
+        <li>طول: <b>${length}</b> m</li>
+        <li>قیمت: <b>${price}</b> تومان</li>
+      </ul>
+      <div style='margin-top:20px; text-align:center;'>
+        <button id='confirmSelectYes' class='popup-btn-yes'>بله</button>
+        <button id='confirmSelectNo' class='popup-btn-no'>خیر</button>
+      </div>
+    </div>`;
+    // Show popup (no auto-close)
+    createPopup(msg, 'info', 'تأیید انتخاب محصول', 1000000);
+    // Add event listeners for Yes/No
     setTimeout(() => {
-        button.innerHTML = originalText;
-        button.disabled = false;
-    }, 2000);
+      const yesBtn = document.getElementById('confirmSelectYes');
+      const noBtn = document.getElementById('confirmSelectNo');
+      if (yesBtn) {
+        yesBtn.onclick = function() {
+          // Proceed with selection
+          button.classList.add('selected');
+          button.querySelector('.selection-icon').textContent = '✅';
+          button.querySelector('span:last-child').textContent = 'انتخاب شده';
+          checkbox.checked = true;
+          selectedItems[section]++;
+          row.classList.add('selected');
+          updateSelectionCount(section);
+          closePopup();
+        };
+      }
+      if (noBtn) {
+        noBtn.onclick = function() {
+          closePopup();
+        };
+      }
+    }, 50);
+}
+function handleCheckboxChange(checkbox) {
+    const section = checkbox.dataset.section;
+    const row = checkbox.closest('.stock-row');
+    const button = row.querySelector('.selection-btn');
+    if (checkbox.checked) {
+        if (selectedItems[section] >= 6) {
+            checkbox.checked = false;
+            showAlert('حداکثر 6 مورد قابل انتخاب است!', 'warning');
+            return;
+        }
+        button.classList.add('selected');
+        button.querySelector('.selection-icon').textContent = '✅';
+        button.querySelector('span:last-child').textContent = 'انتخاب شده';
+        selectedItems[section]++;
+        row.classList.add('selected');
+    } else {
+        button.classList.remove('selected');
+        button.querySelector('.selection-icon').textContent = '⭕';
+        button.querySelector('span:last-child').textContent = 'انتخاب';
+        selectedItems[section]--;
+        row.classList.remove('selected');
+    }
+    updateSelectionCount(section);
+}
+function updateSelectionCount(section) {
+    const countElement = document.getElementById(section + 'SelectedCount');
+    const purchaseBtn = document.getElementById(section + 'PurchaseBtn');
+    if (countElement) {
+        countElement.textContent = selectedItems[section];
+    }
+    if (purchaseBtn) {
+        if (selectedItems[section] > 0) {
+            purchaseBtn.disabled = false;
+            purchaseBtn.classList.remove('disabled');
+        } else {
+            purchaseBtn.disabled = true;
+            purchaseBtn.classList.add('disabled');
+        }
+    }
+}
+function updateProductCounts() {
+    const cashRows = document.querySelectorAll('#cashStockTable .stock-row');
+    const cashCount = cashRows.length;
+    const cashTotalElement = document.getElementById('cashTotalCount');
+    if (cashTotalElement) {
+        cashTotalElement.textContent = cashCount;
+    }
+    const creditRows = document.querySelectorAll('#creditStockTable .stock-row');
+    const creditCount = creditRows.length;
+    const creditTotalElement = document.getElementById('creditTotalCount');
+    if (creditTotalElement) {
+        creditTotalElement.textContent = creditCount;
+    }
+}
+function getTotalSelectedProducts() {
+    return selectedItems.cash + selectedItems.credit;
+}
+// Purchase functions
+function handleCashPurchase() {
+    if (getTotalSelectedProducts() === 0) {
+        showAlert('لطفا حداقل یک مورد را انتخاب کنید', 'error', 'انتخاب محصول');
+        return;
+    }
+    // Save selected products and redirect with payment type Cash
+    saveSelectedProductsAndRedirect('Cash');
+}
+function handleCreditPurchase() {
+    if (getTotalSelectedProducts() === 0) {
+        showAlert('لطفا حداقل یک مورد را انتخاب کنید', 'error', 'انتخاب محصول');
+        return;
+    }
+    // Save selected products and redirect with payment type Terms
+    saveSelectedProductsAndRedirect('Terms');
+}
+function saveSelectedProductsAndRedirect(paymentType) {
+    let selected = [];
+    document.querySelectorAll('.stock-row').forEach(row => {
+        const checkbox = row.querySelector('.stock-checkbox');
+        if (checkbox && checkbox.checked) {
+            selected.push({
+                product_id: row.getAttribute('data-product-id'),
+                quantity: 1 // Default quantity for checkbox selection
+            });
+        }
+    });
+    if (selected.length === 0) {
+        showAlert('لطفا حداقل یک مورد را انتخاب کنید', 'error', 'انتخاب محصول');
+        return;
+    }
+    // Show loading state
+    const purchaseBtns = document.querySelectorAll('.purchase-btn');
+    purchaseBtns.forEach(btn => {
+        btn.disabled = true;
+        btn.innerHTML = '<span class="loading">در حال پردازش...</span>';
+    });
+    // Send to server with AJAX
+    fetch('/core/save-selected-products/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify({selected_products: selected})
+    })
+    .then(response => {
+        if (response.ok) {
+            return response.json();
+        } else {
+            throw new Error('Network response was not ok');
+        }
+    })
+    .then(data => {
+        showAlert('انتخاب‌های شما با موفقیت ذخیره شد', 'success', 'موفقیت');
+        setTimeout(() => {
+            window.location.href = `/core/selected-products/?default_payment=${paymentType}`;
+        }, 1000);
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showAlert('خطا در ذخیره انتخاب‌ها. لطفاً دوباره تلاش کنید.', 'error', 'خطا');
+        // Reset button states
+        purchaseBtns.forEach(btn => {
+            btn.disabled = false;
+            if (btn.classList.contains('cash-btn')) {
+                btn.innerHTML = '<span class="btn-icon">💰</span><span class="btn-text">خرید نقدی</span>';
+            } else if (btn.classList.contains('credit-btn')) {
+                btn.innerHTML = '<span class="btn-icon">📋</span><span class="btn-text">خرید نسیه</span>';
+            }
+        });
+    });
+}
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+// Quantity management functions (if using quantity inputs)
+function handleQuantityChange(button) {
+    const action = button.dataset.action;
+    const input = button.parentElement.querySelector('.qty-input');
+    const section = input.dataset.section;
+    const row = input.closest('.stock-row');
+    let currentValue = parseInt(input.value) || 0;
+    if (action === 'plus') {
+        if (canIncreaseQuantity(section)) {
+            currentValue++;
+        } else {
+            showAlert('حداکثر ۶ محصول می‌توانید انتخاب کنید', 'warning', 'محدودیت انتخاب');
+            return;
+        }
+    } else if (action === 'minus' && currentValue > 0) {
+        currentValue--;
+    }
+    input.value = currentValue;
+    input.classList.add('updated');
+    setTimeout(() => {
+        input.classList.remove('updated');
+    }, 300);
+    updateRowSelection(row, section, currentValue);
+}
+function handleQuantityInputChange(input) {
+    let value = parseInt(input.value);
+    if (isNaN(value) || value < 0) {
+        value = 0;
+    }
+    const otherInputs = Array.from(document.querySelectorAll('.qty-input')).filter(i => i !== input);
+    let othersTotal = otherInputs.reduce((sum, i) => sum + (parseInt(i.value) || 0), 0);
+    if (value + othersTotal > MAX_TOTAL_SELECTION) {
+        value = Math.max(0, MAX_TOTAL_SELECTION - othersTotal);
+        showAlert('حداکثر ۶ محصول می‌توانید انتخاب کنید', 'warning', 'محدودیت انتخاب');
+    }
+    input.value = value;
+    input.classList.add('updated');
+    setTimeout(() => {
+        input.classList.remove('updated');
+    }, 300);
+    const section = input.dataset.section;
+    const row = input.closest('.stock-row');
+    updateRowSelection(row, section, value);
+}
+function updateRowSelection(row, section, quantity) {
+    if (quantity > 0) {
+        row.classList.add('selected');
+    } else {
+        row.classList.remove('selected');
+    }
+    updateTotalSelectedCount(section);
+}
+function updateTotalSelectedCount(section) {
+    const inputs = document.querySelectorAll(`[data-section="${section}"] .qty-input`);
+    let totalSelected = 0;
+    inputs.forEach(input => {
+        const quantity = parseInt(input.value) || 0;
+        if (quantity > 0) {
+            totalSelected++;
+        }
+    });
+    selectedItems[section] = totalSelected;
+    updateSelectionCount(section);
+}
+function canIncreaseQuantity(section) {
+    const currentTotal = getTotalSelectedProducts();
+    return currentTotal < MAX_TOTAL_SELECTION;
 }
 
-// Add click event listeners with loading animation
-document.addEventListener('DOMContentLoaded', function () {
-    const cashBtn = document.querySelector('.cash-btn');
-    const creditBtn = document.querySelector('.credit-btn');
-
-    if (cashBtn) {
-        cashBtn.addEventListener('click', function () {
-            addLoadingToButton(this);
-            setTimeout(handleCashPurchase, 100);
-        });
-    }
-
-    if (creditBtn) {
-        creditBtn.addEventListener('click', function () {
-            addLoadingToButton(this);
-            setTimeout(handleCreditPurchase, 100);
-        });
-    }
-});
-
+// View order details function
+function viewOrderDetails(orderId) {
+    // Redirect to order detail page
+    window.location.href = `/core/order/${orderId}/`;
+}
 // Accessibility improvements
 document.addEventListener('keydown', function (e) {
-    // Handle Enter key for purchase buttons
     if (e.key === 'Enter' && e.target.classList.contains('purchase-btn')) {
         e.target.click();
     }
 });
-
-// Add focus indicators for keyboard navigation
 document.addEventListener('DOMContentLoaded', function () {
-    const focusableElements = document.querySelectorAll('.purchase-btn, .refresh-btn, .social-link');
-
+    const focusableElements = document.querySelectorAll('.purchase-btn, .refresh-btn, .social-link, .selection-btn');
     focusableElements.forEach(element => {
         element.addEventListener('focus', function () {
             this.style.outline = '3px solid #3498db';
             this.style.outlineOffset = '2px';
         });
-
         element.addEventListener('blur', function () {
             this.style.outline = 'none';
         });
     });
 });
-
-// Error handling for network issues
-window.addEventListener('online', function () {
-    console.log('اتصال اینترنت برقرار شد');
-    updatePricesFromServer();
-});
-
-window.addEventListener('offline', function () {
-    console.log('اتصال اینترنت قطع شد');
-    // You could show a notification to the user here
-});
-
-// Performance monitoring
-const perfObserver = new PerformanceObserver((list) => {
-    const entries = list.getEntries();
-    entries.forEach((entry) => {
-        console.log(`${entry.name}: ${entry.duration}ms`);
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            const target = document.querySelector(this.getAttribute('href'));
+            if (target) {
+                target.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            }
+        });
     });
-});
-
-if ('PerformanceObserver' in window) {
-    perfObserver.observe({ entryTypes: ['navigation', 'resource'] });
-} 
-
-function toggleMenu() {
-    const menu = document.getElementById("navbarMenu");
-    menu.classList.toggle("show");
-}
+}); 

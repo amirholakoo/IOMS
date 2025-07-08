@@ -1,0 +1,284 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .order-form {
+        background: #fff;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        padding: 2rem;
+        margin-bottom: 2rem;
+    }
+    
+    .customer-info {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        border-left: 4px solid #007bff;
+    }
+    
+    .product-selection {
+        border: 2px solid #e9ecef;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        transition: border-color 0.3s ease;
+    }
+    
+    .product-selection:hover {
+        border-color: #007bff;
+    }
+    
+    .product-selection.selected {
+        border-color: #28a745;
+        background-color: #f8fff9;
+    }
+    
+    .form-control:focus {
+        border-color: #007bff;
+        box-shadow: 0 0 0 0.2rem rgba(0,123,255,0.25);
+    }
+    
+    .btn-primary {
+        background: linear-gradient(45deg, #007bff, #0056b3);
+        border: none;
+        padding: 0.75rem 2rem;
+        font-weight: 600;
+    }
+    
+    .btn-primary:hover {
+        background: linear-gradient(45deg, #0056b3, #004085);
+        transform: translateY(-1px);
+    }
+    
+    .price-display {
+        font-size: 1.2rem;
+        font-weight: bold;
+        color: #28a745;
+    }
+    
+    .total-section {
+        background: #e8f5e8;
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin-top: 2rem;
+        border: 2px solid #28a745;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="mb-0">
+                    <i class="fas fa-shopping-cart text-primary"></i>
+                    {{ title }}
+                </h2>
+                <a href="{% url 'core:customers_list' %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-right"></i>
+                    بازگشت به لیست مشتریان
+                </a>
+            </div>
+            
+            <!-- Messages -->
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="بستن"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+            
+            <!-- Customer Information -->
+            <div class="customer-info">
+                <h5 class="mb-3">
+                    <i class="fas fa-user text-primary"></i>
+                    اطلاعات مشتری
+                </h5>
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>👤 نام:</strong> {{ customer.customer_name }}</p>
+                        <p><strong>📞 تلفن:</strong> {{ customer.phone|default:"ثبت نشده" }}</p>
+                        <p><strong>🆔 شناسه ملی:</strong> {{ customer.national_id|default:"ثبت نشده" }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>📊 وضعیت:</strong> 
+                            <span class="badge bg-{% if customer.status == 'Active' %}success{% elif customer.status == 'Inactive' %}warning{% elif customer.status == 'Suspended' %}danger{% elif customer.status == 'Blocked' %}dark{% else %}secondary{% endif %}">
+                                {{ customer.get_status_display }}
+                            </span>
+                        </p>
+                        <p><strong>📍 آدرس:</strong> {{ customer.address|default:"ثبت نشده"|truncatechars:50 }}</p>
+                        <p><strong>📅 تاریخ ثبت:</strong> {{ customer.created_at|date:"Y/m/d" }}</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Order Form -->
+            <form method="post" class="order-form">
+                {% csrf_token %}
+                
+                <!-- Product Selection -->
+                <div class="mb-4">
+                    <h5 class="mb-3">
+                        <i class="fas fa-box text-primary"></i>
+                        انتخاب محصول
+                    </h5>
+                    
+                    {% if available_products %}
+                        <div class="row">
+                            {% for product in available_products %}
+                                <div class="col-md-6 col-lg-4 mb-3">
+                                    <div class="product-selection" onclick="selectProduct({{ product.id }}, '{{ product.reel_number }}', {{ product.price }})">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="product_id" value="{{ product.id }}" id="product_{{ product.id }}" required>
+                                            <label class="form-check-label" for="product_{{ product.id }}">
+                                                <strong>{{ product.reel_number }}</strong>
+                                            </label>
+                                        </div>
+                                        <div class="mt-2">
+                                            <small class="text-muted">
+                                                📏 {{ product.width }}mm × {{ product.gsm }}g/m² × {{ product.length }}m<br>
+                                                🏆 {{ product.grade }}<br>
+                                                📍 {{ product.get_location_display }}<br>
+                                                💰 {{ product.price|floatformat:0 }} تومان
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            هیچ محصول موجودی در انبار یافت نشد.
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <!-- Order Details -->
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="quantity" class="form-label">
+                                <i class="fas fa-hashtag"></i>
+                                تعداد
+                            </label>
+                            <input type="number" class="form-control" id="quantity" name="quantity" value="1" min="1" required>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="payment_method" class="form-label">
+                                <i class="fas fa-credit-card"></i>
+                                روش پرداخت
+                            </label>
+                            <select class="form-select" id="payment_method" name="payment_method" required>
+                                <option value="Cash">💵 نقدی</option>
+                                <option value="Terms">📅 قسطی</option>
+                                <option value="Bank_Transfer">🏦 حواله بانکی</option>
+                                <option value="Check">📝 چک</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="notes" class="form-label">
+                        <i class="fas fa-sticky-note"></i>
+                        توضیحات سفارش
+                    </label>
+                    <textarea class="form-control" id="notes" name="notes" rows="3" placeholder="توضیحات اضافی درباره سفارش..."></textarea>
+                </div>
+                
+                <!-- Total Calculation -->
+                <div class="total-section" id="totalSection" style="display: none;">
+                    <h6 class="mb-2">
+                        <i class="fas fa-calculator"></i>
+                        محاسبه مبلغ
+                    </h6>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <p><strong>قیمت واحد:</strong> <span id="unitPrice" class="price-display">0</span> تومان</p>
+                        </div>
+                        <div class="col-md-4">
+                            <p><strong>تعداد:</strong> <span id="quantityDisplay">1</span></p>
+                        </div>
+                        <div class="col-md-4">
+                            <p><strong>مبلغ کل:</strong> <span id="totalPrice" class="price-display">0</span> تومان</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Submit Button -->
+                <div class="text-center mt-4">
+                    <button type="submit" class="btn btn-primary btn-lg" {% if not available_products %}disabled{% endif %}>
+                        <i class="fas fa-check"></i>
+                        ایجاد سفارش
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let selectedProductPrice = 0;
+
+function selectProduct(productId, productName, price) {
+    // Remove previous selection
+    document.querySelectorAll('.product-selection').forEach(el => {
+        el.classList.remove('selected');
+    });
+    
+    // Select current product
+    const productElement = document.querySelector(`#product_${productId}`).closest('.product-selection');
+    productElement.classList.add('selected');
+    
+    // Check the radio button
+    document.querySelector(`#product_${productId}`).checked = true;
+    
+    // Update price calculation
+    selectedProductPrice = price;
+    updateTotal();
+}
+
+function updateTotal() {
+    const quantity = parseInt(document.getElementById('quantity').value) || 1;
+    const total = selectedProductPrice * quantity;
+    
+    document.getElementById('unitPrice').textContent = selectedProductPrice.toLocaleString();
+    document.getElementById('quantityDisplay').textContent = quantity;
+    document.getElementById('totalPrice').textContent = total.toLocaleString();
+    
+    // Show total section if product is selected
+    if (selectedProductPrice > 0) {
+        document.getElementById('totalSection').style.display = 'block';
+    }
+}
+
+// Event listeners
+document.getElementById('quantity').addEventListener('input', updateTotal);
+
+// Initialize
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-select first product if available
+    const firstProduct = document.querySelector('input[name="product_id"]');
+    if (firstProduct) {
+        firstProduct.checked = true;
+        const productElement = firstProduct.closest('.product-selection');
+        const price = parseFloat(productElement.querySelector('.text-muted').textContent.match(/💰 (\d+) تومان/)[1]);
+        selectedProductPrice = price;
+        updateTotal();
+    }
+});
+</script>
+{% endblock %} 

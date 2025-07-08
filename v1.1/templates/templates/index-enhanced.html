@@ -1,519 +1,0 @@
-{% extends 'base.html' %}
-{% load static %}
-
-{% block title %}{{ title }}{% endblock %}
-
-{% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/main.css' %}">
-<link rel="stylesheet" href="{% static 'css/mobile.css' %}">
-<link rel="stylesheet" href="{% static 'css/selection-styles.css' %}">
-{% endblock %}
-
-{% block content %}
-
-<div class="container">
-    <nav class="navbar">
-        <div class="navbar-header">
-            <span class="navbar-logo">کارخانه کاغذ و مقوای همایون</span>
-            <button class="navbar-toggle" onclick="toggleMenu()">☰</button>
-        </div>
-        <ul class="nav-list" id="navbarMenu">
-            <li class="nav-item"><a href="index.html" class="nav-link">خانه</a></li>
-            <li class="nav-item"><a href="#cashSection" class="nav-link">قیمت نقدی</a></li>
-            <li class="nav-item"><a href="#creditSection" class="nav-link">قیمت نسیه</a></li>
-            <li class="nav-item"><a href="#contactSection" class="nav-link">تماس با ما</a></li>
-            <li class="nav-item"><a href="../Auth/login.html" class="nav-link">ورود</a></li>
-        </ul>
-    </nav>
-
-    <!-- Main Content - Shown during working hours -->
-    <main class="main-content" id="mainContent">
-        <section id="cashSection" class="section cash-section">
-            <div class="section-header">
-                <h2 class="section-title">نق333ی</h2>
-            </div>
-
-            <div class="info-grid">
-                <div class="info-card">
-                    <div class="info-label">قیمت نقدی</div>
-                    <div class="info-value" id="cashPrice">۲,۵۰۰,۰۰۰ تومان</div>
-                </div>
-            </div>
-
-            <!-- جدول موجودی نقدی -->
-            <div class="stock-table-container">
-                <h3 class="stock-title">موجودی نقدی - انتخاب محصول</h3>
-                <div class="selected-count">
-                    تعداد انتخاب شده: <span id="cashSelectedCount">0</span> از 6
-                </div>
-                <div class="table-responsive">
-                    <table class="stock-table" id="cashStockTable">
-                        <thead>
-                            <tr>
-                                <th>انتخاب</th>
-                                <th>عرض کاغذ (سانتی‌متر)</th>
-                                <th>گرماژ (گرم)</th>
-                                <th>تعداد موجود</th>
-                                <th>قیمت واحد</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr class="stock-row" data-type="cash">
-                                <td><input type="checkbox" class="stock-checkbox" data-section="cash"></td>
-                                <td>70</td>
-                                <td>80</td>
-                                <td>50 کیلو</td>
-                                <td>2,400,000 تومان</td>
-                            </tr>
-                            <tr class="stock-row" data-type="cash">
-                                <td><input type="checkbox" class="stock-checkbox" data-section="cash"></td>
-                                <td>100</td>
-                                <td>90</td>
-                                <td>30 کیلو</td>
-                                <td>2,500,000 تومان</td>
-                            </tr>
-                            <tr class="stock-row" data-type="cash">
-                                <td><input type="checkbox" class="stock-checkbox" data-section="cash"></td>
-                                <td>120</td>
-                                <td>100</td>
-                                <td>40 کیلو</td>
-                                <td>2,600,000 تومان</td>
-                            </tr>
-                            <tr class="stock-row" data-type="cash">
-                                <td><input type="checkbox" class="stock-checkbox" data-section="cash"></td>
-                                <td>150</td>
-                                <td>120</td>
-                                <td>25 کیلو</td>
-                                <td>2,700,000 تومان</td>
-                            </tr>
-                            <tr class="stock-row" data-type="cash">
-                                <td><input type="checkbox" class="stock-checkbox" data-section="cash"></td>
-                                <td>80</td>
-                                <td>110</td>
-                                <td>35 کیلو</td>
-                                <td>2,550,000 تومان</td>
-                            </tr>
-                            <tr class="stock-row" data-type="cash">
-                                <td><input type="checkbox" class="stock-checkbox" data-section="cash"></td>
-                                <td>90</td>
-                                <td>85</td>
-                                <td>45 کیلو</td>
-                                <td>2,450,000 تومان</td>
-                            </tr>
-                            <tr class="stock-row" data-type="cash">
-                                <td><input type="checkbox" class="stock-checkbox" data-section="cash"></td>
-                                <td>110</td>
-                                <td>95</td>
-                                <td>28 کیلو</td>
-                                <td>2,580,000 تومان</td>
-                            </tr>
-                            <tr class="stock-row" data-type="cash">
-                                <td><input type="checkbox" class="stock-checkbox" data-section="cash"></td>
-                                <td>130</td>
-                                <td>105</td>
-                                <td>32 کیلو</td>
-                                <td>2,650,000 تومان</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <div class="button-container">
-                <button class="purchase-btn cash-btn" onclick="handleCashPurchase()" id="cashPurchaseBtn" disabled>
-                    <span class="btn-icon">💰</span>
-                    <span class="btn-text">خرید نقدی</span>
-                </button>
-            </div>
-        </section>
-
-        <section id="creditSection" class="section credit-section">
-            <div class="section-header">
-                <h2 class="section-title">نسیه</h2>
-            </div>
-
-            <div class="info-grid">
-                <div class="info-card">
-                    <div class="info-label">قیمت نسیه</div>
-                    <div class="info-value" id="creditPrice">۲,۸۰۰,۰۰۰ تومان</div>
-                </div>
-            </div>
-
-            <!-- جدول موجودی نسیه -->
-            <div class="stock-table-container">
-                <h3 class="stock-title">موجودی نسیه - انتخاب محصول</h3>
-                <div class="selected-count">
-                    تعداد انتخاب شده: <span id="creditSelectedCount">0</span> از 6
-                </div>
-                <div class="table-responsive">
-                    <table class="stock-table" id="creditStockTable">
-                        <thead>
-                            <tr>
-                                <th>انتخاب</th>
-                                <th>عرض کاغذ (سانتی‌متر)</th>
-                                <th>گرماژ (گرم)</th>
-                                <th>تعداد موجود</th>
-                                <th>قیمت واحد</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr class="stock-row" data-type="credit">
-                                <td><input type="checkbox" class="stock-checkbox" data-section="credit"></td>
-                                <td>70</td>
-                                <td>80</td>
-                                <td>60 کیلو</td>
-                                <td>2,700,000 تومان</td>
-                            </tr>
-                            <tr class="stock-row" data-type="credit">
-                                <td><input type="checkbox" class="stock-checkbox" data-section="credit"></td>
-                                <td>100</td>
-                                <td>90</td>
-                                <td>40 کیلو</td>
-                                <td>2,800,000 تومان</td>
-                            </tr>
-                            <tr class="stock-row" data-type="credit">
-                                <td><input type="checkbox" class="stock-checkbox" data-section="credit"></td>
-                                <td>120</td>
-                                <td>100</td>
-                                <td>50 کیلو</td>
-                                <td>2,900,000 تومان</td>
-                            </tr>
-                            <tr class="stock-row" data-type="credit">
-                                <td><input type="checkbox" class="stock-checkbox" data-section="credit"></td>
-                                <td>150</td>
-                                <td>120</td>
-                                <td>35 کیلو</td>
-                                <td>3,000,000 تومان</td>
-                            </tr>
-                            <tr class="stock-row" data-type="credit">
-                                <td><input type="checkbox" class="stock-checkbox" data-section="credit"></td>
-                                <td>80</td>
-                                <td>110</td>
-                                <td>45 کیلو</td>
-                                <td>2,850,000 تومان</td>
-                            </tr>
-                            <tr class="stock-row" data-type="credit">
-                                <td><input type="checkbox" class="stock-checkbox" data-section="credit"></td>
-                                <td>90</td>
-                                <td>85</td>
-                                <td>55 کیلو</td>
-                                <td>2,750,000 تومان</td>
-                            </tr>
-                            <tr class="stock-row" data-type="credit">
-                                <td><input type="checkbox" class="stock-checkbox" data-section="credit"></td>
-                                <td>110</td>
-                                <td>95</td>
-                                <td>38 کیلو</td>
-                                <td>2,880,000 تومان</td>
-                            </tr>
-                            <tr class="stock-row" data-type="credit">
-                                <td><input type="checkbox" class="stock-checkbox" data-section="credit"></td>
-                                <td>130</td>
-                                <td>105</td>
-                                <td>42 کیلو</td>
-                                <td>2,950,000 تومان</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <div class="button-container">
-                <button class="purchase-btn credit-btn" onclick="handleCreditPurchase()" id="creditPurchaseBtn"
-                    disabled>
-                    <span class="btn-icon">📋</span>
-                    <span class="btn-text">خرید نسیه</span>
-                </button>
-            </div>
-        </section>
-    </main>
-
-    <!-- Footer section remains the same -->
-    <footer id="contactSection" class="footer">
-        <div class="footer-content">
-            <div class="footer-section contact-info">
-                <h3 class="footer-title">اطلاعات تماس</h3>
-                <div class="contact-items">
-                    <div class="contact-item">
-                        <span class="contact-icon">📞</span>
-                        <div class="contact-details">
-                            <span class="contact-label">تلفن تماس:</span>
-                            <span class="contact-value">۰۲۱-۱۲۳۴۵۶۷۸</span>
-                        </div>
-                    </div>
-                    <div class="contact-item">
-                        <span class="contact-icon">📱</span>
-                        <div class="contact-details">
-                            <span class="contact-label">موبایل:</span>
-                            <span class="contact-value">۰۹۱۲-۳۴۵-۶۷۸۹</span>
-                        </div>
-                    </div>
-                    <div class="contact-item email-item">
-                        <span class="contact-icon">📧</span>
-                        <div class="contact-details">
-                            <span class="contact-label">ایمیل:</span>
-                            <span class="contact-value">info@homayounpaper.com</span>
-                        </div>
-                    </div>
-                    <div class="contact-item">
-                        <span class="contact-icon">📍</span>
-                        <div class="contact-details">
-                            <span class="contact-label">آدرس:</span>
-                            <span class="contact-value">تهران، خیابان ولیعصر، پلاک ۱۲۳</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="footer-section working-hours">
-                <h3 class="footer-title">ساعات کاری</h3>
-                <div class="hours-info">
-                    <div class="hours-item">
-                        <span class="hours-label">شنبه تا چهارشنبه:</span>
-                        <span class="hours-value">۰۸:۰۰ - ۱۸:۰۰</span>
-                    </div>
-                    <div class="hours-item">
-                        <span class="hours-label">پنج‌شنبه:</span>
-                        <span class="hours-value">۰۸:۰۰ - ۱۶:۰۰</span>
-                    </div>
-                    <div class="hours-item">
-                        <span class="hours-label">جمعه:</span>
-                        <span class="hours-value">تعطیل</span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="footer-section about-us">
-                <h3 class="footer-title">درباره ما</h3>
-                <p class="about-text">
-                    کارخانه کاغذ و مقوای همایون با بیش از ۲۰ سال تجربه در تولید و فروش
-                    انواع کاغذ و مقوا، ارائه‌دهنده بهترین محصولات با کیفیت و قیمت مناسب می‌باشد.
-                </p>
-                <div class="social-links">
-                    <a href="#" class="social-link">📘</a>
-                    <a href="#" class="social-link">📷</a>
-                    <a href="#" class="social-link">📞</a>
-                </div>
-            </div>
-        </div>
-    </footer>
-</div>
-{% endblock %}
-
-{% block extra_js %}
-<script src="{% static 'js/index.js' %}"></script>
-<script>
-    // Toggle mobile menu
-    function toggleMenu() {
-        const navList = document.getElementById('navbarMenu');
-        navList.classList.toggle('show');
-    }
-
-    // Smooth scrolling for anchor links
-    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-        anchor.addEventListener('click', function (e) {
-            e.preventDefault();
-            const target = document.querySelector(this.getAttribute('href'));
-            if (target) {
-                target.scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'start'
-                });
-            }
-        });
-    });
-
-    // Enhanced Stock table selection functionality
-    let selectedItems = {
-        cash: 0,
-        credit: 0
-    };
-
-    function updateSelectionCount(section) {
-        const countElement = document.getElementById(section + 'SelectedCount');
-        const purchaseBtn = document.getElementById(section + 'PurchaseBtn');
-
-        countElement.textContent = selectedItems[section];
-
-        // Enable/disable purchase button based on selection
-        if (selectedItems[section] > 0) {
-            purchaseBtn.disabled = false;
-            purchaseBtn.classList.remove('disabled');
-        } else {
-            purchaseBtn.disabled = true;
-            purchaseBtn.classList.add('disabled');
-        }
-    }
-
-    function handleSelectionButtonClick(button) {
-        const section = button.dataset.section;
-        const row = button.closest('.stock-row');
-        const checkbox = row.querySelector('.stock-checkbox');
-
-        if (button.classList.contains('selected')) {
-            // Deselect
-            button.classList.remove('selected');
-            button.querySelector('.selection-icon').textContent = '⭕';
-            button.querySelector('span:last-child').textContent = 'انتخاب';
-            checkbox.checked = false;
-            selectedItems[section]--;
-            row.classList.remove('selected');
-        } else {
-            // Check if already 6 items selected
-            if (selectedItems[section] >= 6) {
-                alert('حداکثر 6 مورد قابل انتخاب است!');
-                return;
-            }
-            // Select
-            button.classList.add('selected');
-            button.querySelector('.selection-icon').textContent = '✅';
-            button.querySelector('span:last-child').textContent = 'انتخاب شده';
-            checkbox.checked = true;
-            selectedItems[section]++;
-            row.classList.add('selected');
-        }
-
-        updateSelectionCount(section);
-    }
-
-    function handleCheckboxChange(checkbox) {
-        const section = checkbox.dataset.section;
-        const row = checkbox.closest('.stock-row');
-        const button = row.querySelector('.selection-btn');
-
-        if (checkbox.checked) {
-            // Check if already 6 items selected
-            if (selectedItems[section] >= 6) {
-                checkbox.checked = false;
-                alert('حداکثر 6 مورد قابل انتخاب است!');
-                return;
-            }
-            selectedItems[section]++;
-            row.classList.add('selected');
-            if (button) {
-                button.classList.add('selected');
-                button.querySelector('.selection-icon').textContent = '✅';
-                button.querySelector('span:last-child').textContent = 'انتخاب شده';
-            }
-        } else {
-            selectedItems[section]--;
-            row.classList.remove('selected');
-            if (button) {
-                button.classList.remove('selected');
-                button.querySelector('.selection-icon').textContent = '⭕';
-                button.querySelector('span:last-child').textContent = 'انتخاب';
-            }
-        }
-
-        updateSelectionCount(section);
-    }
-
-    // Initialize selection buttons
-    function initializeSelectionButtons() {
-        // Replace all checkbox cells with custom selection buttons
-        const checkboxCells = document.querySelectorAll('td input.stock-checkbox');
-
-        checkboxCells.forEach(checkbox => {
-            const section = checkbox.dataset.section;
-            const cell = checkbox.closest('td');
-
-            // Create selection button structure
-            cell.innerHTML = `
-                <div class="selection-container">
-                    <button class="selection-btn" data-section="${section}">
-                        <span class="selection-icon">⭕</span>
-                        <span>انتخاب</span>
-                    </button>
-                    <input type="checkbox" class="stock-checkbox" data-section="${section}" style="display: none;">
-                </div>
-            `;
-        });
-
-        // Add event listeners to all selection buttons
-        const selectionButtons = document.querySelectorAll('.selection-btn');
-        selectionButtons.forEach(button => {
-            button.addEventListener('click', function (e) {
-                e.preventDefault();
-                e.stopPropagation();
-                handleSelectionButtonClick(this);
-            });
-        });
-
-        // Keep checkbox event listeners for compatibility
-        const checkboxes = document.querySelectorAll('.stock-checkbox');
-        checkboxes.forEach(checkbox => {
-            checkbox.addEventListener('change', function () {
-                handleCheckboxChange(this);
-            });
-        });
-    }
-
-    // Add enhanced functionality
-    document.addEventListener('DOMContentLoaded', function () {
-        // Initialize the beautiful selection buttons
-        initializeSelectionButtons();
-
-        // Initialize button states
-        updateSelectionCount('cash');
-        updateSelectionCount('credit');
-
-        // Add row click functionality (optional - click on row to select)
-        const stockRows = document.querySelectorAll('.stock-row');
-        stockRows.forEach(row => {
-            row.addEventListener('click', function (e) {
-                // Only trigger if not clicking on the selection button directly
-                if (!e.target.closest('.selection-btn')) {
-                    const button = this.querySelector('.selection-btn');
-                    if (button) {
-                        handleSelectionButtonClick(button);
-                    }
-                }
-            });
-        });
-    });
-
-    function handleCashPurchase() {
-        const selectedRows = document.querySelectorAll('#cashStockTable .stock-row.selected');
-        if (selectedRows.length === 0) {
-            alert('لطفا حداقل یک مورد را انتخاب کنید');
-            return;
-        }
-
-        let purchaseList = [];
-        selectedRows.forEach(row => {
-            const cells = row.querySelectorAll('td');
-            purchaseList.push({
-                width: cells[1].textContent,
-                grammage: cells[2].textContent,
-                quantity: cells[3].textContent,
-                price: cells[4].textContent
-            });
-        });
-
-        console.log('خرید نقدی:', purchaseList);
-        alert(`${selectedRows.length} مورد برای خرید نقدی انتخاب شد`);
-    }
-
-    function handleCreditPurchase() {
-        const selectedRows = document.querySelectorAll('#creditStockTable .stock-row.selected');
-        if (selectedRows.length === 0) {
-            alert('لطفا حداقل یک مورد را انتخاب کنید');
-            return;
-        }
-
-        let purchaseList = [];
-        selectedRows.forEach(row => {
-            const cells = row.querySelectorAll('td');
-            purchaseList.push({
-                width: cells[1].textContent,
-                grammage: cells[2].textContent,
-                quantity: cells[3].textContent,
-                price: cells[4].textContent
-            });
-        });
-
-        console.log('خرید نسیه:', purchaseList);
-        alert(`${selectedRows.length} مورد برای خرید نسیه انتخاب شد`);
-    }
-</script>
-{% endblock %}

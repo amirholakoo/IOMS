@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}تایید کد - ورود به سیستم{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/styles.css' %}">
+<link rel="stylesheet" href="{% static 'css/verification.css' %}">
+{% endblock %}
+
+{% block header %}
+<header class="header">
+    <h1 class="main-title">تایید کد</h1>
+</header>
+{% endblock %}
+
+{% block content %}
+<main class="main-content">
+    <div class="verification-container">
+        <div class="verification-card">
+            <div class="verification-header">
+                <div class="verification-icon">🔐</div>
+                <h2 class="verification-title">کد تایید را وارد کنید</h2>
+                <p class="verification-subtitle">
+                    کد تایید به شماره {{ phone_number|default:'شماره شما' }} ارسال شد
+                </p>
+            </div>
+
+            <form class="verification-form" id="verificationForm" method="POST" action="{% url 'auth:verify_code' %}">
+                {% csrf_token %}
+                
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+
+                <input type="hidden" name="phone_number" value="{{ phone_number }}">
+
+                <div class="code-input-group">
+                    <label for="verificationCode" class="input-label">کد تایید</label>
+                    <div class="code-input-container">
+                        <input type="text" id="digit1" name="digit1" class="code-input" maxlength="1" pattern="[0-9]" required>
+                        <input type="text" id="digit2" name="digit2" class="code-input" maxlength="1" pattern="[0-9]" required>
+                        <input type="text" id="digit3" name="digit3" class="code-input" maxlength="1" pattern="[0-9]" required>
+                        <input type="text" id="digit4" name="digit4" class="code-input" maxlength="1" pattern="[0-9]" required>
+                        <input type="text" id="digit5" name="digit5" class="code-input" maxlength="1" pattern="[0-9]" required>
+                        <input type="text" id="digit6" name="digit6" class="code-input" maxlength="1" pattern="[0-9]" required>
+                    </div>
+                    {% if form.verification_code.errors %}
+                        <div class="input-error">{{ form.verification_code.errors.0 }}</div>
+                    {% endif %}
+                </div>
+
+                <button type="submit" class="submit-btn" id="verifyBtn">
+                    <span class="btn-icon">✅</span>
+                    <span class="btn-text">تایید و ورود</span>
+                </button>
+
+                <div class="resend-container">
+                    <p class="resend-text">کد را دریافت نکردید؟</p>
+                    <button type="button" class="resend-btn" id="resendBtn" onclick="resendCode()">
+                        <span class="resend-icon">🔄</span>
+                        <span class="resend-text">ارسال مجدد</span>
+                        <span class="resend-timer" id="resendTimer"></span>
+                    </button>
+                </div>
+            </form>
+
+            <div class="verification-footer">
+                <a href="{% url 'auth:login' %}" class="back-link">
+                    <span class="back-icon">←</span>
+                    تغییر شماره تلفن
+                </a>
+            </div>
+        </div>
+    </div>
+</main>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/verification.js' %}"></script>
+{% endblock %} 

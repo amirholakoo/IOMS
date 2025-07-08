@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>کارخانه کاغذ و مقوای همایون</title>
+    <title>صفحه اصلی - قیمت و موجودی</title>
     <link rel="stylesheet" href="styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;700&display=swap" rel="stylesheet">
 </head>
@@ -12,11 +12,18 @@
 <body>
     <div class="container">
         <header class="header">
-            <h1 class="main-title">کارخانه کاغذ و مقوای همایون</h1>
+            <h1 class="main-title">کارخانه کاغد و مقوای همایون</h1>
+            <h4 class="main-subtitle">قیمت و موجودی</h4>
         </header>
 
-        <!-- Main Content - Shown during working hours -->
-        <main class="main-content" id="mainContent">
+        <main class="main-content">
+            <!-- <div class="header-actions">
+                <button class="login-btn" onclick="goToLogin()" id="loginBtn">
+                    <span class="btn-icon">🔐</span>
+                    <span class="btn-text">ورود</span>
+                </button>
+            </div> -->
+            <!-- بخش نقدی -->
             <section class="section cash-section">
                 <div class="section-header">
                     <h2 class="section-title">نقدی</h2>
@@ -42,6 +49,7 @@
                 </div>
             </section>
 
+            <!-- بخش نسیه -->
             <section class="section credit-section">
                 <div class="section-header">
                     <h2 class="section-title">نسیه</h2>
@@ -68,41 +76,9 @@
             </section>
         </main>
 
-        <!-- Closed Content - Shown outside working hours -->
-        <main class="closed-content" id="closedContent" style="display: none;">
-            <div class="closed-container">
-                <div class="closed-icon">🔒</div>
-                <h2 class="closed-title">سایت در حال حاضر بسته است</h2>
-
-                <p class="closed-message">
-                    متأسفانه در حال حاضر خارج از ساعت کاری هستیم.
-                    لطفاً در ساعت کاری مجدداً مراجعه فرمایید.
-                </p>
-
-                <div class="working-hours-info">
-                    <h3 class="working-hours-title">ساعت کاری:</h3>
-                    <div class="working-hours-time" id="workingHoursDisplay">
-                        از 08:00 تا 18:00
-                    </div>
-                </div>
-
-                <div class="contact-info-closed">
-                    <h4>اطلاعات تماس:</h4>
-                    <p>📞 تلفن: 021-12345678</p>
-                    <p>📧 ایمیل: info@homayounpaper.com</p>
-                    <p>📍 آدرس: تهران، خیابان ولیعصر</p>
-                </div>
-
-                <button class="refresh-btn" onclick="checkWorkingHours()">
-                    <span class="btn-icon">🔄</span>
-                    <span class="btn-text">بررسی مجدد</span>
-                </button>
-            </div>
-        </main>
-
-        <!-- Footer - Always visible -->
         <footer class="footer">
             <div class="footer-content">
+                <!-- اطلاعات تماس -->
                 <div class="footer-section contact-info">
                     <h3 class="footer-title">اطلاعات تماس</h3>
                     <div class="contact-items">
@@ -120,7 +96,7 @@
                                 <span class="contact-value">۰۹۱۲-۳۴۵-۶۷۸۹</span>
                             </div>
                         </div>
-                        <div class="contact-item email-item">
+                        <div class="contact-item">
                             <span class="contact-icon">📧</span>
                             <div class="contact-details">
                                 <span class="contact-label">ایمیل:</span>
@@ -137,6 +113,7 @@
                     </div>
                 </div>
 
+                <!-- ساعات کاری -->
                 <div class="footer-section working-hours">
                     <h3 class="footer-title">ساعات کاری</h3>
                     <div class="hours-info">
@@ -155,6 +132,7 @@
                     </div>
                 </div>
 
+                <!-- درباره ما -->
                 <div class="footer-section about-us">
                     <h3 class="footer-title">درباره ما</h3>
                     <p class="about-text">
@@ -168,7 +146,6 @@
                     </div>
                 </div>
             </div>
-        </footer>
     </div>
 
     <script src="script.js"></script>

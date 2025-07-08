@@ -8,8 +8,8 @@
     .logs-header {
         background: linear-gradient(135deg, #343a40, #6c757d);
         color: white;
-        padding: 2rem 0;
-        margin-bottom: 2rem;
+        padding: 1rem 0;
+        margin-bottom: 1rem;
         border-radius: 15px;
     }
     
@@ -173,6 +173,8 @@
     .timeline-item:last-child::after {
         display: none;
     }
+
+    .logs-header > .container, .logs-header .row:first-child { margin-top: 0 !important; padding-top: 0 !important; }
 </style>
 {% endblock %}
 

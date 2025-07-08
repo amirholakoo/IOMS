@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}خطای سرور - 500{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/styles.css' %}">
+<style>
+    .error-container {
+        text-align: center;
+        padding: 60px 20px;
+        min-height: 60vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .error-icon {
+        font-size: 4rem;
+        margin-bottom: 20px;
+    }
+
+    .error-title {
+        font-size: 2.5rem;
+        margin-bottom: 15px;
+        color: #e74c3c;
+    }
+
+    .error-message {
+        font-size: 1.2rem;
+        margin-bottom: 30px;
+        color: #7f8c8d;
+    }
+
+    .error-actions {
+        display: flex;
+        gap: 15px;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .action-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 12px 24px;
+        background: #3498db;
+        color: white;
+        text-decoration: none;
+        border-radius: 8px;
+        transition: background-color 0.3s;
+    }
+
+    .action-link:hover {
+        background: #2980b9;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="error-container">
+    <div class="error-icon">⚠️</div>
+    <h1 class="error-title">500</h1>
+    <p class="error-message">خطای داخلی سرور</p>
+    <p class="error-description">متأسفانه مشکلی در سرور رخ داده است. لطفاً بعداً تلاش کنید.</p>
+
+    <div class="error-actions">
+        <a href="{% url 'index:home' %}" class="action-link">
+            <span>🏠</span>
+            <span>بازگشت به صفحه اصلی</span>
+        </a>
+    </div>
+</div>
+{% endblock %}

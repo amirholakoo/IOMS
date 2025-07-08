@@ -20,6 +20,7 @@ import string
 import random
 from datetime import timedelta
 from django.db.models import Q
+from django.db import IntegrityError, transaction
 
 
 def login_view(request):
@@ -82,27 +83,11 @@ def customer_login_view(request):
 def customer_registration_view(request):
     """
     📝 ثبت‌نام مشتری جدید
+    🔐 ایجاد حساب کاربری جدید با وضعیت PENDING
     """
-    phone = request.POST.get('phone', '').strip() if request.method == 'POST' else request.GET.get('phone', '').strip()
-    disable_form = False
-    form_data = request.POST if request.method == 'POST' else {}
-
-    # جلوگیری قطعی از حلقه: اگر هر کاربری با این شماره وجود داشت، فرم غیرفعال و پیام مناسب نمایش داده شود
-    if phone:
-        from .models import User
-        existing_user = User.objects.filter(phone=phone, role=User.UserRole.CUSTOMER).first()
-        if existing_user:
-            if existing_user.status == User.UserStatus.PENDING:
-                messages.warning(request, 'درخواست ثبت‌نام شما قبلاً ثبت شده و در انتظار تایید مدیریت است. لطفاً صبور باشید، به زودی توسط مدیر بررسی خواهد شد.')
-            else:
-                messages.error(request, 'این شماره قبلاً ثبت شده است و امکان ثبت‌نام مجدد وجود ندارد.')
-            disable_form = True
-            return render(request, 'accounts/customer_registration.html', {
-                'form_data': form_data,
-                'phone': phone,
-                'disable_form': disable_form
-            })
-    if request.method == 'POST' and not disable_form:
+    if request.method == 'POST':
+        # دریافت اطلاعات فرم
+        phone = request.POST.get('phone', '').strip()
         first_name = request.POST.get('first_name', '').strip()
         last_name = request.POST.get('last_name', '').strip()
         email = request.POST.get('email', '').strip()
@@ -110,111 +95,148 @@ def customer_registration_view(request):
         economic_code = request.POST.get('economic_code', '').strip()
         national_id = request.POST.get('national_id', '').strip()
         postcode = request.POST.get('postcode', '').strip()
+        
+        # اعتبارسنجی فیلدهای اجباری
         errors = []
         if not phone:
             errors.append('📱 شماره تلفن الزامی است')
         elif not phone.startswith('09') or len(phone) != 11:
             errors.append('📱 شماره تلفن باید با 09 شروع شده و 11 رقم باشد')
+        
         if not first_name:
             errors.append('👤 نام الزامی است')
+        
         if not last_name:
             errors.append('👤 نام خانوادگی الزامی است')
-        if Customer.objects.filter(phone=phone).exclude(status='Requested').exists():
-            errors.append('👤 مشتری با این شماره قبلاً ثبت شده است و فعال است')
+        
+        # بررسی تکراری نبودن شماره تلفن
+        user_exists = User.objects.filter(phone=phone).exists()
+        print(f"[DEBUG] User exists for phone {phone}: {user_exists}")
+        if user_exists:
+            errors.append('📱 این شماره تلفن قبلاً ثبت شده است')
+        
+        # جلوگیری از ثبت مشتری تکراری با شماره موبایل
+        customer_exists = Customer.objects.filter(phone=phone).exists()
+        print(f"[DEBUG] Customer exists (any status) for phone {phone}: {customer_exists}")
+        if customer_exists:
+            errors.append('👤 مشتری با این شماره قبلاً ثبت شده است')
+        
+        # بررسی تکراری نبودن ایمیل (در صورت وارد کردن)
         if email and User.objects.filter(email=email).exists():
             errors.append('📧 این ایمیل قبلاً ثبت شده است')
+        
         if errors:
             for error in errors:
                 messages.error(request, error)
-            return render(request, 'accounts/customer_registration.html', {
-                'form_data': request.POST,
-                'phone': phone,
-                'disable_form': False
-            })
-        try:
-            customer = Customer.objects.filter(phone=phone, status='Requested').first()
-            if customer:
-                customer.customer_name = f"{first_name} {last_name}"
-                customer.address = address
-                customer.economic_code = economic_code
-                customer.national_id = national_id
-                customer.postcode = postcode
-                customer.status = 'Active'
-                customer.comments = 'ثبت‌نام تکمیل شد و فعال گردید.'
-                customer.save()
+            if request.user.is_authenticated and request.user.is_super_admin():
+                return redirect('core:customers_list')
             else:
-                base_customer_name = f"{first_name} {last_name}"
-                customer_name = base_customer_name
-                counter = 1
-                while Customer.objects.filter(customer_name=customer_name).exists():
-                    customer_name = f"{base_customer_name} ({counter})"
-                    counter += 1
-                customer = Customer.objects.create(
-                    customer_name=customer_name,
-                    phone=phone,
-                    address=address,
-                    economic_code=economic_code,
-                    national_id=national_id,
-                    postcode=postcode,
-                    status='Active',
-                    comments='ثبت‌نام جدید و فعال'
-                )
+                return render(request, 'accounts/customer_registration.html', {
+                    'form_data': request.POST
+                })
+        
+        try:
+            # تولید نام کاربری منحصر به فرد
             base_username = f"{first_name}_{last_name}".lower().replace(' ', '_')
             username = base_username
             counter = 1
             while User.objects.filter(username=username).exists():
                 username = f"{base_username}_{counter}"
                 counter += 1
-            user = User.objects.create_user(
-                username=username,
-                email=email,
-                password=None,
-                first_name=first_name,
-                last_name=last_name,
-                phone=phone,
-                role=User.UserRole.CUSTOMER,
-                status=User.UserStatus.ACTIVE,
-                is_active=True,
-                date_joined=timezone.now()
-            )
-            ActivityLog.log_activity(
-                user=None,
-                action='CREATE',
-                description=f'📝 ثبت‌نام جدید مشتری: {first_name} {last_name} - {phone}',
-                content_object=user,
-                severity='MEDIUM',
-                ip_address=get_client_ip(request),
-                user_agent=request.META.get('HTTP_USER_AGENT'),
-                registration_data={
-                    'phone': phone,
-                    'first_name': first_name,
-                    'last_name': last_name,
-                    'email': email,
-                    'address': address,
-                    'economic_code': economic_code,
-                    'national_id': national_id,
-                    'postcode': postcode
-                }
-            )
-            if request.user.is_authenticated and request.user.is_superuser:
-                messages.success(request, '✅ مشتری جدید با موفقیت ثبت شد و فعال است.')
+            
+            # ایجاد کاربر جدید با وضعیت PENDING
+            with transaction.atomic():
+                user = User.objects.create_user(
+                    username=username,
+                    email=email,
+                    password=None,  # کاربران Customer رمز عبور ندارند
+                    first_name=first_name,
+                    last_name=last_name,
+                    phone=phone,
+                    role=User.UserRole.CUSTOMER,
+                    status=User.UserStatus.PENDING,  # وضعیت در انتظار تایید
+                    is_active=False,  # غیرفعال تا تایید شود
+                    date_joined=timezone.now()
+                )
+                
+                # ثبت لاگ ثبت‌نام جدید
+                ActivityLog.log_activity(
+                    user=None,  # کاربر هنوز تایید نشده
+                    action='CREATE',
+                    description=f'📝 درخواست ثبت‌نام جدید مشتری: {first_name} {last_name} - {phone}',
+                    content_object=user,
+                    severity='MEDIUM',
+                    ip_address=get_client_ip(request),
+                    user_agent=request.META.get('HTTP_USER_AGENT'),
+                    registration_data={
+                        'phone': phone,
+                        'first_name': first_name,
+                        'last_name': last_name,
+                        'email': email,
+                        'address': address,
+                        'economic_code': economic_code,
+                        'national_id': national_id,
+                        'postcode': postcode
+                    }
+                )
+                
+                # فعال کردن کاربر نیز
+                user.status = User.UserStatus.ACTIVE
+                user.is_active = True
+                user.save()
+                
+                # ثبت لاگ تغییر وضعیت
+                ActivityLog.log_activity(
+                    user=request.user,
+                    action='APPROVE',
+                    description=f'✅ تایید و فعال‌سازی مشتری جدید: {first_name} {last_name} ({phone})',
+                    content_object=user,  # log on user, not customer
+                    severity='MEDIUM',
+                    ip_address=get_client_ip(request),
+                    user_agent=request.META.get('HTTP_USER_AGENT'),
+                    status_change={
+                        'user_status': 'active',
+                        'customer_status': 'Active',
+                        'activated_by': request.user.username
+                    }
+                )
+                
+                messages.success(request, 
+                    f'✅ مشتری جدید "{first_name} {last_name}" با موفقیت ثبت شد و فعال است! 📞 شماره: {phone}'
+                )
                 request.session['show_success'] = True
                 return redirect('core:customers_list')
+        except IntegrityError as e:
+            print(f"[DEBUG] IntegrityError occurred: {e}")
+            print(f"[DEBUG] Error details: {str(e)}")
+            error_message = '❌ این شماره موبایل قبلاً ثبت شده است. اگر رمز عبور را فراموش کرده‌اید، از بازیابی رمز استفاده کنید.'
+            if request.user.is_authenticated and request.user.is_super_admin():
+                messages.error(request, error_message)
+                return redirect('core:customers_list')
             else:
-                messages.success(request, '✅ ثبت‌نام شما با موفقیت انجام شد. منتظر تایید مدیریت باشید.')
-                return redirect('accounts:customer_sms_login')
+                messages.error(request, error_message)
+                return render(request, 'accounts/customer_registration.html', {
+                    'form_data': request.POST
+                })
         except Exception as e:
-            messages.error(request, f'❌ خطا در ثبت‌نام: {str(e)}')
-            return render(request, 'accounts/customer_registration.html', {
-                'form_data': request.POST,
-                'phone': phone,
-                'disable_form': False
-            })
-    # حالت GET یا فرم غیرفعال
+            error_message = '❌ خطا در ثبت‌نام. لطفاً مجدداً تلاش کنید'
+            if request.user.is_authenticated and request.user.is_super_admin():
+                messages.error(request, f'{error_message} (جزئیات: {str(e)})')
+                return redirect('core:customers_list')
+            else:
+                print(f"❌ Error in customer registration: {e}")
+                import traceback
+                traceback.print_exc()
+                messages.error(request, error_message)
+                return render(request, 'accounts/customer_registration.html', {
+                    'form_data': request.POST
+                })
+    
+    # GET request - نمایش فرم ثبت‌نام
+    phone = request.GET.get('phone') or request.session.get('registration_phone', '')
     return render(request, 'accounts/customer_registration.html', {
-        'form_data': form_data,
         'phone': phone,
-        'disable_form': disable_form
+        'form_data': {},
     })
 
 
@@ -403,17 +425,7 @@ def customer_sms_login_view(request):
     print(f"🚨 DEBUG: Method: {request.method}")
     print(f"🚨 DEBUG: URL: {request.path}")
     print("="*60)
-
-    # منطق جلوگیری از حلقه ثبت‌نام برای شماره‌هایی با وضعیت pending
-    phone = request.POST.get('phone', '').strip() if request.method == 'POST' else request.GET.get('phone', '').strip()
-    if phone:
-        from .models import User
-        pending_user = User.objects.filter(phone=phone, status=User.UserStatus.PENDING, role=User.UserRole.CUSTOMER).first()
-        if pending_user:
-            # فقط پیام نمایش داده شود و فرم غیرفعال باشد
-            messages.warning(request, 'درخواست شما در حال بررسی است. لطفاً منتظر تأیید بمانید.')
-            return render(request, 'accounts/customer_sms_login.html', {'phone': phone, 'disable_form': True})
-
+    
     if request.method == 'POST':
         phone = request.POST.get('phone', '').strip()
         print(f"🚨 DEBUG: Phone from POST: '{phone}'")
@@ -448,7 +460,10 @@ def customer_sms_login_view(request):
             user = User.objects.get(phone=phone, role=User.UserRole.CUSTOMER)
             print(f"✅ DEBUG: User found: {user.username}")
             
-            # بررسی فعال بودن کاربر
+            # بررسی وضعیت کاربر
+            if user.status == User.UserStatus.SUSPENDED:
+                messages.error(request, '🚫 حساب کاربری شما معلق شده است. لطفاً با پشتیبانی تماس بگیرید.')
+                return render(request, 'accounts/customer_sms_login.html')
             if not user.is_active_user():
                 print("❌ DEBUG: User is not active")
                 messages.error(request, '❌ حساب کاربری شما غیرفعال است. لطفاً با پشتیبانی تماس بگیرید')
@@ -517,7 +532,7 @@ def customer_sms_verify_view(request):
     # بررسی انقضای کد (5 دقیقه)
     created_at = timezone.datetime.fromisoformat(sms_data['created_at'])
     if timezone.now() - created_at > timedelta(minutes=5):
-        del request.session['sms_verification']
+        request.session.pop('sms_verification', None)
         messages.error(request, '⏰ کد تایید منقضی شده است. لطفاً مجدداً درخواست کنید')
         return redirect('accounts:customer_sms_login')
     
@@ -532,7 +547,7 @@ def customer_sms_verify_view(request):
         
         # بررسی تعداد تلاش‌ها
         if sms_data.get('attempts', 0) >= 3:
-            del request.session['sms_verification']
+            request.session.pop('sms_verification', None)
             messages.error(request, '🚫 تعداد تلاش‌های مجاز تمام شد. لطفاً مجدداً درخواست کنید')
             return redirect('accounts:customer_sms_login')
         
@@ -544,7 +559,7 @@ def customer_sms_verify_view(request):
                 login(request, user)
                 
                 # پاک کردن اطلاعات تایید از session
-                del request.session['sms_verification']
+                request.session.pop('sms_verification', None)
                 
                 # ثبت لاگ ورود موفق
                 ActivityLog.log_activity(
@@ -568,7 +583,7 @@ def customer_sms_verify_view(request):
                 return redirect('accounts:customer_dashboard')
                 
             except User.DoesNotExist:
-                del request.session['sms_verification']
+                request.session.pop('sms_verification', None)
                 messages.error(request, '❌ خطا در ورود. لطفاً مجدداً تلاش کنید')
                 return redirect('accounts:customer_sms_login')
         
@@ -581,7 +596,7 @@ def customer_sms_verify_view(request):
             if remaining_attempts > 0:
                 messages.error(request, f'❌ کد تایید اشتباه است. {remaining_attempts} تلاش باقی مانده')
             else:
-                del request.session['sms_verification']
+                request.session.pop('sms_verification', None)
                 messages.error(request, '🚫 تعداد تلاش‌های مجاز تمام شد. لطفاً مجدداً درخواست کنید')
                 return redirect('accounts:customer_sms_login')
     
@@ -633,7 +648,7 @@ def resend_sms_code_view(request):
         messages.success(request, '📱 کد تایید جدید ارسال شد')
         
     except User.DoesNotExist:
-        del request.session['sms_verification']
+        request.session.pop('sms_verification', None)
         messages.error(request, '❌ خطا در ارسال مجدد. لطفاً از ابتدا شروع کنید')
         return redirect('accounts:customer_sms_login')
     
@@ -680,30 +695,162 @@ def get_client_ip(request):
 
 
 @login_required
-@super_admin_permission_required('manage_customers')
-@require_http_methods(["GET", "POST"])
-def edit_customer_view(request, customer_id):
-    customer = get_object_or_404(Customer, id=customer_id)
-    if request.method == "POST":
-        phone = request.POST.get('phone', customer.phone)
-        # بررسی یکتایی شماره موبایل (غیر از مشتری فعلی و غیر از Requested)
-        if Customer.objects.filter(phone=phone).exclude(id=customer.id).exclude(status='Requested').exists():
-            messages.error(request, 'شماره موبایل تکراری است و قبلاً برای مشتری فعال ثبت شده است.')
-            return redirect('core:edit_customer', customer_id=customer.id)
-        customer.customer_name = request.POST.get('customer_name', customer.customer_name)
-        customer.phone = phone
-        customer.address = request.POST.get('address', customer.address)
-        customer.national_id = request.POST.get('national_id', customer.national_id)
-        customer.economic_code = request.POST.get('economic_code', customer.economic_code)
-        customer.postcode = request.POST.get('postcode', customer.postcode)
-        customer.status = request.POST.get('status', customer.status)
-        customer.comments = request.POST.get('comments', customer.comments)
-        customer.save()
-        messages.success(request, '✅ اطلاعات مشتری با موفقیت ویرایش شد.')
-        return redirect('core:customers_list')
-    context = {
-        'customer': customer,
-        'status_choices': Customer.STATUS_CHOICES,
-        'title': '✏️ ویرایش مشتری'
-    }
-    return render(request, 'core/edit_customer.html', context)
+@super_admin_permission_required('accounts.manage_all_users')
+def register_requested_customer_view(request):
+    """
+    👑 ثبت‌نام مشتری درخواستی توسط Super Admin
+    🔄 به‌روزرسانی مشتری موجود با وضعیت Requested به Active
+    """
+    if request.method == 'POST':
+        print(f"[DEBUG] Starting register_requested_customer POST for phone: {request.POST.get('phone', '')}")
+        
+        # دریافت اطلاعات فرم
+        phone = request.POST.get('phone', '').strip()
+        first_name = request.POST.get('first_name', '').strip()
+        last_name = request.POST.get('last_name', '').strip()
+        email = request.POST.get('email', '').strip()
+        address = request.POST.get('address', '').strip()
+        economic_code = request.POST.get('economic_code', '').strip()
+        national_id = request.POST.get('national_id', '').strip()
+        postcode = request.POST.get('postcode', '').strip()
+        
+        print(f"[DEBUG] Form data - Phone: {phone}, Name: {first_name} {last_name}")
+        
+        # اعتبارسنجی فیلدهای اجباری
+        errors = []
+        if not phone:
+            errors.append('📱 شماره تلفن الزامی است')
+        elif not phone.startswith('09') or len(phone) != 11:
+            errors.append('📱 شماره تلفن باید با 09 شروع شده و 11 رقم باشد')
+        
+        if not first_name:
+            errors.append('👤 نام الزامی است')
+        
+        if not last_name:
+            errors.append('👤 نام خانوادگی الزامی است')
+        
+        print(f"[DEBUG] Validation errors: {errors}")
+        
+        # بررسی وجود مشتری درخواستی
+        requested_customer = Customer.objects.filter(phone=phone, status='Requested').first()
+        print(f"[DEBUG] Requested customer found: {requested_customer is not None}")
+        if not requested_customer:
+            errors.append('❌ مشتری درخواستی با این شماره تلفن یافت نشد')
+        
+        # بررسی وجود مشتریان دیگر با این شماره تلفن
+        other_customers = Customer.objects.filter(phone=phone).exclude(status='Requested')
+        print(f"[DEBUG] Other customers with same phone: {other_customers.count()}")
+        if other_customers.exists():
+            print(f"[DEBUG] Found {other_customers.count()} other customers with phone {phone}:")
+            for cust in other_customers:
+                print(f"[DEBUG] - Customer ID: {cust.id}, Name: {cust.customer_name}, Status: {cust.status}")
+            errors.append('❌ مشتری دیگری با این شماره تلفن وجود دارد')
+        
+        # بررسی وجود کاربر با این شماره تلفن
+        existing_user = User.objects.filter(phone=phone).first()
+        print(f"[DEBUG] Existing user found: {existing_user is not None}")
+        if existing_user:
+            print(f"[DEBUG] Found existing user with phone {phone}: ID={existing_user.id}, Username={existing_user.username}, Status={existing_user.status}")
+        
+        if errors:
+            print(f"[DEBUG] Validation failed, returning with errors: {errors}")
+            for error in errors:
+                messages.error(request, error)
+            return redirect('core:customers_list')
+        
+        print(f"[DEBUG] Starting transaction...")
+        try:
+            with transaction.atomic():
+                # بررسی وجود کاربر با این شماره تلفن
+                existing_user = User.objects.filter(phone=phone).first()
+                
+                if existing_user:
+                    # اگر کاربر وجود دارد، آن را به‌روزرسانی کن
+                    print(f"[DEBUG] Updating existing user ID {existing_user.id}")
+                    existing_user.first_name = first_name
+                    existing_user.last_name = last_name
+                    existing_user.email = email
+                    existing_user.status = User.UserStatus.ACTIVE
+                    existing_user.is_active = True
+                    existing_user.save()
+                    print(f"[DEBUG] Existing user updated successfully")
+                    user = existing_user
+                else:
+                    # تولید نام کاربری منحصر به فرد
+                    print(f"[DEBUG] Creating new user")
+                    base_username = f"{first_name}_{last_name}".lower().replace(' ', '_')
+                    username = base_username
+                    counter = 1
+                    while User.objects.filter(username=username).exists():
+                        username = f"{base_username}_{counter}"
+                        counter += 1
+                    
+                    print(f"[DEBUG] Creating user with username: {username}, phone: {phone}")
+                    
+                    # ایجاد کاربر جدید
+                    user = User.objects.create_user(
+                        username=username,
+                        email=email,
+                        password=None,  # کاربران Customer رمز عبور ندارند
+                        first_name=first_name,
+                        last_name=last_name,
+                        phone=phone,
+                        role=User.UserRole.CUSTOMER,
+                        status=User.UserStatus.ACTIVE,  # فعال
+                        is_active=True,  # فعال
+                        date_joined=timezone.now()
+                    )
+                    print(f"[DEBUG] New user created successfully with ID: {user.id}")
+                
+                # به‌روزرسانی مشتری درخواستی
+                print(f"[DEBUG] Updating customer ID {requested_customer.id} with phone {phone}")
+                requested_customer.customer_name = f"{first_name} {last_name}"
+                requested_customer.address = address
+                requested_customer.economic_code = economic_code
+                requested_customer.national_id = national_id
+                requested_customer.postcode = postcode
+                requested_customer.status = 'Active'  # فعال کردن
+                requested_customer.comments = f'✅ تایید شده توسط Super Admin\n📅 تاریخ تایید: {timezone.now().strftime("%Y/%m/%d %H:%M")}\n👑 تایید کننده: {request.user.username}'
+                print(f"[DEBUG] About to save customer with phone {phone}")
+                requested_customer.save()
+                print(f"[DEBUG] Customer saved successfully")
+                
+                # ثبت لاگ تایید مشتری
+                ActivityLog.log_activity(
+                    user=request.user,
+                    action='APPROVE',
+                    description=f'✅ تایید و فعال‌سازی مشتری درخواستی: {requested_customer.customer_name} ({phone})',
+                    content_object=requested_customer,
+                    severity='MEDIUM',
+                    ip_address=get_client_ip(request),
+                    user_agent=request.META.get('HTTP_USER_AGENT'),
+                    status_change={
+                        'user_status': 'active',
+                        'customer_status': 'Active',
+                        'activated_by': request.user.username,
+                        'previous_status': 'Requested'
+                    }
+                )
+                
+                messages.success(request, 
+                    f'✅ مشتری "{requested_customer.customer_name}" با موفقیت تایید و فعال شد! 📞 شماره: {phone}'
+                )
+                return redirect('core:customers_list')
+                
+        except IntegrityError as e:
+            print(f"[DEBUG] IntegrityError in register_requested_customer: {e}")
+            messages.error(request, '❌ خطا در ثبت‌نام. احتمالاً شماره تلفن یا ایمیل تکراری است.')
+            return redirect('core:customers_list')
+        except Exception as e:
+            print(f"❌ Error in register_requested_customer: {e}")
+            import traceback
+            traceback.print_exc()
+            messages.error(request, f'❌ خطا در ثبت‌نام: {str(e)}')
+            return redirect('core:customers_list')
+    
+    # GET request - نمایش فرم ثبت‌نام
+    phone = request.GET.get('phone', '')
+    return render(request, 'accounts/register_requested_customer.html', {
+        'phone': phone,
+        'form_data': {},
+    })

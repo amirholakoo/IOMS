@@ -1,0 +1,62 @@
+# 🐳 Docker Ignore File برای HomayOMS
+# 🚫 فایل‌هایی که نباید در Docker image قرار گیرند
+
+# 📁 دایرکتوری‌های توسعه
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+pip-log.txt
+pip-delete-this-directory.txt
+
+# 🗄️ پایگاه داده
+*.sqlite3
+*.db
+db.sqlite3
+
+# 📝 فایل‌های لاگ
+*.log
+logs/
+
+# 🔧 فایل‌های IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# 📦 فایل‌های Git
+.git/
+.gitignore
+
+# 🐳 فایل‌های Docker
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# 📁 فایل‌های استاتیک (در Docker build می‌شوند)
+staticfiles/
+media/
+
+# 📄 فایل‌های مستندات
+README.md
+*.md
+
+# 🔧 فایل‌های تنظیمات محلی
+.env
+.env.local
+.env.development
+
+# 📁 دایرکتوری‌های اضافی
+v0/
+Pure Html and CSS/
+SMS_Server/
+
+# 🗂️ فایل‌های موقت
+*.tmp
+*.temp
+.DS_Store
+Thumbs.db 

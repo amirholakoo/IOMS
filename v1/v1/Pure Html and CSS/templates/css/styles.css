@@ -1,0 +1,385 @@
+/* Reset and base styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Vazirmatn', Tahoma, Arial, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    direction: rtl;
+    text-align: right;
+    line-height: 1.6;
+    color: #333;
+}
+
+.container {
+    max-width: 100%;
+    margin: 0 auto;
+    padding: 10px;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Header styles */
+.header {
+    text-align: center;
+    padding: 20px 0;
+    margin-bottom: 20px;
+}
+
+.main-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: white;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+    margin: 0;
+}
+
+/* Main content */
+.main-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* Section styles */
+.section {
+    background: white;
+    border-radius: 15px;
+    padding: 25px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.section-header {
+    text-align: center;
+    margin-bottom: 25px;
+}
+
+.section-title {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #2c3e50;
+    margin: 0;
+    padding: 10px 0;
+    border-bottom: 3px solid #3498db;
+    display: inline-block;
+}
+
+/* Cash section specific */
+.cash-section .section-title {
+    color: #27ae60;
+    border-bottom-color: #27ae60;
+}
+
+/* Credit section specific */
+.credit-section .section-title {
+    color: #e74c3c;
+    border-bottom-color: #e74c3c;
+}
+
+/* Info grid */
+.info-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 20px;
+}
+
+/* Info cards */
+.info-card {
+    background: linear-gradient(145deg, #f8f9fa, #e9ecef);
+    border-radius: 12px;
+    padding: 25px;
+    text-align: center;
+    border: 2px solid #dee2e6;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    min-height: 120px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.info-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+.info-label {
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: #495057;
+    margin-bottom: 15px;
+    display: block;
+}
+
+.info-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #2c3e50;
+    display: block;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* Cash section values */
+.cash-section .info-value {
+    color: #27ae60;
+}
+
+/* Credit section values */
+.credit-section .info-value {
+    color: #e74c3c;
+}
+
+/* Footer */
+.footer {
+    text-align: center;
+    padding: 20px 0;
+    margin-top: 20px;
+}
+
+.footer p {
+    color: white;
+    font-size: 1.1rem;
+    opacity: 0.9;
+}
+
+/* Responsive design for larger screens */
+@media (min-width: 768px) {
+    .container {
+        padding: 20px;
+        max-width: 800px;
+    }
+
+    .main-title {
+        font-size: 3rem;
+    }
+
+    .section-title {
+        font-size: 2.5rem;
+    }
+
+    .info-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 30px;
+    }
+
+    .info-card {
+        padding: 30px;
+        min-height: 150px;
+    }
+
+    .info-label {
+        font-size: 1.5rem;
+    }
+
+    .info-value {
+        font-size: 2.5rem;
+    }
+}
+
+/* Extra large screens */
+@media (min-width: 1024px) {
+    .container {
+        max-width: 1000px;
+    }
+
+    .main-title {
+        font-size: 3.5rem;
+    }
+
+    .info-value {
+        font-size: 3rem;
+    }
+}
+
+/* Accessibility improvements for older users */
+@media (prefers-reduced-motion: reduce) {
+    .info-card {
+        transition: none;
+    }
+
+    .info-card:hover {
+        transform: none;
+    }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    .info-card {
+        border: 3px solid #000;
+    }
+
+    .section-title {
+        border-bottom-width: 4px;
+    }
+}
+
+/* Touch-friendly improvements */
+.info-card {
+    cursor: pointer;
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
+}
+
+/* Ensure text is readable on all devices */
+.info-value {
+    word-break: break-word;
+    hyphens: auto;
+}
+
+/* Loading state (optional) */
+.loading {
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+/* Focus states for accessibility */
+.info-card:focus {
+    outline: 3px solid #3498db;
+    outline-offset: 2px;
+}
+
+/* Purchase Button Styles */
+.button-container {
+    margin-top: 25px;
+    text-align: center;
+}
+
+.purchase-btn {
+    width: 100%;
+    max-width: 300px;
+    height: 70px;
+    border: none;
+    border-radius: 15px;
+    font-family: 'Vazirmatn', Tahoma, Arial, sans-serif;
+    font-size: 1.4rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+    position: relative;
+    overflow: hidden;
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
+}
+
+.purchase-btn:active {
+    transform: translateY(2px);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+}
+
+.purchase-btn:focus {
+    outline: 3px solid #3498db;
+    outline-offset: 2px;
+}
+
+/* Cash button styles */
+.cash-btn {
+    background: linear-gradient(145deg, #27ae60, #2ecc71);
+    color: white;
+    border: 3px solid #27ae60;
+}
+
+.cash-btn:hover {
+    background: linear-gradient(145deg, #2ecc71, #27ae60);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(39, 174, 96, 0.3);
+}
+
+/* Credit button styles */
+.credit-btn {
+    background: linear-gradient(145deg, #e74c3c, #c0392b);
+    color: white;
+    border: 3px solid #e74c3c;
+}
+
+.credit-btn:hover {
+    background: linear-gradient(145deg, #c0392b, #e74c3c);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(231, 76, 60, 0.3);
+}
+
+/* Button icon styles */
+.btn-icon {
+    font-size: 1.8rem;
+    display: inline-block;
+}
+
+/* Button text styles */
+.btn-text {
+    font-size: 1.2rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+}
+
+/* Responsive button styles */
+@media (min-width: 768px) {
+    .purchase-btn {
+        height: 80px;
+        font-size: 1.6rem;
+        max-width: 350px;
+    }
+
+    .btn-icon {
+        font-size: 2rem;
+    }
+
+    .btn-text {
+        font-size: 1.3rem;
+    }
+}
+
+@media (min-width: 1024px) {
+    .purchase-btn {
+        height: 90px;
+        font-size: 1.8rem;
+        max-width: 400px;
+    }
+
+    .btn-icon {
+        font-size: 2.2rem;
+    }
+
+    .btn-text {
+        font-size: 1.5rem;
+    }
+}
+
+/* High contrast mode for buttons */
+@media (prefers-contrast: high) {
+    .purchase-btn {
+        border-width: 4px;
+    }
+
+    .cash-btn {
+        background: #27ae60;
+        border-color: #000;
+    }
+
+    .credit-btn {
+        background: #e74c3c;
+        border-color: #000;
+    }
+}
+
+/* Reduced motion for accessibility */
+@media (prefers-reduced-motion: reduce) {
+    .purchase-btn {
+        transition: none;
+    }
+
+    .purchase-btn:hover {
+        transform: none;
+    }
+
+    .purchase-btn:active {
+        transform: none;
+    }
+}

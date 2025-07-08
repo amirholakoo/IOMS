@@ -8,10 +8,12 @@
     .admin-hero {
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         color: white;
-        padding: 3rem 0;
-        margin-bottom: 2rem;
+        padding: 1.5rem 0;
+        margin-bottom: 1rem;
         border-radius: 15px;
     }
+    
+    .admin-hero > .container, .admin-hero .row:first-child { margin-top: 0 !important; padding-top: 0 !important; }
     
     .stats-card {
         border: none;
@@ -524,7 +526,7 @@ function getCookie(name) {
                 <div class="activity-item">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
-                            <strong>{{ activity.user.get_full_name|default:activity.user.username }}</strong>
+                            <strong>{% if activity.user %}{{ activity.user.get_full_name|default:activity.user.username }}{% else %}سیستم{% endif %}</strong>
                             <span class="text-muted">{{ activity.description }}</span>
                         </div>
                         <small class="text-muted">{{ activity.timestamp|date:"Y/m/d H:i" }}</small>

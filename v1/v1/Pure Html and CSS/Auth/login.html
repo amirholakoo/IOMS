@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ورود به سیستم</title>
+    <link rel="stylesheet" href="../Index/styles.css">
+    <link rel="stylesheet" href="login.css">
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div class="container">
+        <header class="header">
+            <h1 class="main-title">ورود به سیستم</h1>
+        </header>
+
+        <main class="main-content">
+            <div class="login-container">
+                <div class="login-card">
+                    <div class="login-header">
+                        <div class="login-icon">📱</div>
+                        <h2 class="login-title">شماره تلفن خود را وارد کنید</h2>
+                        <p class="login-subtitle">کد تایید برای شما ارسال خواهد شد</p>
+                    </div>
+
+                    <form class="login-form" id="phoneForm" onsubmit="handlePhoneSubmit(event)">
+                        <div class="input-group">
+                            <label for="phoneNumber" class="input-label">شماره تلفن</label>
+                            <div class="phone-input-container">
+                                <span class="country-code">+۹۸</span>
+                                <input type="tel" id="phoneNumber" name="phoneNumber" class="phone-input"
+                                    placeholder="۰۹۱۲۳۴۵۶۷۸۹" maxlength="11" pattern="[0-9]{11}" required
+                                    autocomplete="tel">
+                            </div>
+                            <div class="input-hint">مثال: ۰۹۱۲۳۴۵۶۷۸۹ (با صفر شروع شود)</div>
+                        </div>
+
+                        <button type="submit" class="submit-btn" id="submitBtn">
+                            <span class="btn-icon">📤</span>
+                            <span class="btn-text">ارسال کد تایید</span>
+                        </button>
+                    </form>
+
+                    <div class="login-footer">
+                        <a href="../Index/index.html" class="back-link">
+                            <span class="back-icon">←</span>
+                            بازگشت به صفحه اصلی
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <footer class="footer">
+                <div class="footer-content">
+                    <!-- اطلاعات تماس -->
+                    <div class="footer-section contact-info">
+                        <h3 class="footer-title">اطلاعات تماس</h3>
+                        <div class="contact-items">
+                            <div class="contact-item">
+                                <span class="contact-icon">📞</span>
+                                <div class="contact-details">
+                                    <span class="contact-label">تلفن تماس:</span>
+                                    <span class="contact-value">۰۲۱-۱۲۳۴۵۶۷۸</span>
+                                </div>
+                            </div>
+                            <div class="contact-item">
+                                <span class="contact-icon">📱</span>
+                                <div class="contact-details">
+                                    <span class="contact-label">موبایل:</span>
+                                    <span class="contact-value">۰۹۱۲-۳۴۵-۶۷۸۹</span>
+                                </div>
+                            </div>
+                            <div class="contact-item">
+                                <span class="contact-icon">📧</span>
+                                <div class="contact-details">
+                                    <span class="contact-label">ایمیل:</span>
+                                    <span class="contact-value">info@homayounpaper.com</span>
+                                </div>
+                            </div>
+                            <div class="contact-item">
+                                <span class="contact-icon">📍</span>
+                                <div class="contact-details">
+                                    <span class="contact-label">آدرس:</span>
+                                    <span class="contact-value">تهران، خیابان ولیعصر، پلاک ۱۲۳</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ساعات کاری -->
+                    <div class="footer-section working-hours">
+                        <h3 class="footer-title">ساعات کاری</h3>
+                        <div class="hours-info">
+                            <div class="hours-item">
+                                <span class="hours-label">شنبه تا چهارشنبه:</span>
+                                <span class="hours-value">۰۸:۰۰ - ۱۸:۰۰</span>
+                            </div>
+                            <div class="hours-item">
+                                <span class="hours-label">پنج‌شنبه:</span>
+                                <span class="hours-value">۰۸:۰۰ - ۱۶:۰۰</span>
+                            </div>
+                            <div class="hours-item">
+                                <span class="hours-label">جمعه:</span>
+                                <span class="hours-value">تعطیل</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- درباره ما -->
+                    <div class="footer-section about-us">
+                        <h3 class="footer-title">درباره ما</h3>
+                        <p class="about-text">
+                            کارخانه کاغذ و مقوای همایون با بیش از ۲۰ سال تجربه در تولید و فروش
+                            انواع کاغذ و مقوا، ارائه‌دهنده بهترین محصولات با کیفیت و قیمت مناسب می‌باشد.
+                        </p>
+                        <div class="social-links">
+                            <a href="#" class="social-link">📘</a>
+                            <a href="#" class="social-link">📷</a>
+                            <a href="#" class="social-link">📞</a>
+                        </div>
+                    </div>
+                </div>
+            </footer>
+        </main>
+    </div>
+    <script src="login.js"></script>
+</body>
+
+</html>

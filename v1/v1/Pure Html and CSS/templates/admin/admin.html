@@ -1,0 +1,306 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}پنل مدیریت - کارخانه کاغذ و مقوای همایون{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/styles.css' %}">
+<link rel="stylesheet" href="{% static 'css/admin.css' %}">
+{% endblock %}
+
+{% block body_class %}admin-body{% endblock %}
+
+{% block content %}
+<div class="admin-container">
+    <!-- Mobile Header -->
+    <header class="mobile-header">
+        <div class="mobile-header-content">
+            <button class="hamburger-btn" id="hamburgerBtn" onclick="toggleSidebar()">
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+            </button>
+            <div class="mobile-title">
+                <span class="mobile-logo">👨‍💼</span>
+                <h1 class="mobile-title-text">پنل مدیریت</h1>
+            </div>
+            <div class="mobile-actions">
+                <button class="mobile-action-btn" onclick="showMobileSearch()">
+                    <span class="action-icon">🔍</span>
+                </button>
+                <button class="mobile-action-btn" onclick="showMobileMenu()">
+                    <span class="action-icon">⋮</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Sidebar Navigation -->
+    <aside class="admin-sidebar" id="adminSidebar">
+        <div class="sidebar-header">
+            <div class="admin-logo">👨‍💼</div>
+            <h2 class="admin-title">پنل مدیریت</h2>
+            <button class="sidebar-close-btn" onclick="toggleSidebar()">×</button>
+        </div>
+
+        <nav class="sidebar-nav">
+            <ul class="nav-list">
+                <li class="nav-item">
+                    <button class="nav-btn {% if active_section == 'cms' %}active{% endif %}" data-section="cms"
+                        onclick="showSection('cms')">
+                        <span class="nav-icon">👥</span>
+                        <span class="nav-text">مدیریت کاربران</span>
+                        <span class="nav-badge">{{ users_count|default:0 }}</span>
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-btn {% if active_section == 'inventory' %}active{% endif %}"
+                        data-section="inventory" onclick="showSection('inventory')">
+                        <span class="nav-icon">📦</span>
+                        <span class="nav-text">مدیریت موجودی</span>
+                        <span class="nav-badge">{{ products_count|default:0 }}</span>
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-btn {% if active_section == 'orders' %}active{% endif %}" data-section="orders"
+                        onclick="showSection('orders')">
+                        <span class="nav-icon">📋</span>
+                        <span class="nav-text">مدیریت سفارشات</span>
+                        <span class="nav-badge">{{ orders_count|default:0 }}</span>
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-btn {% if active_section == 'working-hours' %}active{% endif %}"
+                        data-section="working-hours" onclick="showSection('working-hours')">
+                        <span class="nav-icon">🕐</span>
+                        <span class="nav-text">ساعت کاری</span>
+                        <span class="nav-status {% if working_hours.is_active %}active{% endif %}">
+                            {% if working_hours.is_active %}فعال{% else %}غیرفعال{% endif %}
+                        </span>
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-btn {% if active_section == 'main-page' %}active{% endif %}"
+                        data-section="main-page" onclick="showSection('main-page')">
+                        <span class="nav-icon">🏠</span>
+                        <span class="nav-text">مدیریت صفحه اصلی</span>
+                        <span class="nav-badge">2</span>
+                    </button>
+                </li>
+            </ul>
+        </nav>
+
+        <div class="sidebar-footer">
+            <div class="admin-profile-sidebar">
+                <div class="admin-avatar-sidebar">👨‍💼</div>
+                <div class="admin-info-sidebar">
+                    <span class="admin-name-sidebar">{{ user.get_full_name|default:'مدیر سیستم' }}</span>
+                    <span class="admin-role-sidebar">{{ user.role|default:'Administrator' }}</span>
+                </div>
+            </div>
+            <form method="POST" action="{% url 'auth:logout' %}" style="display: inline;">
+                {% csrf_token %}
+                <button type="submit" class="logout-btn">
+                    <span class="logout-icon">🚪</span>
+                    <span class="logout-text">خروج</span>
+                </button>
+            </form>
+        </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="admin-main">
+        <!-- Desktop Header -->
+        <header class="admin-header">
+            <div class="header-content">
+                <h1 class="section-title" id="sectionTitle">
+                    {% if active_section == 'cms' %}مدیریت کاربران
+                    {% elif active_section == 'inventory' %}مدیریت موجودی
+                    {% elif active_section == 'orders' %}مدیریت سفارشات
+                    {% elif active_section == 'working-hours' %}ساعت کاری
+                    {% elif active_section == 'main-page' %}مدیریت صفحه اصلی
+                    {% else %}مدیریت کاربران{% endif %}
+                </h1>
+                <div class="header-actions">
+                    <div class="admin-info">
+                        <span class="admin-name">{{ user.get_full_name|default:'مدیر سیستم' }}</span>
+                        <span class="admin-role">{{ user.role|default:'Administrator' }}</span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Content Sections -->
+        <div class="content-wrapper">
+            <!-- CMS Section - User Management -->
+            <section id="cms" class="content-section {% if active_section == 'cms' %}active{% endif %}">
+                <div class="section-header">
+                    <h2>مدیریت کاربران</h2>
+                    <button class="action-btn primary-btn" onclick="showAddUserModal()">
+                        <span class="btn-icon">➕</span>
+                        <span class="btn-text">افزودن کاربر جدید</span>
+                    </button>
+                </div>
+
+                <!-- User Filters -->
+                <div class="filters-container">
+                    <div class="filter-group">
+                        <label for="userStatusFilter">وضعیت:</label>
+                        <select id="userStatusFilter" onchange="filterUsers()">
+                            <option value="">همه</option>
+                            <option value="approved">تایید شده</option>
+                            <option value="pending">در انتظار</option>
+                            <option value="deactive">غیرفعال</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="userSearch">جستجو:</label>
+                        <input type="text" id="userSearch" placeholder="نام، شماره تلفن..." onkeyup="filterUsers()">
+                    </div>
+                    <div class="filter-group">
+                        <button class="action-btn secondary-btn" onclick="exportUsers()">
+                            <span class="btn-icon">📊</span>
+                            <span class="btn-text">خروجی Excel</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Users Table -->
+                <div class="table-container">
+                    <table class="admin-table" id="usersTable">
+                        <thead>
+                            <tr>
+                                <th>نام و نام خانوادگی</th>
+                                <th>شماره تلفن</th>
+                                <th>وضعیت</th>
+                                <th>تاریخ ثبت‌نام</th>
+                                <th>آخرین ورود</th>
+                                <th>عملیات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="usersTableBody">
+                            {% for user_item in users %}
+                            <tr>
+                                <td>{{ user_item.get_full_name|default:user_item.username }}</td>
+                                <td>{{ user_item.phone_number }}</td>
+                                <td>
+                                    <span class="status-badge status-{{ user_item.status|default:'pending' }}">
+                                        {% if user_item.status == 'approved' %}تایید شده
+                                        {% elif user_item.status == 'pending' %}در انتظار
+                                        {% else %}غیرفعال{% endif %}
+                                    </span>
+                                </td>
+                                <td>{{ user_item.date_joined|date:'Y/m/d' }}</td>
+                                <td>{{ user_item.last_login|date:'Y/m/d H:i'|default:'هیچوقت' }}</td>
+                                <td>
+                                    <button class="action-btn edit-btn"
+                                        onclick="editUser({{ user_item.id }})">ویرایش</button>
+                                    <button class="action-btn delete-btn"
+                                        onclick="deleteUser({{ user_item.id }})">حذف</button>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6" class="no-data">هیچ کاربری یافت نشد</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Inventory Section -->
+            <section id="inventory" class="content-section {% if active_section == 'inventory' %}active{% endif %}">
+                <div class="section-header">
+                    <h2>مدیریت موجودی</h2>
+                    <button class="action-btn primary-btn" onclick="showAddProductModal()">
+                        <span class="btn-icon">➕</span>
+                        <span class="btn-text">افزودن محصول جدید</span>
+                    </button>
+                </div>
+
+                <!-- Products Table -->
+                <div class="table-container">
+                    <table class="admin-table" id="productsTable">
+                        <thead>
+                            <tr>
+                                <th>نام محصول</th>
+                                <th>نوع</th>
+                                <th>قیمت (تومان)</th>
+                                <th>موجودی</th>
+                                <th>وضعیت</th>
+                                <th>عملیات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="productsTableBody">
+                            {% for product in products %}
+                            <tr>
+                                <td>{{ product.name }}</td>
+                                <td>{{ product.get_type_display }}</td>
+                                <td>{{ product.price|floatformat:0 }}</td>
+                                <td>{{ product.stock }}</td>
+                                <td>
+                                    <span class="status-badge status-{{ product.status }}">
+                                        {{ product.get_status_display }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <button class="action-btn edit-btn"
+                                        onclick="editProduct({{ product.id }})">ویرایش</button>
+                                    <button class="action-btn delete-btn"
+                                        onclick="deleteProduct({{ product.id }})">حذف</button>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6" class="no-data">هیچ محصولی یافت نشد</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Working Hours Section -->
+            <section id="working-hours"
+                class="content-section {% if active_section == 'working-hours' %}active{% endif %}">
+                <div class="section-header">
+                    <h2>مدیریت ساعت کاری</h2>
+                    <button class="action-btn primary-btn" onclick="showWorkingHoursModal()">
+                        <span class="btn-icon">⚙️</span>
+                        <span class="btn-text">تنظیم ساعت کاری</span>
+                    </button>
+                </div>
+
+                <div class="working-hours-info">
+                    <div class="info-card">
+                        <div class="info-header">
+                            <h3>ساعت کاری فعلی</h3>
+                            <span class="status-indicator {% if working_hours.is_active %}active{% endif %}"
+                                id="workingHoursStatus">
+                                {% if working_hours.is_active %}فعال{% else %}غیرفعال{% endif %}
+                            </span>
+                        </div>
+                        <div class="info-content">
+                            <div class="time-range">
+                                <span class="time-label">از:</span>
+                                <span class="time-value" id="currentStartTime">{{
+                                    working_hours.start_time|default:'08:00' }}</span>
+                            </div>
+                            <div class="time-range">
+                                <span class="time-label">تا:</span>
+                                <span class="time-value" id="currentEndTime">{{ working_hours.end_time|default:'18:00'
+                                    }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/admin.js' %}"></script>
+{% endblock %}

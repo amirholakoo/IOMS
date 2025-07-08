@@ -23,6 +23,9 @@ urlpatterns = [
     # 🏢 اپلیکیشن اصلی کسب‌وکار
     path('core/', include('core.urls')),
     
+    # 💳 سیستم پرداخت
+    path('payments/', include('payments.urls')),
+    
     # 🏠 صفحه اصلی
     # 🏠 صفحه اصلی کارخانه کاغذ و مقوای همایون
     path('', views.index_view, name='index'),

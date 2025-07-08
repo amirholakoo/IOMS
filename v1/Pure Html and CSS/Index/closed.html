@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>سایت بسته - کارخانه کاغذ و مقوای همایون</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Vazirmatn', sans-serif;
+            background-color: #f4f4f4;
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 5px auto;
+            margin-outside: 5px;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .main-title {
+            font-size: 2.5rem;
+            color: #007bff;
+        }
+
+        .main-subtitle {
+            font-size: 1.2rem;
+            color: #555;
+        }
+
+        .closed-container {
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .closed-icon {
+            font-size: 4rem;
+            color: #e74c3c;
+        }
+
+        .closed-title {
+            font-size: 2rem;
+            color: #e74c3c;
+            margin: 1rem 0;
+        }
+
+        .closed-message {
+            font-size: 1.2rem;
+            color: #666;
+            margin-bottom: 2rem;
+            line-height: 1.6;
+        }
+
+        .working-hours-info {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            border: 1px solid #e9ecef;
+        }
+
+        .working-hours-title {
+            font-size: 1.1rem;
+            color: #495057;
+            margin-bottom: 1rem;
+        }
+
+        .working-hours-time {
+            font-size: 1.3rem;
+            color: #007bff;
+            font-weight: bold;
+        }
+
+        .refresh-btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .refresh-btn:hover {
+            background: #0056b3;
+        }
+
+        .contact-info {
+            margin-top: 2rem;
+            padding: 1rem;
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+        }
+
+        .contact-info h4 {
+            color: #856404;
+            margin-bottom: 0.5rem;
+        }
+
+        .contact-info p {
+            color: #856404;
+            margin: 0.25rem 0;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 0.9rem;
+            color: #777;
+        }
+    </style>
+</head>
+
+<body>
+<div class="container">
+    <header class="header">
+        <h1 class="main-title">کارخانه کاغذ و مقوای همایون</h1>
+    </header>
+
+    <main class="main-content">
+        <div class="closed-container">
+            <div class="closed-icon">🔒</div>
+            <h2 class="closed-title">سایت در حال حاضر بسته است</h2>
+
+            <p class="closed-message">
+                متأسفانه در حال حاضر خارج از ساعت کاری هستیم.
+                لطفاً در ساعت کاری مجدداً مراجعه فرمایید.
+            </p>
+
+            <div class="working-hours-info">
+                <h3 class="working-hours-title">ساعت کاری:</h3>
+                <div class="working-hours-time" id="workingHoursDisplay">
+                    از 08:00 تا 18:00
+                </div>
+            </div>
+
+            <div class="contact-info">
+                <h4>اطلاعات تماس:</h4>
+                <p>📞 تلفن: 021-12345678</p>
+                <p>📧 ایمیل: info@homayounpaper.com</p>
+                <p>📍 آدرس: تهران، خیابان ولیعصر</p>
+            </div>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <p>آخرین بروزرسانی: امروز</p>
+    </footer>
+</div>
+
+<script>
+    // Load working hours from localStorage
+    function loadWorkingHours() {
+        const saved = localStorage.getItem('workingHours');
+        if (saved) {
+            const workingHours = JSON.parse(saved);
+            const display = document.getElementById('workingHoursDisplay');
+            if (display) {
+                const startTime = `${workingHours.startHour.toString().padStart(2, '0')}:${workingHours.startMinute.toString().padStart(2, '0')}`;
+                const endTime = `${workingHours.endHour.toString().padStart(2, '0')}:${workingHours.endMinute.toString().padStart(2, '0')}`;
+                display.textContent = `از ${startTime} تا ${endTime}`;
+            }
+        }
+    }
+
+    // Check if site should be open
+    function checkIfOpen() {
+        const saved = localStorage.getItem('workingHours');
+        if (saved) {
+            const workingHours = JSON.parse(saved);
+
+            if (!workingHours.isActive) {
+                alert('سایت در حال حاضر غیرفعال است.');
+                return;
+            }
+
+            const now = new Date();
+            const currentHour = now.getHours();
+            const currentMinute = now.getMinutes();
+            const currentTime = currentHour * 60 + currentMinute;
+
+            const startTime = workingHours.startHour * 60 + workingHours.startMinute;
+            const endTime = workingHours.endHour * 60 + workingHours.endMinute;
+
+            if (currentTime >= startTime && currentTime <= endTime) {
+                // Site should be open, redirect to main page
+                window.location.href = 'index.html';
+            } else {
+                alert('هنوز خارج از ساعت کاری هستیم. لطفاً صبر کنید.');
+            }
+        } else {
+            alert('تنظیمات ساعت کاری یافت نشد.');
+        }
+    }
+
+    // Auto-check every 5 minutes
+    setInterval(checkIfOpen, 5 * 60 * 1000);
+
+    // Load working hours when page loads
+    window.addEventListener('load', loadWorkingHours);
+</script>
+</body>
+
+</html>

@@ -13,6 +13,8 @@
         border-radius: 15px;
     }
     
+    .customers-header > .container, .customers-header .row:first-child { margin-top: 0 !important; padding-top: 0 !important; }
+    
     .customer-card {
         border: none;
         border-radius: 15px;
@@ -98,7 +100,7 @@
                 <a href="{% url 'core:admin_dashboard' %}" class="btn btn-light me-2">
                     ↩️ بازگشت به داشبورد
                 </a>
-                <a href="{% url 'accounts:customer_registration' %}" class="btn btn-success">
+                <a href="{% url 'core:create_customer' %}" class="btn btn-success">
                     ➕ افزودن مشتری
                 </a>
             </div>
@@ -118,20 +120,20 @@
             </div>
             <div class="col-md-3">
                 <div class="stat-card stat-success">
-                    <h3>{{ active_customers }}</h3>
-                    <p class="mb-0">✅ مشتریان فعال</p>
+                    <h3>{{ page_obj.paginator.count|default:0 }}</h3>
+                    <p class="mb-0">✅ کل مشتریان</p>
                 </div>
             </div>
             <div class="col-md-3">
                 <div class="stat-card stat-warning">
-                    <h3>{{ recent_customers }}</h3>
-                    <p class="mb-0">🆕 مشتریان جدید</p>
+                    <h3>{{ total_customers|default:0 }}</h3>
+                    <p class="mb-0">🆕 مشتریان فیلتر شده</p>
                 </div>
             </div>
             <div class="col-md-3">
                 <div class="stat-card stat-info">
-                    <h3>{{ customers_with_orders }}</h3>
-                    <p class="mb-0">🛒 دارای سفارش</p>
+                    <h3>{{ page_obj.number|default:1 }}</h3>
+                    <p class="mb-0">📄 صفحه فعلی</p>
                 </div>
             </div>
         </div>
@@ -200,34 +202,19 @@
     <!-- Customers List -->
     <div class="customers-list">
         <div class="container">
-            {% if show_success %}
-            <div class="alert alert-success alert-dismissible fade show" role="alert">
-                ✅ مشتری جدید با موفقیت ثبت شد و فعال است.
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="بستن"></button>
-            </div>
-            {% endif %}
-            {% if requested_list %}
-            <div class="alert alert-warning mt-3">
-                📝 این لیست فقط درخواست‌های ثبت‌نام مشتریان جدید (در انتظار تایید) را نمایش می‌دهد.
-            </div>
-            <div class="mb-3 text-end">
-                <a href="{% url 'core:customers_list' %}" class="btn btn-outline-primary">بازگشت به لیست مشتریان فعال</a>
-            </div>
-            {% endif %}
-            {% if not page_obj or page_obj.paginator.count == 0 %}
-                <div class="text-center py-5">
-                    <div class="empty-state">
-                        {% if requested_list %}
-                            <h3>درخواستی برای ثبت‌نام مشتری جدید وجود ندارد.</h3>
-                            <p class="text-muted">همه درخواست‌ها بررسی شده‌اند.</p>
-                        {% else %}
-                            <h3>🔍 مشتری یافت نشد</h3>
-                            <p class="text-muted">هیچ مشتری با معیارهای جستجو پیدا نشد.</p>
-                        {% endif %}
-                        <a href="{% url 'core:customers_list' %}" class="btn btn-primary">نمایش همه مشتریان</a>
+            <!-- Messages -->
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="بستن"></button>
                     </div>
-                </div>
-            {% else %}
+                {% endfor %}
+            {% endif %}
+            
+
+            
+            {% if page_obj %}
                 <div class="row">
                     {% for customer in page_obj %}
                         <div class="col-md-6 col-lg-4 mb-4">
@@ -243,21 +230,18 @@
                                         </small>
                                     </div>
                                     {% if customer.status == 'Requested' and request.user.is_superuser %}
-                                        <a href="{% url 'accounts:customer_registration' %}?phone={{ customer.phone }}" class="btn btn-warning btn-sm ms-2">ثبت‌نام</a>
+                                        <a href="{% url 'accounts:register_requested_customer' %}?phone={{ customer.phone }}" class="btn btn-warning btn-sm ms-2">ثبت‌نام</a>
                                     {% endif %}
                                     <div class="dropdown">
                                         <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="dropdown">
                                             ⋮
                                         </button>
                                         <ul class="dropdown-menu">
-                                            <li><a class="dropdown-item" href="#" onclick="viewCustomer({{ customer.id }})">👁️ مشاهده</a></li>
-                                            <li><a class="dropdown-item" href="{% url 'core:edit_customer' customer.id %}">✏️ ویرایش</a></li>
-                                            <li><a class="dropdown-item" href="#" onclick="customerOrders({{ customer.id }})">🛒 سفارشات</a></li>
+                                            <li><a class="dropdown-item" href="#" onclick="openViewCustomerModal({{ customer.id }})">👁️ مشاهده</a></li>
+                                            <li><a class="dropdown-item" href="#" onclick="openEditCustomerModal({{ customer.id }})">✏️ ویرایش</a></li>
+                                            <li><a class="dropdown-item" href="{% url 'core:orders_list' %}?customer_id={{ customer.id }}">🛒 سفارشات</a></li>
                                             <li><hr class="dropdown-divider"></li>
-                                            <li><form method="post" action="{% url 'core:delete_customer' customer.id %}" style="display:inline;">
-                                                {% csrf_token %}
-                                                <button type="submit" class="dropdown-item text-danger" onclick="return confirm('آیا از حذف این مشتری اطمینان دارید؟')">🗑️ حذف</button>
-                                            </form></li>
+                                            <li><a class="dropdown-item text-danger" href="#" onclick="openDeleteCustomerModal({{ customer.id }}, '{{ customer.customer_name|escapejs }}')">🗑️ حذف</a></li>
                                         </ul>
                                     </div>
                                 </div>
@@ -279,9 +263,13 @@
                                         <small class="text-muted">
                                             📅 {{ customer.created_at|date:"Y/m/d" }}
                                         </small>
-                                        <button class="btn btn-sm btn-primary" onclick="createOrder({{ customer.id }})">
+                                        {% if customer.status != 'Requested' %}
+                                            <a href="{% url 'core:create_order_for_customer' customer.id %}" class="btn btn-sm btn-primary">
                                             ➕ سفارش جدید
-                                        </button>
+                                            </a>
+                                        {% else %}
+                                            <span class="badge bg-warning text-dark">📝 در انتظار تایید</span>
+                                        {% endif %}
                                     </div>
                                 </div>
                             </div>
@@ -319,7 +307,70 @@
                         </ul>
                     </nav>
                 {% endif %}
+            {% else %}
+                <div class="text-center py-5">
+                    <div class="empty-state">
+                        <h3>🔍 مشتری یافت نشد</h3>
+                        <p class="text-muted">هیچ مشتری با معیارهای جستجو پیدا نشد.</p>
+                        <a href="{% url 'core:customers_list' %}" class="btn btn-primary">نمایش همه مشتریان</a>
+                    </div>
+                </div>
             {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Customer View Modal -->
+<div class="modal fade" id="viewCustomerModal" tabindex="-1" aria-labelledby="viewCustomerModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="viewCustomerModalLabel">👁️ مشاهده مشتری</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="بستن"></button>
+      </div>
+      <div class="modal-body" id="viewCustomerModalBody">
+        <div class="text-center text-muted py-5">در حال بارگذاری...</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Customer Edit Modal -->
+<div class="modal fade" id="editCustomerModal" tabindex="-1" aria-labelledby="editCustomerModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="editCustomerModalLabel">✏️ ویرایش مشتری</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="بستن"></button>
+      </div>
+      <div class="modal-body" id="editCustomerModalBody">
+        <div class="text-center text-muted py-5">در حال بارگذاری...</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Customer Delete Modal -->
+<div class="modal fade" id="deleteCustomerModal" tabindex="-1" aria-labelledby="deleteCustomerModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-danger text-white">
+        <h5 class="modal-title" id="deleteCustomerModalLabel">🗑️ حذف مشتری</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="بستن"></button>
+      </div>
+      <div class="modal-body" id="deleteCustomerModalBody">
+        <div class="text-center">
+          <div class="display-1 mb-3">🗑️</div>
+          <h4 class="mb-3 text-danger">آیا مطمئن هستید که می‌خواهید این مشتری را حذف کنید؟</h4>
+          <div id="deleteCustomerName" class="mb-3 fw-bold"></div>
+          <form id="deleteCustomerForm" method="post">
+            {% csrf_token %}
+            <input type="hidden" name="customer_id" id="deleteCustomerId">
+            <button type="submit" class="btn btn-danger btn-lg">بله، حذف کن</button>
+            <button type="button" class="btn btn-secondary btn-lg ms-2" data-bs-dismiss="modal">انصراف</button>
+          </form>
+        </div>
+      </div>
         </div>
     </div>
 </div>
@@ -327,25 +378,44 @@
 
 {% block extra_js %}
 <script>
-// View customer details
-function viewCustomer(customerId) {
-    showNotification('⚠️ صفحه جزئیات مشتری در حال توسعه است', 'info');
+// Open View Modal
+function openViewCustomerModal(customerId) {
+    $('#viewCustomerModal').modal('show');
+    $('#viewCustomerModalBody').html('<div class="text-center text-muted py-5">در حال بارگذاری...</div>');
+    $.get('/core/customers/' + customerId + '/view/', function(data) {
+        $('#viewCustomerModalBody').html(data);
+    });
 }
-
-// View customer orders
-function customerOrders(customerId) {
-    showNotification('⚠️ صفحه سفارشات مشتری در حال توسعه است', 'info');
+// Open Edit Modal
+function openEditCustomerModal(customerId) {
+    $('#editCustomerModal').modal('show');
+    $('#editCustomerModalBody').html('<div class="text-center text-muted py-5">در حال بارگذاری...</div>');
+    $.get('/core/customers/' + customerId + '/edit-modal/?modal=1', function(data) {
+        $('#editCustomerModalBody').html(data);
+    });
 }
-
-// Create new order for customer
-function createOrder(customerId) {
-    showNotification('⚠️ قابلیت ایجاد سفارش در حال توسعه است', 'info');
+// Open Delete Modal
+function openDeleteCustomerModal(customerId, customerName) {
+    $('#deleteCustomerId').val(customerId);
+    $('#deleteCustomerName').text(customerName);
+    $('#deleteCustomerModal').modal('show');
 }
-
-// Add new customer
-function addNewCustomer() {
-    showNotification('⚠️ فرم افزودن مشتری جدید در حال توسعه است', 'info');
+// Handle Delete Form Submit
+$('#deleteCustomerForm').on('submit', function(e) {
+    e.preventDefault();
+    var customerId = $('#deleteCustomerId').val();
+    $.ajax({
+        url: '/core/customers/' + customerId + '/delete/',
+        type: 'POST',
+        data: $(this).serialize(),
+        success: function(response) {
+            location.reload();
+        },
+        error: function(xhr) {
+            alert('خطا در حذف مشتری.');
 }
+    });
+});
 
 // Export customers
 function exportCustomers() {

@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}کارخانه تعطیل است{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/styles.css' %}">
+{% endblock %}
+
+{% block header %}
+<header class="header">
+    <h1 class="main-title">کارخانه کاغد و مقوای همایون</h1>
+    <h4 class="main-subtitle">تعطیل</h4>
+</header>
+{% endblock %}
+
+{% block content %}
+<main class="main-content">
+    <div class="closed-message">
+        <div class="closed-icon">⏰</div>
+        <h2 class="closed-title">کارخانه در حال حاضر تعطیل است</h2>
+        <p class="closed-subtitle">لطفاً در ساعات کاری مراجعه فرمایید</p>
+
+        {% if working_hours %}
+        <div class="working-hours">
+            <h3>ساعات کاری:</h3>
+            <p>{{ working_hours }}</p>
+        </div>
+        {% endif %}
+    </div>
+</main>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/script.js' %}"></script>
+{% endblock %}

@@ -248,10 +248,61 @@
 
 {% block extra_js %}
 <script>
+function getCSRFToken() {
+    // Try to get CSRF token from cookie or hidden input
+    let csrfToken = null;
+    // Try cookie first
+    const cookies = document.cookie.split(';');
+    for (let i = 0; i < cookies.length; i++) {
+        const cookie = cookies[i].trim();
+        if (cookie.substring(0, 10) === 'csrftoken=') {
+            csrfToken = decodeURIComponent(cookie.substring(10));
+            break;
+        }
+    }
+    // Fallback: try hidden input
+    if (!csrfToken) {
+        const input = document.querySelector('[name=csrfmiddlewaretoken]');
+        if (input) csrfToken = input.value;
+    }
+    return csrfToken;
+}
+
 function confirmCancel() {
-    if (confirm('آیا مطمئن هستید که می‌خواهید این سفارش را لغو کنید؟')) {
-        // Add cancel order functionality here
-        alert('قابلیت لغو سفارش به زودی اضافه خواهد شد');
+    if (confirm('Are you sure you want to cancel this order?')) {
+        fetch('/core/orders/{{ order.id }}/cancel/', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCSRFToken(),
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                if (typeof createPopup === 'function') {
+                    createPopup(data.message, 'success', 'Order Cancelled', 2000);
+                } else {
+                    alert(data.message);
+                }
+                setTimeout(function() {
+                    window.location.reload();
+                }, 1500);
+            } else {
+                if (typeof createPopup === 'function') {
+                    createPopup(data.message, 'error', 'Error', 3000);
+                } else {
+                    alert(data.message);
+                }
+            }
+        })
+        .catch(() => {
+            if (typeof createPopup === 'function') {
+                createPopup('Server error. Please try again.', 'error', 'Error', 3000);
+            } else {
+                alert('Server error. Please try again.');
+            }
+        });
     }
 }
 </script>

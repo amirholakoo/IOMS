@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}ورود به سیستم{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/styles.css' %}">
+<link rel="stylesheet" href="{% static 'css/login.css' %}">
+{% endblock %}
+
+{% block header %}
+<header class="header">
+    <h1 class="main-title">ورود به سیستم</h1>
+</header>
+{% endblock %}
+
+{% block content %}
+<main class="main-content">
+    <div class="login-container">
+        <div class="login-card">
+            <div class="login-header">
+                <div class="login-icon">📱</div>
+                <h2 class="login-title">شماره تلفن خود را وارد کنید</h2>
+                <p class="login-subtitle">کد تایید برای شما ارسال خواهد شد</p>
+            </div>
+
+            <form class="login-form" id="phoneForm" method="POST" action="{% url 'auth:send_verification' %}">
+                {% csrf_token %}
+
+                {% if messages %}
+                {% for message in messages %}
+                <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+                {% endfor %}
+                {% endif %}
+
+                <div class="input-group">
+                    <label for="phoneNumber" class="input-label">شماره تلفن</label>
+                    <div class="phone-input-container">
+                        <span class="country-code">+۹۸</span>
+                        <input type="tel" id="phoneNumber" name="phone_number" class="phone-input"
+                            placeholder="۰۹۱۲۳۴۵۶۷۸۹" maxlength="11" pattern="[0-9]{11}" required autocomplete="tel"
+                            value="{{ form.phone_number.value|default:'' }}">
+                    </div>
+                    <div class="input-hint">مثال: ۰۹۱۲۳۴۵۶۷۸۹ (با صفر شروع شود)</div>
+                    {% if form.phone_number.errors %}
+                    <div class="input-error">{{ form.phone_number.errors.0 }}</div>
+                    {% endif %}
+                </div>
+
+                <button type="submit" class="submit-btn" id="submitBtn">
+                    <span class="btn-icon">📤</span>
+                    <span class="btn-text">ارسال کد تایید</span>
+                </button>
+            </form>
+
+            <div class="login-footer">
+                <a href="{% url 'index:home' %}" class="back-link">
+                    <span class="back-icon">←</span>
+                    بازگشت به صفحه اصلی
+                </a>
+            </div>
+        </div>
+    </div>
+</main>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/login.js' %}"></script>
+{% endblock %}

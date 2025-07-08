@@ -252,10 +252,18 @@ class User(AbstractUser, BaseModel):
         # جلوگیری از import circular
         from core.models import Customer
         
-        # بررسی اینکه آیا Customer object از قبل وجود دارد یا نه
-        existing_customer = Customer.objects.filter(
-            customer_name=self.get_full_name() or self.username
-        ).first()
+        # بررسی اینکه آیا Customer object از قبل وجود دارد یا نه (بر اساس نام یا شماره تلفن)
+        existing_customer = None
+        
+        # ابتدا بر اساس شماره تلفن بررسی کن
+        if self.phone:
+            existing_customer = Customer.objects.filter(phone=self.phone).first()
+        
+        # اگر بر اساس شماره تلفن پیدا نشد، بر اساس نام بررسی کن
+        if not existing_customer:
+            existing_customer = Customer.objects.filter(
+                customer_name=self.get_full_name() or self.username
+            ).first()
         
         if not existing_customer:
             # ایجاد Customer object جدید
@@ -275,7 +283,12 @@ class User(AbstractUser, BaseModel):
             # برای الان از طریق نام و شماره تلفن ارتباط برقرار می‌کنیم
             
             return customer
-        
+        else:
+            # اگر Customer از قبل وجود دارد، آن را به‌روزرسانی کن
+            existing_customer.customer_name = self.get_full_name() or self.username
+            existing_customer.phone = self.phone if self.phone else existing_customer.phone
+            existing_customer.comments = f'🔵 به‌روزرسانی خودکار برای کاربر: {self.username}'
+            existing_customer.save()
         return existing_customer
     
     def __str__(self):
@@ -375,6 +388,26 @@ class User(AbstractUser, BaseModel):
         
         # سایر کاربران بر اساس وضعیت و فیلد is_active
         return self.status == self.UserStatus.ACTIVE and self.is_active
+    
+    @property
+    def customer(self):
+        """
+        🔵 دسترسی به Customer object مرتبط با کاربر
+        """
+        from core.models import Customer
+        
+        # ابتدا بر اساس شماره تلفن جستجو کن
+        if self.phone:
+            customer = Customer.objects.filter(phone=self.phone).first()
+            if customer:
+                return customer
+        
+        # اگر بر اساس شماره تلفن پیدا نشد، بر اساس نام جستجو کن
+        customer = Customer.objects.filter(
+            customer_name=self.get_full_name() or self.username
+        ).first()
+        
+        return customer
 
 
 class UserSession(BaseModel):
