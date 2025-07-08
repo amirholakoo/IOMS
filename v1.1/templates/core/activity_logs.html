@@ -192,9 +192,6 @@
                     ↩️ بازگشت به داشبورد
                 </a>
                 <div class="btn-group">
-                    <button class="btn btn-outline-light" onclick="exportLogs()">
-                        📤 خروجی
-                    </button>
                     <button class="btn btn-outline-light" onclick="clearOldLogs()">
                         🗑️ پاکسازی
                     </button>
@@ -321,10 +318,10 @@
             <div class="log-entry severity-{{ log.severity|lower }}">
                 <div class="log-header">
                     <div class="log-user">
-                        <div class="user-avatar">{{ log.user.get_initials|default:'SY' }}</div>
+                        <div class="user-avatar">{{ log.user.get_initials|default_if_none:'SY' }}</div>
                         <div>
-                            <strong>{{ log.user.get_full_name|default:log.user.username|default:'سیستم' }}</strong>
-                            <div class="small text-muted">{{ log.user.username|default:'system' }}</div>
+                            <strong>{% if log.user %}{{ log.user.get_full_name|default:log.user.username }}{% else %}سیستم{% endif %}</strong>
+                            <div class="small text-muted">{% if log.user %}{{ log.user.username|default:'system' }}{% else %}system{% endif %}</div>
                         </div>
                     </div>
                     <div class="d-flex gap-2 align-items-center">
@@ -389,10 +386,7 @@ function refreshLogs() {
     // Implement refresh logic
 }
 
-// Export logs
-function exportLogs() {
-    showNotification('📤 خروجی لاگ‌ها در حال آماده‌سازی...', 'info');
-}
+
 
 // Clear old logs
 function clearOldLogs() {

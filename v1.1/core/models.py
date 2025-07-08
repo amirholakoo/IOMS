@@ -107,6 +107,14 @@ class Customer(BaseModel):
         help_text="شناسه ملی (اشخاص حقیقی) یا شناسه اقتصادی (اشخاص حقوقی)"
     )
     
+    # 📝 لاگ‌های تحلیلی
+    logs = models.TextField(
+        blank=True,
+        default='',
+        verbose_name="📝 لاگ‌ها",
+        help_text="لاگ‌های تحلیلی برای تیم آنالیتیکس (append only)"
+    )
+    
     class Meta:
         verbose_name = "👤 مشتری"
         verbose_name_plural = "👥 مشتریان"
@@ -177,6 +185,32 @@ class Customer(BaseModel):
             contact_parts.append(f"🏠 {self.address}")
         
         return " | ".join(contact_parts) if contact_parts else "❌ اطلاعات تماس ناقص"
+
+    def save(self, *args, **kwargs):
+        from django.utils import timezone
+        from django.core.management import call_command
+        is_new = not self.pk
+        now_str = timezone.now().strftime('%Y-%m-%d %H:%M')
+        log_entries = []
+        if self.logs:
+            log_entries = [entry.strip() for entry in self.logs.split(',') if entry.strip()]
+        if is_new:
+            log_entries.append(f"{now_str} Created By {self.customer_name}")
+        else:
+            try:
+                old = type(self).objects.get(pk=self.pk)
+            except type(self).DoesNotExist:
+                old = None
+            log_entries.append(f"{now_str} Updated By {self.customer_name}")
+            if old and hasattr(old, 'status') and old.status != self.status:
+                log_entries.append(f"{now_str} Status changed to {self.status} By {self.customer_name}")
+        log_entries = sorted(log_entries, key=lambda x: x[:16])
+        self.logs = ', '.join(log_entries) + (',' if log_entries else '')
+        super().save(*args, **kwargs)
+        try:
+            call_command('export_logs_to_csv')
+        except Exception:
+            pass
 
 
 class Product(BaseModel):
@@ -695,6 +729,14 @@ class Order(BaseModel):
         ('Check', '📝 چک'),
     ]
     
+    # 📝 لاگ‌های تحلیلی
+    logs = models.TextField(
+        blank=True,
+        default='',
+        verbose_name="📝 لاگ‌ها",
+        help_text="لاگ‌های تحلیلی برای تیم آنالیتیکس (append only)"
+    )
+    
     # 👤 مشتری سفارش‌دهنده
     customer = models.ForeignKey(
         'Customer',
@@ -823,13 +865,47 @@ class Order(BaseModel):
         """
         💾 ذخیره سفارش با تولید خودکار شماره سفارش
         """
-        if not self.order_number:
-            self.order_number = self.generate_order_number()
-        
-        # محاسبه مبلغ نهایی
-        self.calculate_final_amount()
-        
+        from django.utils import timezone
+        from django.core.management import call_command
+        current_user = None
+        username = 'system'
+        try:
+            from core.middleware import get_current_user
+            current_user = get_current_user()
+            if current_user and hasattr(current_user, 'get_full_name'):
+                username = current_user.get_full_name() or current_user.username
+            elif current_user and hasattr(current_user, 'username'):
+                username = current_user.username
+        except Exception:
+            pass
+        is_new = not self.pk
+        now_str = timezone.now().strftime('%Y-%m-%d %H:%M')
+        log_entries = []
+        if self.logs:
+            log_entries = [entry.strip() for entry in self.logs.split(',') if entry.strip()]
+        if is_new:
+            log_entries.append(f"{now_str} Created By {username}")
+            log_entries.append(f"{now_str} Status: {self.status} By {username}")
+        else:
+            try:
+                old = type(self).objects.get(pk=self.pk)
+            except type(self).DoesNotExist:
+                old = None
+            log_entries.append(f"{now_str} Updated By {username}")
+            if old:
+                if hasattr(old, 'status') and old.status != self.status:
+                    log_entries.append(f"{now_str} Status changed to {self.status} By {username}")
+                if hasattr(old, 'payment_method') and old.payment_method != self.payment_method:
+                    log_entries.append(f"{now_str} Payment method changed to {self.payment_method} By {username}")
+                if hasattr(old, 'final_amount') and old.final_amount != self.final_amount:
+                    log_entries.append(f"{now_str} Final amount changed to {self.final_amount} By {username}")
+        log_entries = sorted(log_entries, key=lambda x: x[:16])
+        self.logs = ', '.join(log_entries) + (',' if log_entries else '')
         super().save(*args, **kwargs)
+        try:
+            call_command('export_logs_to_csv')
+        except Exception:
+            pass
     
     def generate_order_number(self):
         """

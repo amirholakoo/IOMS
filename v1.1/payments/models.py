@@ -310,6 +310,11 @@ class Payment(BaseModel):
         self.log_activity('SAVE', f'پرداخت {self.tracking_code} ذخیره شد - وضعیت: {self.get_status_display_persian()}')
         
         super().save(*args, **kwargs)
+        try:
+            from django.core.management import call_command
+            call_command('export_payments_logs_to_csv')
+        except Exception:
+            pass
     
     def generate_tracking_code(self):
         """

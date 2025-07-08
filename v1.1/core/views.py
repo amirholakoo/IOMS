@@ -1926,12 +1926,26 @@ def create_order_for_customer_view(request, customer_id):
             # ایجاد سفارش
             from django.db import transaction
             with transaction.atomic():
+                # Generate unique order_number
+                for _ in range(5):
+                    candidate = Order().generate_order_number()
+                    if not Order.objects.filter(order_number=candidate).exists():
+                        order_number = candidate
+                        break
+                else:
+                    messages.error(request, '❌ خطا در تولید شماره سفارش یکتا. لطفاً مجدداً تلاش کنید.')
+                    return render(request, 'core/create_order_for_customer.html', {
+                        'customer': customer,
+                        'available_products': available_products,
+                        'title': f'🛒 ایجاد سفارش برای {customer.customer_name}'
+                    })
                 order = Order.objects.create(
                     customer=customer,
                     payment_method=payment_method,
                     status='Confirmed',  # سفارش تایید شده
                     notes=notes,
-                    created_by=request.user
+                    created_by=request.user,
+                    order_number=order_number
                 )
                 
                 # ایجاد آیتم سفارش
@@ -2050,41 +2064,47 @@ def selected_products_view(request):
     if not request.user.is_authenticated:
         return redirect('/accounts/customer/sms-login/?next=/core/selected-products/')
     
-    # Get customer
+    # Ensure customer exists for the user
     customer = request.user.customer
     if not customer:
-        messages.error(request, '❌ اطلاعات مشتری یافت نشد. لطفاً با پشتیبانی تماس بگیرید.')
-        return redirect('accounts:customer_dashboard')
-    
+        # Try to create or update customer profile automatically
+        from accounts.models import User
+        customer = request.user._create_customer_profile() if hasattr(request.user, '_create_customer_profile') else None
+        if customer:
+            messages.warning(request, '⚠️ پروفایل مشتری شما به صورت خودکار ایجاد شد. لطفاً اطلاعات خود را بررسی کنید.')
+        else:
+            messages.error(request, '❌ اطلاعات مشتری یافت نشد و امکان ایجاد خودکار وجود ندارد. لطفاً با پشتیبانی تماس بگیرید.')
+            return redirect('accounts:customer_dashboard')
+
     # Check customer status
     if customer.status not in ['Active', 'Inactive']:
         messages.error(request, '❌ حساب کاربری شما فعال نیست. لطفاً با پشتیبانی تماس بگیرید.')
         return redirect('accounts:customer_dashboard')
-    
+
     selected = request.session.get('selected_products', [])
     if not selected:
         messages.warning(request, '⚠️ هیچ محصولی انتخاب نشده است.')
         return redirect('core:products_landing')
-    
+
     product_ids = [item['product_id'] for item in selected]
     products = Product.objects.filter(id__in=product_ids, status='In-stock')
-    
+
     if not products.exists():
         messages.error(request, '❌ محصولات انتخاب شده موجود نیستند.')
         return redirect('core:products_landing')
-    
+
     # تعداد هر محصول را به دیکشنری تبدیل کن
     quantities = {str(item['product_id']): item['quantity'] for item in selected}
     for p in products:
         p.selected_quantity = quantities.get(str(p.id), 0)
-    
+
     # Robust default payment method logic
     default_payment_method = request.GET.get('default_payment')
     if default_payment_method:
         request.session['default_payment_method'] = default_payment_method
     else:
         default_payment_method = request.session.get('default_payment_method', 'Cash')
-    
+
     # Create initial order with Processing status
     from django.db import transaction
     try:
@@ -2094,17 +2114,26 @@ def selected_products_view(request):
                 customer=customer,
                 status='Processing'
             ).first()
-            
+
             if not existing_order:
-                # Create new processing order
+                # Create new processing order with unique order_number
+                for _ in range(5):
+                    candidate = Order().generate_order_number()
+                    if not Order.objects.filter(order_number=candidate).exists():
+                        order_number = candidate
+                        break
+                else:
+                    messages.error(request, '❌ خطا در تولید شماره سفارش یکتا. لطفاً مجدداً تلاش کنید.')
+                    return redirect('core:products_landing')
                 processing_order = Order.objects.create(
                     customer=customer,
                     payment_method='Cash',  # Default, will be updated later
                     status='Processing',
                     notes=f'سفارش در حال پردازش - مرحله انتخاب محصولات و نوع پرداخت',
-                    created_by=request.user
+                    created_by=request.user,
+                    order_number=order_number
                 )
-                
+
                 # Log the creation of processing order
                 ActivityLog.log_activity(
                     user=request.user,
@@ -2120,7 +2149,7 @@ def selected_products_view(request):
                         'stage': 'product_selection'
                     }
                 )
-                
+
                 # Store order ID in session for later use
                 request.session['processing_order_id'] = processing_order.id
             else:
@@ -2129,7 +2158,7 @@ def selected_products_view(request):
     except Exception as e:
         messages.error(request, f'❌ خطا در ایجاد سفارش: {str(e)}')
         return redirect('core:products_landing')
-    
+
     # After rendering, clear the session value so it doesn't persist
     response = render(request, 'core/selected_products.html', {
         'products': products,
