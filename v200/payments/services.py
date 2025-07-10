@@ -419,6 +419,12 @@ class ShaparakGateway(BasePaymentGateway):
                 # موفقیت
                 token = response['data']['token']
                 
+                # Use mock gateway in sandbox mode (like ZarinPal)
+                if self.sandbox:
+                    payment_url = f"/payments/mock-gateway/?gateway=shaparak&token={token}&payment_id={payment.id}"
+                else:
+                    payment_url = f"{self.payment_url}?token={token}"
+                
                 # به‌روزرسانی پرداخت
                 payment.gateway_transaction_id = token
                 payment.status = 'REDIRECTED'
@@ -427,9 +433,6 @@ class ShaparakGateway(BasePaymentGateway):
                     'token': token
                 })
                 payment.save()
-                
-                # تولید URL پرداخت
-                payment_url = f"{self.payment_url}?token={token}"
                 
                 return {
                     'success': True,
