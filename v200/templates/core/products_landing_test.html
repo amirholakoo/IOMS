@@ -1,0 +1,169 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}📦 موجودی محصولات - HomayOMS{% endblock %}
+
+{% block extra_css %}
+<style>
+    .section {
+        background: #fff;
+        padding: 2rem;
+        border-radius: 12px;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    }
+
+    .section-title {
+        font-size: 1.5rem;
+        font-weight: bold;
+        margin-bottom: 1rem;
+        color: #333;
+    }
+
+    .stock-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 1rem;
+    }
+
+    .stock-table th,
+    .stock-table td {
+        border: 1px solid #ddd;
+        padding: 0.75rem;
+        text-align: center;
+        font-size: 0.95rem;
+    }
+
+    .stock-table th {
+        background-color: #f8f9fa;
+        font-weight: bold;
+    }
+
+    .stock-table tbody tr:hover {
+        background-color: #f1f1f1;
+    }
+
+    .btn {
+        padding: 0.6rem 1.2rem;
+        border: none;
+        border-radius: 8px;
+        font-weight: bold;
+        cursor: pointer;
+    }
+
+    .btn-primary {
+        background-color: #3498db;
+        color: #fff;
+    }
+
+    .btn-primary:disabled {
+        background-color: #ccc;
+        cursor: not-allowed;
+    }
+
+    .selected-count {
+        margin-top: 0.5rem;
+        color: #555;
+        font-size: 0.9rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+
+    <!-- نقدی Section -->
+    <section class="section" id="cashSection">
+        <h2 class="section-title">🟢 محصولات نقدی</h2>
+
+        <div class="selected-count">
+            تعداد انتخاب‌شده: <span id="cashSelectedCount">0</span>
+        </div>
+
+        <table class="stock-table" id="cashStockTable">
+            <thead>
+                <tr>
+                    <th>انتخاب</th>
+                    <th>عرض</th>
+                    <th>گرماژ</th>
+                    <th>موجودی</th>
+                    <th>قیمت نقدی</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for product in cash_products %}
+<tr>
+    <td><input type="checkbox" class="stock-checkbox" data-type="cash"></td>
+    <td>{{ product.width|default:"-" }}</td>
+    <td>{{ product.gsm|default:"-" }}</td>
+    <td>{{ product.length|default:"-" }} متر</td>
+    <td>{{ product.price|floatformat:0 }} تومان</td>
+</tr>
+{% endfor %}
+
+            </tbody>
+        </table>
+
+        <div class="mt-3">
+            <button class="btn btn-primary" id="cashPurchaseBtn" disabled>💰 خرید نقدی</button>
+        </div>
+    </section>
+
+    <!-- نسیه Section -->
+    <section class="section" id="creditSection">
+        <h2 class="section-title">🔵 محصولات نسیه</h2>
+
+        <div class="selected-count">
+            تعداد انتخاب‌شده: <span id="creditSelectedCount">0</span>
+        </div>
+
+        <table class="stock-table" id="creditStockTable">
+            <thead>
+                <tr>
+                    <th>انتخاب</th>
+                    <th>عرض</th>
+                    <th>گرماژ</th>
+                    <th>موجودی</th>
+                    <th>قیمت نسیه</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for product in credit_products %}
+<tr>
+    <td><input type="checkbox" class="stock-checkbox" data-type="credit"></td>
+    <td>{{ product.width|default:"-" }}</td>
+    <td>{{ product.gsm|default:"-" }}</td>
+    <td>{{ product.length|default:"-" }} متر</td>
+    <td>{{ product.price|floatformat:0 }} تومان</td>
+</tr>
+{% endfor %}
+
+            </tbody>
+        </table>
+
+        <div class="mt-3">
+            <button class="btn btn-primary" id="creditPurchaseBtn" disabled>🧾 خرید نسیه</button>
+        </div>
+    </section>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function updateButtonStates() {
+        const cashSelected = document.querySelectorAll('#cashStockTable .stock-checkbox:checked').length;
+        const creditSelected = document.querySelectorAll('#creditStockTable .stock-checkbox:checked').length;
+
+        document.getElementById('cashSelectedCount').textContent = cashSelected;
+        document.getElementById('creditSelectedCount').textContent = creditSelected;
+
+        document.getElementById('cashPurchaseBtn').disabled = cashSelected === 0;
+        document.getElementById('creditPurchaseBtn').disabled = creditSelected === 0;
+    }
+
+    document.querySelectorAll('.stock-checkbox').forEach(checkbox => {
+        checkbox.addEventListener('change', updateButtonStates);
+    });
+</script>
+{% endblock %}

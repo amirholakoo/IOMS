@@ -1,0 +1,144 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}🚫 عدم دسترسی - HomayOMS{% endblock %}
+
+{% block extra_css %}
+<style>
+    .permission-denied-container {
+        min-height: 70vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+    }
+    
+    .permission-card {
+        max-width: 600px;
+        text-align: center;
+        background: white;
+        border-radius: 20px;
+        padding: 3rem;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        border: 1px solid #e0e0e0;
+    }
+    
+    .permission-icon {
+        font-size: 5rem;
+        color: #dc3545;
+        margin-bottom: 1.5rem;
+        display: block;
+    }
+    
+    .permission-title {
+        color: #dc3545;
+        font-weight: bold;
+        margin-bottom: 1rem;
+    }
+    
+    .permission-message {
+        color: #6c757d;
+        margin-bottom: 2rem;
+        line-height: 1.6;
+    }
+    
+    .role-info {
+        background: #f8f9fa;
+        border-radius: 10px;
+        padding: 1rem;
+        margin: 1.5rem 0;
+        border-left: 4px solid #ffc107;
+    }
+    
+    .action-buttons {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+    
+    .btn-home {
+        background: linear-gradient(45deg, #007bff, #0056b3);
+        border: none;
+        color: white;
+        padding: 0.75rem 2rem;
+        border-radius: 25px;
+        text-decoration: none;
+        font-weight: bold;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-home:hover {
+        background: linear-gradient(45deg, #0056b3, #007bff);
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0, 123, 255, 0.3);
+        color: white;
+        text-decoration: none;
+    }
+    
+    .btn-logout {
+        background: linear-gradient(45deg, #6c757d, #495057);
+        border: none;
+        color: white;
+        padding: 0.75rem 2rem;
+        border-radius: 25px;
+        text-decoration: none;
+        font-weight: bold;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-logout:hover {
+        background: linear-gradient(45deg, #495057, #6c757d);
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(108, 117, 125, 0.3);
+        color: white;
+        text-decoration: none;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="permission-denied-container">
+    <div class="permission-card">
+        <span class="permission-icon">🚫</span>
+        
+        <h1 class="permission-title">عدم دسترسی</h1>
+        
+        <div class="permission-message">
+            <p>متأسفانه شما دسترسی لازم برای مشاهده این صفحه را ندارید.</p>
+            <p>این بخش فقط برای کاربران با نقش‌های خاص در نظر گرفته شده است.</p>
+        </div>
+        
+        {% if user.is_authenticated %}
+        <div class="role-info">
+            <strong>👤 اطلاعات کاربری شما:</strong><br>
+            <strong>نام کاربری:</strong> {{ user.username }}<br>
+            <strong>نقش:</strong> {{ user.get_role_display|default:"تعریف نشده" }}<br>
+            <strong>وضعیت:</strong> {{ user.get_status_display|default:"نامشخص" }}
+        </div>
+        {% endif %}
+        
+        <div class="action-buttons">
+            <a href="{% url 'core:products_landing' %}" class="btn btn-home">
+                🏠 بازگشت به صفحه اصلی
+            </a>
+            
+            {% if user.is_authenticated %}
+            <a href="{% url 'accounts:logout' %}" class="btn btn-logout">
+                🚪 خروج از حساب کاربری
+            </a>
+            {% else %}
+            <a href="{% url 'accounts:login' %}" class="btn btn-home">
+                🔑 ورود به سیستم
+            </a>
+            {% endif %}
+        </div>
+        
+        <div class="mt-4">
+            <small class="text-muted">
+                در صورت نیاز به دسترسی، با مدیر سیستم تماس بگیرید.
+            </small>
+        </div>
+    </div>
+</div>
+{% endblock %} 

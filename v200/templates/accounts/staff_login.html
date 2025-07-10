@@ -1,0 +1,136 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}👥 ورود کارمندان - HomayOMS{% endblock %}
+
+{% block content %}
+<div class="login-container">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-6 col-lg-4">
+                <div class="card">
+                    <div class="card-body p-5">
+                        <!-- 👥 لوگو و عنوان -->
+                        <div class="text-center mb-4">
+                            <div class="login-logo mx-auto mb-3">
+                                <svg class="icon" style="width: 2rem; height: 2rem; color: white;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                                </svg>
+                            </div>
+                            <h2 class="text-2xl font-bold mb-2">
+                                👥 ورود کارمندان
+                            </h2>
+                            <p class="text-sm" style="color: #6b7280;">
+                                ورود به پنل مدیریت HomayOMS
+                            </p>
+                            
+                            <!-- 🎭 نمایش نقش انتخاب شده -->
+                            <div class="mt-3">
+                                {% if request.GET.role == 'super_admin' %}
+                                    <span class="badge" style="background: var(--super-admin-color); color: white; padding: 0.5rem 1rem; border-radius: 50px; font-size: 0.875rem;">
+                                        🔴 مدیر ارشد
+                                    </span>
+                                {% elif request.GET.role == 'admin' %}
+                                    <span class="badge" style="background: var(--admin-color); color: white; padding: 0.5rem 1rem; border-radius: 50px; font-size: 0.875rem;">
+                                        🟡 ادمین
+                                    </span>
+                                {% elif request.GET.role == 'finance' %}
+                                    <span class="badge" style="background: var(--finance-color); color: white; padding: 0.5rem 1rem; border-radius: 50px; font-size: 0.875rem;">
+                                        🟢 مالی
+                                    </span>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- 📝 فرم ورود -->
+                        <form method="POST">
+                            {% csrf_token %}
+                            
+                            <!-- 🎭 فیلد مخفی نقش -->
+                            <input type="hidden" name="role" value="{{ request.GET.role }}">
+                            
+                            <!-- 💬 پیام‌های سیستم -->
+                            {% if messages %}
+                                <div class="messages mb-4">
+                                    {% for message in messages %}
+                                        <div class="alert {% if message.tags == 'error' %}alert-error{% else %}alert-success{% endif %}">
+                                            <div style="flex-shrink: 0;">
+                                                {% if message.tags == 'error' %}
+                                                    <svg class="icon" style="color: #dc2626;" fill="currentColor" viewBox="0 0 20 20">
+                                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
+                                                    </svg>
+                                                {% else %}
+                                                    <svg class="icon" style="color: #10b981;" fill="currentColor" viewBox="0 0 20 20">
+                                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                                                    </svg>
+                                                {% endif %}
+                                            </div>
+                                            <div>
+                                                <p style="font-weight: 500;">{{ message }}</p>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+
+                            <!-- 👤 نام کاربری -->
+                            <div class="form-group">
+                                <label for="username" class="form-label">
+                                    👤 نام کاربری
+                                </label>
+                                <input id="username" name="username" type="text" required 
+                                       class="form-control"
+                                       placeholder="نام کاربری خود را وارد کنید">
+                            </div>
+
+                            <!-- 🔐 رمز عبور -->
+                            <div class="form-group">
+                                <label for="password" class="form-label">
+                                    🔐 رمز عبور
+                                </label>
+                                <input id="password" name="password" type="password" required 
+                                       class="form-control"
+                                       placeholder="رمز عبور خود را وارد کنید">
+                            </div>
+
+                            <!-- 🔗 لینک‌های مفید -->
+                            <div class="d-flex justify-content-between mb-4">
+                                <div class="text-sm">
+                                    <a href="{% url 'accounts:login' %}" style="color: var(--primary-color); text-decoration: none;">
+                                        🔙 بازگشت به صفحه اصلی
+                                    </a>
+                                </div>
+                                <div class="text-sm">
+                                    <a href="#" style="color: var(--primary-color); text-decoration: none;">
+                                        ❓ فراموشی رمز عبور
+                                    </a>
+                                </div>
+                            </div>
+
+                            <!-- 🚀 دکمه ورود -->
+                            <div>
+                                <button type="submit" class="btn btn-primary w-100">
+                                    <svg class="icon" style="margin-left: 0.5rem;" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"></path>
+                                    </svg>
+                                    👥 ورود به پنل کارمندان
+                                </button>
+                            </div>
+                        </form>
+
+                        <!-- 📞 اطلاعات تماس -->
+                        <div class="contact-info mt-4">
+                            <p class="text-sm">
+                                📞 برای پشتیبانی: <a href="tel:+989123456789">0912-345-6789</a>
+                            </p>
+                            <p class="text-sm mt-1">
+                                📧 ایمیل: <a href="mailto:support@homayoms.com">support@homayoms.com</a>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

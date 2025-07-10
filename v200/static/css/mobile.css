@@ -1,0 +1,809 @@
+/* Responsive design for larger screens */
+@media (min-width: 768px) {
+    .container {
+        padding: 20px;
+        max-width: 800px;
+    }
+
+    .main-title {
+        font-size: 3rem;
+    }
+
+    .section-title {
+        font-size: 2.5rem;
+    }
+
+    .info-grid {
+        grid-template-columns: 1fr;
+        gap: 25px;
+        justify-items: center;
+        max-width: 450px;
+        margin: 0 auto;
+    }
+
+    .info-card {
+        padding: 30px;
+        min-height: 150px;
+    }
+
+    .info-label {
+        font-size: 1.5rem;
+    }
+
+    .info-value {
+        font-size: 2.5rem;
+    }
+
+    /* Stock Table Desktop Styles */
+    .stock-table-container {
+        padding: 25px;
+    }
+
+    .stock-title {
+        font-size: 1.6rem;
+    }
+
+    .selected-count {
+        font-size: 1.2rem;
+        padding: 12px 18px;
+    }
+
+    .stock-table th {
+        padding: 18px 15px;
+        font-size: 1.1rem;
+    }
+
+    .stock-table td {
+        padding: 15px 12px;
+        font-size: 1rem;
+    }
+
+    .purchase-btn {
+        height: 80px;
+        font-size: 1.6rem;
+        max-width: 350px;
+    }
+
+    .btn-icon {
+        font-size: 2rem;
+    }
+
+    .btn-text {
+        font-size: 1.3rem;
+    }
+}
+
+/* Extra large screens */
+@media (min-width: 1024px) {
+    .container {
+        max-width: 1200px;
+        padding: 20px;
+    }
+
+    .main-title {
+        font-size: 3.5rem;
+    }
+
+    .info-value {
+        font-size: 3rem;
+    }
+
+    .info-grid {
+        grid-template-columns: 1fr;
+        gap: 30px;
+        justify-items: center;
+        max-width: 500px;
+        margin: 0 auto;
+    }
+
+    .main-content {
+        gap: 30px;
+    }
+
+    .section {
+        padding: 35px;
+    }
+
+    .purchase-btn {
+        height: 90px;
+        font-size: 1.8rem;
+        max-width: 400px;
+    }
+
+    .btn-icon {
+        font-size: 2.2rem;
+    }
+
+    .btn-text {
+        font-size: 1.3rem;
+    }
+}
+
+/* Responsive design for mobile and tablet */
+@media (max-width: 768px) {
+    .main-title {
+        font-size: 1.8rem;
+    }
+
+    .container {
+        padding: 5px;
+    }
+
+    .section {
+        padding: 20px;
+        margin-bottom: 15px;
+    }
+
+    .section-title {
+        font-size: 1.5rem;
+    }
+
+    .info-value {
+        font-size: 1.5rem;
+    }
+
+    .purchase-btn {
+        padding: 12px 25px;
+        font-size: 1rem;
+    }
+
+    /* Stock Table Mobile Styles */
+    .stock-table-container {
+        margin-top: 20px;
+        padding: 15px;
+    }
+
+    .stock-title {
+        font-size: 1.2rem;
+        margin-bottom: 12px;
+    }
+
+    .selected-count {
+        font-size: 1rem;
+        padding: 8px 12px;
+        margin-bottom: 15px;
+    }
+
+    .stock-table {
+        font-size: 0.85rem;
+    }
+
+    .stock-table th {
+        padding: 10px 6px;
+        font-size: 0.9rem;
+    }
+
+    .stock-table td {
+        padding: 8px 4px;
+        font-size: 0.85rem;
+    }
+
+    .stock-checkbox {
+        width: 18px;
+        height: 18px;
+        transform: scale(1.1);
+    }
+
+    .table-responsive {
+        margin-bottom: 15px;
+    }
+
+    /* Mobile Menu */
+    .navbar-toggle {
+        display: block;
+    }
+
+    .nav-list {
+        display: none;
+        flex-direction: column;
+        margin-top: 10px;
+        padding: 0;
+        gap: 0;
+    }
+
+    .nav-list.show {
+        display: flex;
+    }
+
+    .nav-item {
+        border-top: 1px solid #ccc;
+    }
+
+    .nav-link {
+        padding: 12px;
+        text-align: right;
+    }
+
+    /* Footer responsive */
+    .footer-content {
+        grid-template-columns: 1fr;
+        gap: 25px;
+        padding: 30px 20px;
+    }
+
+    .footer-section {
+        padding: 20px;
+    }
+
+    .footer-title {
+        font-size: 1.2rem;
+    }
+
+    .contact-item {
+        flex-direction: column;
+        text-align: center;
+        gap: 10px;
+    }
+
+    .contact-details {
+        align-items: center;
+    }
+
+    .hours-item {
+        flex-direction: column;
+        text-align: center;
+        gap: 5px;
+    }
+
+    .footer-bottom-content {
+        flex-direction: column;
+        text-align: center;
+        gap: 10px;
+    }
+
+    .contact-value {
+        font-size: 0.9rem;
+        word-break: break-word;
+    }
+
+    .contact-item.email-item .contact-value {
+        font-size: 0.85rem;
+    }
+
+    /* Admin Panel Mobile */
+    .mobile-header {
+        display: flex;
+    }
+
+    .admin-sidebar {
+        position: fixed;
+        left: 0;
+        top: 0;
+        height: 100vh;
+        transform: translateX(-100%);
+    }
+
+    .admin-sidebar.active {
+        transform: translateX(0);
+    }
+
+    .admin-content {
+        padding: 1rem;
+        margin-top: 70px;
+    }
+
+    /* Login responsive */
+    .login-container {
+        padding: 1rem;
+    }
+
+    .role-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+
+    .role-card {
+        padding: 1.5rem;
+    }
+
+    .text-4xl {
+        font-size: 1.875rem;
+    }
+
+    .text-2xl {
+        font-size: 1.25rem;
+    }
+
+    .navbar {
+        flex-direction: column;
+    }
+
+    .col-md-6 {
+        flex: 0 0 100%;
+        max-width: 100%;
+    }
+
+    /* Closed content responsive */
+    .closed-container {
+        margin: 1rem;
+        padding: 1.5rem;
+    }
+
+    .closed-icon {
+        font-size: 3rem;
+    }
+
+    .closed-title {
+        font-size: 1.5rem;
+    }
+
+    .closed-message {
+        font-size: 1rem;
+    }
+
+    .refresh-btn {
+        padding: 10px 20px;
+        font-size: 0.9rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .main-title {
+        font-size: 1.5rem;
+    }
+
+    .section-title {
+        font-size: 1.3rem;
+    }
+
+    .info-value {
+        font-size: 1.3rem;
+    }
+
+    .purchase-btn {
+        padding: 10px 20px;
+        font-size: 0.95rem;
+    }
+
+    /* Extra small screen table adjustments */
+    .stock-table-container {
+        padding: 12px;
+        margin-top: 15px;
+    }
+
+    .stock-title {
+        font-size: 1.1rem;
+        margin-bottom: 10px;
+    }
+
+    .selected-count {
+        font-size: 0.95rem;
+        padding: 6px 10px;
+        margin-bottom: 12px;
+    }
+
+    .stock-table {
+        font-size: 0.8rem;
+    }
+
+    .stock-table th {
+        padding: 8px 4px;
+        font-size: 0.85rem;
+    }
+
+    .stock-table td {
+        padding: 6px 3px;
+        font-size: 0.8rem;
+        line-height: 1.2;
+    }
+
+    .stock-checkbox {
+        width: 16px;
+        height: 16px;
+        transform: scale(1);
+    }
+
+    /* Compact table headers for small screens */
+    .stock-table th:nth-child(2) {
+        min-width: 60px;
+    }
+
+    .stock-table th:nth-child(3) {
+        min-width: 55px;
+    }
+
+    .stock-table th:nth-child(4) {
+        min-width: 70px;
+    }
+
+    .stock-table th:nth-child(5) {
+        min-width: 80px;
+    }
+
+    .footer-content {
+        padding: 25px 15px;
+    }
+
+    .footer-section {
+        padding: 15px;
+    }
+
+    .contact-icon {
+        width: 35px;
+        height: 35px;
+        font-size: 1.3rem;
+    }
+
+    .social-link {
+        width: 40px;
+        height: 40px;
+        font-size: 1.2rem;
+    }
+
+    .login-container {
+        padding: 0.5rem;
+    }
+
+    .role-card {
+        padding: 1rem;
+    }
+
+    .btn {
+        padding: 0.5rem 1rem;
+        font-size: 0.875rem;
+    }
+
+    .card-body {
+        padding: 1rem;
+    }
+}
+
+/* Bootstrap Grid System */
+@media (min-width: 576px) {
+    .col-sm-12 {
+        flex: 0 0 100%;
+        max-width: 100%;
+    }
+
+    .col-sm-11 {
+        flex: 0 0 91.666667%;
+        max-width: 91.666667%;
+    }
+
+    .col-sm-10 {
+        flex: 0 0 83.333333%;
+        max-width: 83.333333%;
+    }
+
+    .col-sm-9 {
+        flex: 0 0 75%;
+        max-width: 75%;
+    }
+
+    .col-sm-8 {
+        flex: 0 0 66.666667%;
+        max-width: 66.666667%;
+    }
+
+    .col-sm-7 {
+        flex: 0 0 58.333333%;
+        max-width: 58.333333%;
+    }
+
+    .col-sm-6 {
+        flex: 0 0 50%;
+        max-width: 50%;
+    }
+
+    .col-sm-5 {
+        flex: 0 0 41.666667%;
+        max-width: 41.666667%;
+    }
+
+    .col-sm-4 {
+        flex: 0 0 33.333333%;
+        max-width: 33.333333%;
+    }
+
+    .col-sm-3 {
+        flex: 0 0 25%;
+        max-width: 25%;
+    }
+
+    .col-sm-2 {
+        flex: 0 0 16.666667%;
+        max-width: 16.666667%;
+    }
+
+    .col-sm-1 {
+        flex: 0 0 8.333333%;
+        max-width: 8.333333%;
+    }
+}
+
+@media (min-width: 768px) {
+    .col-md-12 {
+        flex: 0 0 100%;
+        max-width: 100%;
+    }
+
+    .col-md-11 {
+        flex: 0 0 91.666667%;
+        max-width: 91.666667%;
+    }
+
+    .col-md-10 {
+        flex: 0 0 83.333333%;
+        max-width: 83.333333%;
+    }
+
+    .col-md-9 {
+        flex: 0 0 75%;
+        max-width: 75%;
+    }
+
+    .col-md-8 {
+        flex: 0 0 66.666667%;
+        max-width: 66.666667%;
+    }
+
+    .col-md-7 {
+        flex: 0 0 58.333333%;
+        max-width: 58.333333%;
+    }
+
+    .col-md-6 {
+        flex: 0 0 50%;
+        max-width: 50%;
+    }
+
+    .col-md-5 {
+        flex: 0 0 41.666667%;
+        max-width: 41.666667%;
+    }
+
+    .col-md-4 {
+        flex: 0 0 33.333333%;
+        max-width: 33.333333%;
+    }
+
+    .col-md-3 {
+        flex: 0 0 25%;
+        max-width: 25%;
+    }
+
+    .col-md-2 {
+        flex: 0 0 16.666667%;
+        max-width: 16.666667%;
+    }
+
+    .col-md-1 {
+        flex: 0 0 8.333333%;
+        max-width: 8.333333%;
+    }
+}
+
+@media (min-width: 992px) {
+    .col-lg-12 {
+        flex: 0 0 100%;
+        max-width: 100%;
+    }
+
+    .col-lg-11 {
+        flex: 0 0 91.666667%;
+        max-width: 91.666667%;
+    }
+
+    .col-lg-10 {
+        flex: 0 0 83.333333%;
+        max-width: 83.333333%;
+    }
+
+    .col-lg-9 {
+        flex: 0 0 75%;
+        max-width: 75%;
+    }
+
+    .col-lg-8 {
+        flex: 0 0 66.666667%;
+        max-width: 66.666667%;
+    }
+
+    .col-lg-7 {
+        flex: 0 0 58.333333%;
+        max-width: 58.333333%;
+    }
+
+    .col-lg-6 {
+        flex: 0 0 50%;
+        max-width: 50%;
+    }
+
+    .col-lg-5 {
+        flex: 0 0 41.666667%;
+        max-width: 41.666667%;
+    }
+
+    .col-lg-4 {
+        flex: 0 0 33.333333%;
+        max-width: 33.333333%;
+    }
+
+    .col-lg-3 {
+        flex: 0 0 25%;
+        max-width: 25%;
+    }
+
+    .col-lg-2 {
+        flex: 0 0 16.666667%;
+        max-width: 16.666667%;
+    }
+
+    .col-lg-1 {
+        flex: 0 0 8.333333%;
+        max-width: 8.333333%;
+    }
+}
+
+@media (min-width: 769px) {
+    .mobile-header {
+        display: none;
+    }
+
+    .admin-content {
+        margin-top: 0;
+    }
+}
+
+/* Accessibility improvements */
+@media (prefers-reduced-motion: reduce) {
+
+    .info-card,
+    .purchase-btn {
+        transition: none;
+    }
+
+    .info-card:hover,
+    .purchase-btn:hover,
+    .purchase-btn:active {
+        transform: none;
+    }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    .info-card {
+        border: 3px solid #000;
+    }
+
+    .section-title {
+        border-bottom-width: 4px;
+    }
+
+    .purchase-btn {
+        border-width: 4px;
+    }
+
+    .cash-btn {
+        background: #27ae60;
+        border-color: #000;
+    }
+
+    .credit-btn {
+        background: #e74c3c;
+        border-color: #000;
+    }
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.05);
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+/* Mobile Selection Button Styles */
+.selection-btn {
+    padding: 6px 8px !important;
+    font-size: 0.75rem !important;
+    min-width: 60px !important;
+    border-radius: 15px !important;
+    gap: 4px !important;
+}
+
+.selection-container {
+    padding: 4px !important;
+}
+
+.selection-icon {
+    font-size: 0.8rem !important;
+}
+
+/* Enhanced Touch Targets */
+.stock-row {
+    min-height: 45px !important;
+}
+
+.stock-table td {
+    padding: 6px 2px !important;
+    font-size: 0.75rem !important;
+}
+
+/* Mobile Hover States (touch-friendly) */
+.selection-btn:active {
+    transform: scale(0.95) !important;
+    transition: transform 0.1s ease !important;
+}
+
+.stock-row:active {
+    background-color: #f0f0f0 !important;
+    transition: background-color 0.1s ease !important;
+}
+
+
+/* Mobile Optimizations */
+@media (max-width: 768px) {
+    .selection-btn {
+        padding: 10px 14px !important;
+        font-size: 0.85rem !important;
+        min-width: 80px !important;
+        border-radius: 20px !important;
+    }
+
+    .selection-container {
+        padding: 6px !important;
+    }
+
+    .stock-row:hover {
+        transform: none !important;
+        background-color: #f8f9fa !important;
+    }
+
+    .cash-section .stock-row:hover {
+        transform: none !important;
+        background-color: #d5f4e6 !important;
+    }
+
+    .credit-section .stock-row:hover {
+        transform: none !important;
+        background-color: #fdeaea !important;
+    }
+
+    .stock-row {
+        min-height: 50px !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .selection-btn {
+        padding: 8px 10px !important;
+        font-size: 0.8rem !important;
+        min-width: 70px !important;
+        border-radius: 18px !important;
+        gap: 6px !important;
+    }
+
+    .selection-icon {
+        font-size: 0.9rem !important;
+    }
+}

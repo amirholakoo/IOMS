@@ -1,0 +1,160 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}انتخاب محصولات{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/styles.css' %}">
+<link rel="stylesheet" href="{% static 'css/shopping.css' %}">
+{% endblock %}
+
+{% block header %}
+<header class="header">
+    <div class="header-content">
+        <h1 class="main-title">انتخاب محصولات</h1>
+        <div class="user-info">
+            <span class="user-name">{{ user.get_full_name|default:'کاربر' }}</span>
+            <form method="POST" action="{% url 'auth:logout' %}" style="display: inline;">
+                {% csrf_token %}
+                <button class="logout-btn" type="submit">خروج</button>
+            </form>
+        </div>
+    </div>
+</header>
+{% endblock %}
+
+{% block content %}
+<main class="main-content">
+    <div class="shopping-container">
+        <!-- Cash Section -->
+        <section class="product-section cash-section">
+            <div class="section-header">
+                <h2 class="section-title">خرید نقدی</h2>
+                <div class="section-icon">💵</div>
+            </div>
+
+            <div class="table-container">
+                <table class="product-table cash-table">
+                    <thead>
+                        <tr>
+                            <th>نوع کاغذ</th>
+                            <th>گرماژ</th>
+                            <th>اندازه</th>
+                            <th>رنگ</th>
+                            <th>قیمت (تومان)</th>
+                            <th>موجودی</th>
+                            <th>انتخاب</th>
+                        </tr>
+                    </thead>
+                    <tbody id="cashTableBody">
+                        {% for product in cash_products %}
+                        <tr data-product-id="{{ product.id }}" data-product-type="cash">
+                            <td>{{ product.name }}</td>
+                            <td>{{ product.weight|default:'-' }}</td>
+                            <td>{{ product.size|default:'-' }}</td>
+                            <td>{{ product.color|default:'-' }}</td>
+                            <td>{{ product.price|floatformat:0 }}</td>
+                            <td>{{ product.stock }}</td>
+                            <td>
+                                {% if product.stock > 0 %}
+                                <div class="quantity-controls">
+                                    <button class="qty-btn minus-btn">-</button>
+                                    <input type="number" class="qty-input" value="0" min="0" max="{{ product.stock }}">
+                                    <button class="qty-btn plus-btn">+</button>
+                                </div>
+                                {% else %}
+                                <span class="out-of-stock">ناموجود</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="no-data">هیچ محصول نقدی موجود نیست</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Credit Section -->
+        <section class="product-section credit-section">
+            <div class="section-header">
+                <h2 class="section-title">خرید نسیه</h2>
+                <div class="section-icon">📋</div>
+            </div>
+
+            <div class="table-container">
+                <table class="product-table credit-table">
+                    <thead>
+                        <tr>
+                            <th>نوع کاغذ</th>
+                            <th>گرماژ</th>
+                            <th>اندازه</th>
+                            <th>رنگ</th>
+                            <th>قیمت (تومان)</th>
+                            <th>موجودی</th>
+                            <th>انتخاب</th>
+                        </tr>
+                    </thead>
+                    <tbody id="creditTableBody">
+                        {% for product in credit_products %}
+                        <tr data-product-id="{{ product.id }}" data-product-type="credit">
+                            <td>{{ product.name }}</td>
+                            <td>{{ product.weight|default:'-' }}</td>
+                            <td>{{ product.size|default:'-' }}</td>
+                            <td>{{ product.color|default:'-' }}</td>
+                            <td>{{ product.price|floatformat:0 }}</td>
+                            <td>{{ product.stock }}</td>
+                            <td>
+                                {% if product.stock > 0 %}
+                                <div class="quantity-controls">
+                                    <button class="qty-btn minus-btn">-</button>
+                                    <input type="number" class="qty-input" value="0" min="0" max="{{ product.stock }}">
+                                    <button class="qty-btn plus-btn">+</button>
+                                </div>
+                                {% else %}
+                                <span class="out-of-stock">ناموجود</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="no-data">هیچ محصول نسیه موجود نیست</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Selected Products Summary -->
+        <section class="summary-section">
+            <div class="summary-header">
+                <h3 class="summary-title">محصولات انتخاب شده</h3>
+                <div class="summary-icon">🛒</div>
+            </div>
+
+            <div class="selected-products" id="selectedProducts">
+                <p class="no-selection">هیچ محصولی انتخاب نشده است</p>
+            </div>
+
+            <div class="summary-actions">
+                <button class="action-btn clear-btn">
+                    <span class="btn-icon">🗑️</span>
+                    <span class="btn-text">پاک کردن انتخاب‌ها</span>
+                </button>
+
+                <button class="action-btn checkout-btn">
+                    <span class="btn-icon">✅</span>
+                    <span class="btn-text">ادامه خرید</span>
+                </button>
+            </div>
+        </section>
+    </div>
+</main>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/shopping.js' %}"></script>
+{% endblock %}

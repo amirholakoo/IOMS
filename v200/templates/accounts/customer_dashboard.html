@@ -1,0 +1,156 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}داشبورد مشتری - HomayOMS{% endblock %}
+
+{% block extra_css %}
+<style>
+    .dashboard-header {
+        background: linear-gradient(90deg, #3498db 0%, #6dd5fa 100%);
+        color: #fff;
+        border-radius: 1rem;
+        padding: 2rem 1rem 1rem 1rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 24px rgba(52,152,219,0.08);
+    }
+    .dashboard-header .avatar {
+        width: 56px;
+        height: 56px;
+        background: #2980b9;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        font-weight: bold;
+        color: #fff;
+        margin-left: 1rem;
+    }
+    .dashboard-card {
+        border-radius: 1rem;
+        box-shadow: 0 2px 12px rgba(52,152,219,0.07);
+        margin-bottom: 1.5rem;
+    }
+    .dashboard-actions .btn {
+        min-width: 180px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header -->
+    <div class="dashboard-header d-flex align-items-center justify-content-between flex-wrap mb-4">
+        <div class="d-flex align-items-center">
+            <div class="avatar">{{ user.get_full_name|first|default:user.username|first|upper }}</div>
+            <div>
+                <h2 class="mb-1">داشبورد مشتری</h2>
+                <div class="small">خوش آمدید {{ user.get_full_name|default:user.username }}</div>
+            </div>
+        </div>
+        <div class="d-flex align-items-center gap-3 mt-3 mt-md-0">
+            <div class="text-white-50 small">📅 آخرین ورود: {{ user.last_login|date:"Y/m/d" }}</div>
+            <a href="{% url 'accounts:logout' %}" class="btn btn-outline-light btn-sm">🚪 خروج</a>
+        </div>
+    </div>
+
+    <!-- پیام‌های سیستم -->
+    {% if messages %}
+        <div class="mb-4">
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <!-- کارت‌های آماری -->
+    <div class="row g-4 mb-4">
+        <div class="col-6 col-md-3">
+            <div class="card dashboard-card text-center">
+                <div class="card-body">
+                    <div class="mb-2" style="font-size:2rem;">📋</div>
+                    <div class="fw-bold">کل سفارشات</div>
+                    <div class="fs-5">{{ total_orders|default:0 }}</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card dashboard-card text-center">
+                <div class="card-body">
+                    <div class="mb-2" style="font-size:2rem;">⏳</div>
+                    <div class="fw-bold">در انتظار</div>
+                    <div class="fs-5">{{ pending_orders|default:0 }}</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card dashboard-card text-center">
+                <div class="card-body">
+                    <div class="mb-2" style="font-size:2rem;">✅</div>
+                    <div class="fw-bold">تکمیل شده</div>
+                    <div class="fs-5">{{ completed_orders|default:0 }}</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card dashboard-card text-center">
+                <div class="card-body">
+                    <div class="mb-2" style="font-size:2rem;">💰</div>
+                    <div class="fw-bold">کل مبلغ</div>
+                    <div class="fs-5">{{ total_amount|default:'0 تومان' }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- عملیات -->
+    <div class="row dashboard-actions g-4 mb-4">
+        <div class="col-12 col-md-4">
+            <div class="card dashboard-card h-100">
+                <div class="card-body d-flex flex-column align-items-center justify-content-center">
+                    <div class="mb-2" style="font-size:2rem;">🛒</div>
+                    <h5 class="card-title mb-2">ثبت سفارش جدید</h5>
+                    <p class="card-text text-muted mb-3">سفارش جدید خود را ثبت کنید</p>
+                    <a href="{% url 'core:products_landing' %}" class="btn btn-primary">شروع کنید</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-md-4">
+            <div class="card dashboard-card h-100">
+                <div class="card-body d-flex flex-column align-items-center justify-content-center">
+                    <div class="mb-2" style="font-size:2rem;">📋</div>
+                    <h5 class="card-title mb-2">مشاهده سفارشات</h5>
+                    <p class="card-text text-muted mb-3">لیست سفارشات قبلی خود را ببینید</p>
+                    <a href="{% url 'core:orders_list' %}" class="btn btn-outline-primary">سفارشات من</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-md-4">
+            <div class="card dashboard-card h-100">
+                <div class="card-body d-flex flex-column align-items-center justify-content-center">
+                    <div class="mb-2" style="font-size:2rem;">👤</div>
+                    <h5 class="card-title mb-2">پروفایل من</h5>
+                    <p class="card-text text-muted mb-3">ویرایش اطلاعات کاربری</p>
+                    <a href="{% url 'accounts:profile' %}" class="btn btn-outline-secondary">پروفایل</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- راهنما یا اطلاعات بیشتر -->
+    <div class="card dashboard-card mt-4">
+        <div class="card-body">
+            <h5 class="card-title mb-3">راهنمای مشتری</h5>
+            <ul class="list-unstyled mb-0">
+                <li>• برای ثبت سفارش جدید روی دکمه <b>شروع کنید</b> کلیک کنید.</li>
+                <li>• برای مشاهده وضعیت سفارشات قبلی روی <b>سفارشات من</b> کلیک کنید.</li>
+                <li>• برای ویرایش اطلاعات کاربری روی <b>پروفایل</b> کلیک کنید.</li>
+                <li>• در صورت نیاز به پشتیبانی با ما تماس بگیرید.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %} 

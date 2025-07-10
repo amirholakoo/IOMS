@@ -1,0 +1,309 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}🔐 تایید کد SMS{% endblock %}
+
+{% block extra_css %}
+<style>
+    .sms-verify-container {
+        max-width: 450px;
+        margin: 50px auto;
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        overflow: hidden;
+    }
+    
+    .sms-header {
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        color: white;
+        padding: 30px;
+        text-align: center;
+    }
+    
+    .sms-header h2 {
+        margin: 0;
+        font-size: 24px;
+        font-weight: 300;
+    }
+    
+    .sms-header p {
+        margin: 10px 0 0 0;
+        opacity: 0.9;
+        font-size: 14px;
+    }
+    
+    .sms-form {
+        padding: 40px;
+    }
+    
+    .phone-display {
+        background: #f8f9fa;
+        border: 1px solid #e9ecef;
+        border-radius: 8px;
+        padding: 15px;
+        text-align: center;
+        margin-bottom: 25px;
+        font-size: 16px;
+        color: #495057;
+        direction: ltr;
+    }
+    
+    .form-group {
+        margin-bottom: 25px;
+    }
+    
+    .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        color: #333;
+        font-weight: 500;
+        font-size: 14px;
+    }
+    
+    .code-input {
+        width: 100%;
+        padding: 15px;
+        border: 2px solid #e1e5e9;
+        border-radius: 8px;
+        font-size: 20px;
+        text-align: center;
+        letter-spacing: 3px;
+        direction: ltr;
+        transition: all 0.3s ease;
+        font-family: 'Courier New', monospace;
+    }
+    
+    .code-input:focus {
+        outline: none;
+        border-color: #28a745;
+        box-shadow: 0 0 0 3px rgba(40, 167, 69, 0.1);
+    }
+    
+    .verify-btn {
+        width: 100%;
+        padding: 15px;
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        margin-bottom: 15px;
+    }
+    
+    .verify-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(40, 167, 69, 0.4);
+    }
+    
+    .verify-btn:active {
+        transform: translateY(0);
+    }
+    
+    .resend-btn {
+        width: 100%;
+        padding: 12px;
+        background: transparent;
+        color: #6c757d;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        font-size: 14px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .resend-btn:hover {
+        background: #f8f9fa;
+        border-color: #adb5bd;
+    }
+    
+    .timer {
+        text-align: center;
+        margin: 15px 0;
+        color: #dc3545;
+        font-weight: 500;
+    }
+    
+    .help-text {
+        text-align: center;
+        margin-top: 20px;
+        color: #666;
+        font-size: 13px;
+    }
+    
+    .back-link {
+        text-align: center;
+        margin-top: 20px;
+    }
+    
+    .back-link a {
+        color: #28a745;
+        text-decoration: none;
+        font-size: 14px;
+    }
+    
+    .back-link a:hover {
+        text-decoration: underline;
+    }
+    
+    .messages {
+        margin-bottom: 20px;
+    }
+    
+    .messages .alert {
+        padding: 12px 15px;
+        border-radius: 6px;
+        margin-bottom: 10px;
+        border: none;
+    }
+    
+    .messages .alert-success {
+        background-color: #d4edda;
+        color: #155724;
+    }
+    
+    .messages .alert-error {
+        background-color: #f8d7da;
+        color: #721c24;
+    }
+    
+    .code-hint {
+        background: #fff3cd;
+        border: 1px solid #ffeaa7;
+        border-radius: 6px;
+        padding: 10px;
+        margin-top: 10px;
+        font-size: 12px;
+        color: #856404;
+        text-align: center;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="sms-verify-container">
+    <div class="sms-header">
+        <h2>🔐 تایید کد امنیتی</h2>
+        <p>کد تایید ارسال شده را وارد کنید</p>
+    </div>
+    
+    <div class="sms-form">
+        {% if messages %}
+            <div class="messages">
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+        
+        <div class="phone-display">
+            📞 {{ phone }}
+        </div>
+        
+        <form method="post" id="verifyForm">
+            {% csrf_token %}
+            
+            <div class="form-group">
+                <label for="verification_code">🔢 کد تایید 6 رقمی</label>
+                <input 
+                    type="text" 
+                    id="verification_code" 
+                    name="verification_code" 
+                    class="code-input"
+                    placeholder="123456"
+                    maxlength="6"
+                    pattern="[0-9]{6}"
+                    required
+                    autocomplete="one-time-code"
+                >
+                <div class="code-hint">
+                    💡 کد تایید در ترمینال نمایش داده شده است (تست)
+                </div>
+            </div>
+            
+            <button type="submit" class="verify-btn">
+                ✅ تایید و ورود
+            </button>
+        </form>
+        
+        <div class="timer" id="timer">
+            ⏰ زمان باقی‌مانده: <span id="countdown">{{ remaining_time }}</span> ثانیه
+        </div>
+        
+        <form method="post" action="{% url 'accounts:resend_sms_code' %}">
+            {% csrf_token %}
+            <button type="submit" class="resend-btn" id="resendBtn" disabled>
+                🔄 ارسال مجدد کد
+            </button>
+        </form>
+        
+        <div class="help-text">
+            📱 کد تایید را دریافت نکردید؟ پس از اتمام زمان می‌توانید مجدداً درخواست کنید
+        </div>
+        
+        <div class="back-link">
+            <a href="{% url 'accounts:customer_sms_login' %}">🔙 بازگشت به ورود با شماره موبایل</a>
+        </div>
+    </div>
+</div>
+
+<script>
+// تایمر شمارش معکوس
+let timeLeft = {{ remaining_time }};
+const countdownElement = document.getElementById('countdown');
+const resendBtn = document.getElementById('resendBtn');
+
+const timer = setInterval(function() {
+    if (timeLeft <= 0) {
+        clearInterval(timer);
+        countdownElement.textContent = '0';
+        resendBtn.disabled = false;
+        resendBtn.style.opacity = '1';
+        document.getElementById('timer').innerHTML = '⏰ می‌توانید کد جدید درخواست کنید';
+    } else {
+        countdownElement.textContent = timeLeft;
+        timeLeft--;
+    }
+}, 1000);
+
+// فرمت خودکار کد تایید
+document.getElementById('verification_code').addEventListener('input', function(e) {
+    let value = e.target.value.replace(/\D/g, ''); // حذف کاراکترهای غیر عددی
+    if (value.length > 6) {
+        value = value.substring(0, 6);
+    }
+    e.target.value = value;
+    
+    // ارسال خودکار فرم پس از وارد کردن 6 رقم
+    if (value.length === 6) {
+        setTimeout(() => {
+            document.getElementById('verifyForm').submit();
+        }, 500);
+    }
+});
+
+// Focus خودکار روی فیلد کد
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('verification_code').focus();
+});
+
+// جلوگیری از paste کاراکترهای غیر عددی
+document.getElementById('verification_code').addEventListener('paste', function(e) {
+    e.preventDefault();
+    let paste = (e.clipboardData || window.clipboardData).getData('text');
+    let numbers = paste.replace(/\D/g, '').substring(0, 6);
+    this.value = numbers;
+    
+    if (numbers.length === 6) {
+        setTimeout(() => {
+            document.getElementById('verifyForm').submit();
+        }, 500);
+    }
+});
+</script>
+{% endblock %} 

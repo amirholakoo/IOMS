@@ -1,0 +1,577 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}👥 مدیریت کاربران - HomayOMS{% endblock %}
+
+{% block extra_css %}
+<style>
+    .users-container {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding: 2rem 0;
+        font-family: 'Tahoma', sans-serif;
+    }
+
+    .users-header {
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 20px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        backdrop-filter: blur(10px);
+    }
+
+    .users-title {
+        color: #2c3e50;
+        font-size: 2.5rem;
+        font-weight: bold;
+        text-align: center;
+        margin-bottom: 1rem;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .users-subtitle {
+        color: #7f8c8d;
+        text-align: center;
+        font-size: 1.1rem;
+        margin-bottom: 2rem;
+    }
+
+    .users-controls {
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 15px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .search-filters {
+        display: grid;
+        grid-template-columns: 1fr auto auto auto;
+        gap: 1rem;
+        align-items: end;
+    }
+
+    .form-group {
+        margin-bottom: 0;
+    }
+
+    .form-label {
+        color: #2c3e50;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        display: block;
+    }
+
+    .form-control {
+        border: 2px solid #e9ecef;
+        border-radius: 10px;
+        padding: 0.75rem 1rem;
+        transition: all 0.3s ease;
+        font-size: 0.95rem;
+    }
+
+    .form-control:focus {
+        border-color: #3498db;
+        box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
+        outline: none;
+    }
+
+    .btn-search {
+        background: linear-gradient(135deg, #3498db, #2980b9);
+        color: white;
+        border: none;
+        padding: 0.75rem 2rem;
+        border-radius: 10px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        height: fit-content;
+    }
+
+    .btn-search:hover {
+        background: linear-gradient(135deg, #2980b9, #1f618d);
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(52, 152, 219, 0.4);
+    }
+
+    .btn-reset {
+        background: linear-gradient(135deg, #95a5a6, #7f8c8d);
+        color: white;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 10px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        height: fit-content;
+    }
+
+    .users-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .user-card {
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 20px;
+        padding: 1.5rem;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .user-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+    }
+
+    .user-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+
+    .user-avatar {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #3498db, #2980b9);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.5rem;
+        font-weight: bold;
+        margin-left: 1rem;
+        box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+    }
+
+    .user-info h4 {
+        color: #2c3e50;
+        margin: 0 0 0.5rem 0;
+        font-size: 1.2rem;
+        font-weight: 600;
+    }
+
+    .user-info p {
+        color: #7f8c8d;
+        margin: 0;
+        font-size: 0.9rem;
+    }
+
+    .user-details {
+        margin-bottom: 1rem;
+    }
+
+    .user-detail {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid #ecf0f1;
+    }
+
+    .detail-label {
+        color: #7f8c8d;
+        font-size: 0.9rem;
+        font-weight: 500;
+    }
+
+    .detail-value {
+        color: #2c3e50;
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+
+    .role-badge {
+        padding: 0.3rem 0.8rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+
+    .role-super_admin { background: linear-gradient(135deg, #e74c3c, #c0392b); color: white; }
+    .role-admin { background: linear-gradient(135deg, #f39c12, #d68910); color: white; }
+    .role-finance { background: linear-gradient(135deg, #9b59b6, #8e44ad); color: white; }
+    .role-customer { background: linear-gradient(135deg, #3498db, #2980b9); color: white; }
+
+    .status-badge {
+        padding: 0.3rem 0.8rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+
+    .status-active { background: linear-gradient(135deg, #27ae60, #2ecc71); color: white; }
+    .status-inactive { background: linear-gradient(135deg, #95a5a6, #7f8c8d); color: white; }
+    .status-suspended { background: linear-gradient(135deg, #e74c3c, #c0392b); color: white; }
+    .status-pending { background: linear-gradient(135deg, #f39c12, #d68910); color: white; }
+
+    .user-actions {
+        display: flex;
+        gap: 0.5rem;
+        justify-content: flex-end;
+    }
+
+    .btn-action {
+        padding: 0.4rem 0.8rem;
+        border-radius: 8px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        border: none;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .btn-view {
+        background: linear-gradient(135deg, #3498db, #2980b9);
+        color: white;
+    }
+
+    .btn-edit {
+        background: linear-gradient(135deg, #f39c12, #d68910);
+        color: white;
+    }
+
+    .btn-delete {
+        background: linear-gradient(135deg, #e74c3c, #c0392b);
+        color: white;
+    }
+
+    .pagination-wrapper {
+        display: flex;
+        justify-content: center;
+        margin-top: 2rem;
+    }
+
+    .pagination {
+        display: flex;
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 15px;
+        padding: 0.5rem;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .page-item {
+        margin: 0 0.25rem;
+    }
+
+    .page-link {
+        padding: 0.75rem 1rem;
+        color: #3498db;
+        text-decoration: none;
+        border-radius: 10px;
+        transition: all 0.3s ease;
+        font-weight: 600;
+    }
+
+    .page-link:hover {
+        background: #3498db;
+        color: white;
+    }
+
+    .page-item.active .page-link {
+        background: #3498db;
+        color: white;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 3rem;
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 20px;
+        margin: 2rem 0;
+    }
+
+    .empty-icon {
+        font-size: 4rem;
+        color: #bdc3c7;
+        margin-bottom: 1rem;
+    }
+
+    .empty-title {
+        color: #2c3e50;
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+
+    .empty-description {
+        color: #7f8c8d;
+        font-size: 1rem;
+    }
+
+    @media (max-width: 768px) {
+        .search-filters {
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+        
+        .users-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .user-header {
+            flex-direction: column;
+            text-align: center;
+        }
+        
+        .user-avatar {
+            margin-left: 0;
+            margin-bottom: 1rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="users-container">
+    <div class="container">
+        <!-- Header -->
+        <div class="users-header">
+            <h1 class="users-title">👥 مدیریت کاربران</h1>
+            <p class="users-subtitle">مشاهده و مدیریت کاربران سیستم</p>
+            
+            <!-- آمار کلی -->
+            <div class="text-center mb-3">
+                <span class="badge badge-primary fs-6">
+                    📊 تعداد کل کاربران: {{ total_users }}
+                </span>
+            </div>
+        </div>
+
+        <!-- کنترل‌ها و فیلترها -->
+        <div class="users-controls">
+            <form method="get" class="search-filters">
+                <!-- جستجو -->
+                <div class="form-group">
+                    <label class="form-label">🔍 جستجو</label>
+                    <input type="text" 
+                           name="search" 
+                           class="form-control" 
+                           placeholder="جستجو در نام، نام کاربری، ایمیل یا شماره تلفن..."
+                           value="{{ search_query }}">
+                </div>
+
+                <!-- فیلتر نقش -->
+                <div class="form-group">
+                    <label class="form-label">👤 نقش</label>
+                    <select name="role" class="form-control">
+                        <option value="">همه نقش‌ها</option>
+                        {% for role_key, role_label in user_roles %}
+                        <option value="{{ role_key }}" {% if role_filter == role_key %}selected{% endif %}>
+                            {{ role_label }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- فیلتر وضعیت -->
+                <div class="form-group">
+                    <label class="form-label">📊 وضعیت</label>
+                    <select name="status" class="form-control">
+                        <option value="">همه وضعیت‌ها</option>
+                        {% for status_key, status_label in user_statuses %}
+                        <option value="{{ status_key }}" {% if status_filter == status_key %}selected{% endif %}>
+                            {{ status_label }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- دکمه‌ها -->
+                <div class="form-group">
+                    <button type="submit" class="btn btn-search">
+                        🔍 جستجو
+                    </button>
+                </div>
+            </form>
+            
+            <!-- دکمه پاک کردن فیلترها -->
+            <div class="text-center mt-3">
+                <a href="{% url 'accounts:user_list' %}" class="btn btn-reset">
+                    🔄 پاک کردن فیلترها
+                </a>
+            </div>
+        </div>
+
+        <!-- لیست کاربران -->
+        {% if page_obj %}
+            <div class="users-grid">
+                {% for user in page_obj %}
+                <div class="user-card">
+                    <div class="user-header">
+                        <div class="user-avatar">
+                            {{ user.first_name.0|default:user.username.0 }}{{ user.last_name.0|default:"" }}
+                        </div>
+                        <div class="user-info">
+                            <h4>{{ user.get_full_name|default:user.username }}</h4>
+                            <p>@{{ user.username }}</p>
+                        </div>
+                    </div>
+
+                    <div class="user-details">
+                        <div class="user-detail">
+                            <span class="detail-label">📧 ایمیل:</span>
+                            <span class="detail-value">{{ user.email|default:"تعریف نشده" }}</span>
+                        </div>
+                        <div class="user-detail">
+                            <span class="detail-label">📱 تلفن:</span>
+                            <span class="detail-value">{{ user.phone|default:"تعریف نشده" }}</span>
+                        </div>
+                        <div class="user-detail">
+                            <span class="detail-label">👤 نقش:</span>
+                            <span class="detail-value">
+                                <span class="role-badge role-{{ user.role }}">
+                                    {{ user.get_role_display }}
+                                </span>
+                            </span>
+                        </div>
+                        <div class="user-detail">
+                            <span class="detail-label">📊 وضعیت:</span>
+                            <span class="detail-value">
+                                <span class="status-badge status-{{ user.status }}">
+                                    {{ user.get_status_display }}
+                                </span>
+                            </span>
+                        </div>
+                        <div class="user-detail">
+                            <span class="detail-label">📅 تاریخ عضویت:</span>
+                            <span class="detail-value">{{ user.created_at|date:"Y/m/d" }}</span>
+                        </div>
+                    </div>
+
+                    <div class="user-actions">
+                        <a href="{% url 'accounts:user_detail' user.id %}" class="btn-action btn-view">
+                            👁️ مشاهده
+                        </a>
+                        {% if user != request.user %}
+                        <button class="btn-action btn-edit" onclick="changeUserStatus({{ user.id }})">
+                            ✏️ ویرایش
+                        </button>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- صفحه‌بندی -->
+            {% if page_obj.has_other_pages %}
+            <div class="pagination-wrapper">
+                <ul class="pagination">
+                    {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if role_filter %}&role={{ role_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">
+                                ← قبلی
+                            </a>
+                        </li>
+                    {% endif %}
+
+                    {% for num in page_obj.paginator.page_range %}
+                        {% if page_obj.number == num %}
+                            <li class="page-item active">
+                                <span class="page-link">{{ num }}</span>
+                            </li>
+                        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ num }}{% if search_query %}&search={{ search_query }}{% endif %}{% if role_filter %}&role={{ role_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">
+                                    {{ num }}
+                                </a>
+                            </li>
+                        {% endif %}
+                    {% endfor %}
+
+                    {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if role_filter %}&role={{ role_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">
+                                بعدی →
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+            {% endif %}
+        {% else %}
+            <!-- حالت خالی -->
+            <div class="empty-state">
+                <div class="empty-icon">👥</div>
+                <h3 class="empty-title">کاربری یافت نشد</h3>
+                <p class="empty-description">
+                    {% if search_query or role_filter or status_filter %}
+                        با فیلترهای انتخابی کاربری پیدا نشد. فیلترها را تغییر دهید.
+                    {% else %}
+                        هنوز کاربری در سیستم ثبت نشده است.
+                    {% endif %}
+                </p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Modal تغییر وضعیت کاربر -->
+<div class="modal fade" id="statusModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">تغییر وضعیت کاربر</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="statusForm">
+                    {% csrf_token %}
+                    <input type="hidden" id="userId" name="user_id">
+                    <div class="mb-3">
+                        <label class="form-label">وضعیت جدید:</label>
+                        <select name="status" class="form-control" required>
+                            {% for status_key, status_label in user_statuses %}
+                            <option value="{{ status_key }}">{{ status_label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">انصراف</button>
+                <button type="button" class="btn btn-primary" onclick="submitStatusChange()">تغییر وضعیت</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function changeUserStatus(userId) {
+    document.getElementById('userId').value = userId;
+    new bootstrap.Modal(document.getElementById('statusModal')).show();
+}
+
+function submitStatusChange() {
+    const form = document.getElementById('statusForm');
+    const formData = new FormData(form);
+    const userId = formData.get('user_id');
+    
+    fetch(`/accounts/users/${userId}/update-status/`, {
+        method: 'POST',
+        body: formData,
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert('خطا: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('خطا در ارتباط با سرور');
+    });
+}
+</script>
+{% endblock %} 

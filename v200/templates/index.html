@@ -1,0 +1,337 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}{{ title }}{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/main.css' %}">
+<link rel="stylesheet" href="{% static 'css/mobile.css' %}">
+<link rel="stylesheet" href="{% static 'css/selection-styles.css' %}">
+{% endblock %}
+{% block content %}
+
+<div class="container">
+    <nav class="navbar">
+        <div class="navbar-header">
+            <span class="navbar-logo">کارخانه کاغذ و مقوای همایون</span>
+            <button class="navbar-toggle" onclick="toggleMenu()">☰</button>
+        </div>
+        <ul class="nav-list" id="navbarMenu">
+            {% if user.is_authenticated %}
+            <li class="nav-item"><a href="{% url 'accounts:logout' %}" class="nav-link">خروج</a></li>
+            {% else %}
+            <li class="nav-item"><a href="{% url 'accounts:customer_sms_login' %}" class="nav-link">ورود</a></li>
+            {% endif %}
+        </ul>
+    </nav>
+
+    <!-- Main Content - Shown during working hours -->
+    <main class="main-content" id="mainContent">
+        <!-- 🔄 Unpaid Orders Section -->
+        {% if user.is_authenticated and unpaid_orders %}
+        <section id="unpaidOrdersSection" class="section unpaid-orders-section">
+            <div class="section-header">
+                <h2 class="section-title">
+                    <span class="section-icon">🔄</span>
+                    سفارشات ناتمام
+                </h2>
+                <p class="section-subtitle">سفارشات نقدی که هنوز به مرحله پرداخت نرسیده‌اند</p>
+            </div>
+            
+            <div class="unpaid-orders-container">
+                {% for order in unpaid_orders %}
+                <div class="unpaid-order-card">
+                    <div class="order-header">
+                        <div class="order-info">
+                            <h4 class="order-number">سفارش #{{ order.order_number }}</h4>
+                            <p class="order-date">{{ order.created_at|date:"Y/m/d H:i" }}</p>
+                        </div>
+                        <div class="order-status">
+                            {% if order.payment_method == 'Terms' %}
+                                <span class="status-badge pending">⏳ در انتظار تایید ادمین</span>
+                            {% else %}
+                                <span class="status-badge pending">⏳ منتظر پرداخت نقدی</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="order-details">
+                        <div class="order-items">
+                            <h5>محصولات انتخاب شده:</h5>
+                            <ul class="items-list">
+                                {% for item in order.order_items.all %}
+                                <li class="item">
+                                    <span class="item-name">{{ item.product.reel_number }}</span>
+                                    <span class="item-details">
+                                        {{ item.product.width }}mm × {{ item.product.gsm }}g/m² × {{ item.product.length }}m
+                                    </span>
+                                    <span class="item-price">{{ item.total_price|floatformat:0 }} تومان</span>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        
+                        <div class="order-summary">
+                            <div class="summary-row">
+                                <span class="summary-label">تعداد محصولات:</span>
+                                <span class="summary-value">{{ order.order_items.count }} عدد</span>
+                            </div>
+                            <div class="summary-row">
+                                <span class="summary-label">مبلغ کل:</span>
+                                <span class="summary-value total-amount">{{ order.final_amount|floatformat:0 }} تومان</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="order-actions">
+                        {% if order.payment_method == 'Cash' %}
+                        <a href="{% url 'payments:payment_summary' order.id %}" class="btn btn-primary complete-order-btn">
+                            <span class="btn-icon">💳</span>
+                            <span class="btn-text">تکمیل پرداخت</span>
+                        </a>
+                        {% endif %}
+                        <button class="btn btn-outline-secondary view-order-btn" onclick="viewOrderDetails({{ order.id }})">
+                            <span class="btn-icon">👁️</span>
+                            <span class="btn-text">مشاهده جزئیات</span>
+                        </button>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+        {% endif %}
+        
+        <section id="cashSection" class="section cash-section">
+            <div class="info-grid">
+                <!-- Removed the info-card for product count -->
+            </div>
+
+            <!-- جدول موجودی نقدی -->
+            <div class="stock-table-container">
+                <h3 class="stock-title">موجودی نقدی - انتخاب محصول</h3>
+                <div class="selected-count">
+                    تعداد انتخاب شده: <span id="cashSelectedCount">0</span> از <span id="cashTotalCount">0</span>
+                </div>
+                <div class="table-responsive">
+                    <table class="stock-table" id="cashStockTable">
+                        <thead>
+                            <tr>
+                                <th>انتخاب</th>
+                                <th>عرض (mm)</th>
+                                <th>گرماژ (g/m²)</th>
+                                <th>طول (m)</th>
+                                <th>قیمت (تومان)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if products %}
+                            {% for product in products %}
+                            <tr class="stock-row" data-type="cash" data-product-id="{{ product.id }}">
+                                <td>
+                                  <button class="selection-btn" data-section="cash" type="button">
+                                    <span class="selection-icon">⭕</span>
+                                    <span>انتخاب</span>
+                                  </button>
+                                  <input type="checkbox" class="stock-checkbox" data-section="cash" style="display:none;">
+                                </td>
+                                <td>{{ product.width }}</td>
+                                <td>{{ product.gsm }}</td>
+                                <td>{{ product.length }}</td>
+                                <td>{{ product.price|floatformat:0 }}</td>
+                            </tr>
+                            {% endfor %}
+                            {% else %}
+                            <tr>
+                                <td colspan="5" class="text-center">
+                                    <div class="no-products-message">
+                                        <p>🔍 محصولی در انبار یافت نشد</p>
+                                        <small>لطفاً بعداً مراجعه کنید یا با مدیر سیستم تماس بگیرید</small>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="button-container">
+                <button class="purchase-btn cash-btn" type="button" onclick="handleCashPurchase()" id="cashPurchaseBtn" disabled>
+                    <span class="btn-icon">💰</span>
+                    <span class="btn-text">خرید نقدی</span>
+                </button>
+            </div>
+        </section>
+
+        <section id="creditSection" class="section credit-section">
+            <div class="section-header">
+                <h2 class="section-title">نسیه</h2>
+            </div>
+
+            <div class="info-grid">
+                <!-- Removed the info-card for credit section -->
+            </div>
+
+            <!-- جدول موجودی نسیه -->
+            <div class="stock-table-container">
+                <h3 class="stock-title">موجودی نسیه - انتخاب محصول</h3>
+                <div class="selected-count">
+                    تعداد انتخاب شده: <span id="creditSelectedCount">0</span> از <span id="creditTotalCount">0</span>
+                </div>
+                <div class="table-responsive">
+                    <table class="stock-table" id="creditStockTable">
+                        <thead>
+                            <tr>
+                                <th>انتخاب</th>
+                                <th>عرض (mm)</th>
+                                <th>گرماژ (g/m²)</th>
+                                <th>طول (m)</th>
+                                <th>قیمت (تومان)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if products %}
+                            {% for product in products %}
+                            <tr class="stock-row" data-type="credit" data-product-id="{{ product.id }}">
+                                <td>
+                                  <button class="selection-btn" data-section="credit" type="button">
+                                    <span class="selection-icon">⭕</span>
+                                    <span>انتخاب</span>
+                                  </button>
+                                  <input type="checkbox" class="stock-checkbox" data-section="credit" style="display:none;">
+                                </td>
+                                <td>{{ product.width }}</td>
+                                <td>{{ product.gsm }}</td>
+                                <td>{{ product.length }}</td>
+                                <td>{{ product.price|floatformat:0 }}</td>
+                            </tr>
+                            {% endfor %}
+                            {% else %}
+                            <tr>
+                                <td colspan="5" class="text-center">
+                                    <div class="no-products-message">
+                                        <p>🔍 محصولی در انبار یافت نشد</p>
+                                        <small>لطفاً بعداً مراجعه کنید یا با مدیر سیستم تماس بگیرید</small>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="button-container">
+                <button class="purchase-btn credit-btn" type="button" onclick="handleCreditPurchase()" id="creditPurchaseBtn"
+                    disabled>
+                    <span class="btn-icon">📋</span>
+                    <span class="btn-text">خرید نسیه</span>
+                </button>
+            </div>
+        </section>
+    </main>
+
+    <!-- Closed Content - Shown outside working hours -->
+    <main class="closed-content" id="closedContent" style="display: none;">
+        <div class="closed-container">
+            <div class="closed-icon">🔒</div>
+            <h2 class="closed-title">سایت در حال حاضر بسته است</h2>
+
+            <p class="closed-message">
+                متأسفانه در حال حاضر خارج از ساعت کاری هستیم.
+                لطفاً در ساعت کاری مجدداً مراجعه فرمایید.
+            </p>
+
+            <div class="working-hours-info">
+                <h3 class="working-hours-title">ساعت کاری:</h3>
+                <div class="working-hours-time" id="workingHoursDisplay">
+                    از 08:00 تا 18:00
+                </div>
+            </div>
+
+            <div class="contact-info-closed">
+                <h4>اطلاعات تماس:</h4>
+                <p>📞 تلفن: 021-12345678</p>
+                <p>📧 ایمیل: info@homayounpaper.com</p>
+                <p>📍 آدرس: تهران، خیابان ولیعصر</p>
+            </div>
+
+            <button class="refresh-btn" onclick="checkWorkingHours()">
+                <span class="btn-text">بررسی مجدد</span>
+            </button>
+        </div>
+    </main>
+
+    <!-- Footer - Always visible -->
+    <footer id="contactSection" class="footer">
+        <div class="footer-content">
+            <div class="footer-section contact-info">
+                <h3 class="footer-title">اطلاعات تماس</h3>
+                <div class="contact-items">
+                    <div class="contact-item">
+                        <span class="contact-icon">📞</span>
+                        <div class="contact-details">
+                            <span class="contact-label">تلفن تماس:</span>
+                            <span class="contact-value">۰۲۱-۱۲۳۴۵۶۷۸</span>
+                        </div>
+                    </div>
+                    <div class="contact-item">
+                        <span class="contact-icon">📱</span>
+                        <div class="contact-details">
+                            <span class="contact-label">موبایل:</span>
+                            <span class="contact-value">۰۹۱۲-۳۴۵-۶۷۸۹</span>
+                        </div>
+                    </div>
+                    <div class="contact-item email-item">
+                        <span class="contact-icon">📧</span>
+                        <div class="contact-details">
+                            <span class="contact-label">ایمیل:</span>
+                            <span class="contact-value">info@homayounpaper.com</span>
+                        </div>
+                    </div>
+                    <div class="contact-item">
+                        <span class="contact-icon">📍</span>
+                        <div class="contact-details">
+                            <span class="contact-label">آدرس:</span>
+                            <span class="contact-value">تهران، خیابان ولیعصر، پلاک ۱۲۳</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="footer-section working-hours">
+                <h3 class="footer-title">ساعات کاری</h3>
+                <div class="hours-info">
+                    <div class="hours-item">
+                        <span class="hours-label">شنبه تا چهارشنبه:</span>
+                        <span class="hours-value">۰۸:۰۰ - ۱۸:۰۰</span>
+                    </div>
+                    <div class="hours-item">
+                        <span class="hours-label">پنج‌شنبه:</span>
+                        <span class="hours-label">۰۸:۰۰ - ۱۶:۰۰</span>
+                    </div>
+                    <div class="hours-item">
+                        <span class="hours-label">جمعه:</span>
+                        <span class="hours-value">تعطیل</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="footer-section about-us">
+                <h3 class="footer-title">درباره ما</h3>
+                <p class="about-text">
+                    کارخانه کاغذ و مقوای همایون با بیش از ۲۰ سال تجربه در تولید و فروش
+                    انواع کاغذ و مقوا، ارائه‌دهنده بهترین محصولات با کیفیت و قیمت مناسب می‌باشد.
+                </p>
+                <div class="social-links">
+                    <a href="#" class="social-link">📘</a>
+                    <a href="#" class="social-link">📷</a>
+                    <a href="#" class="social-link">📞</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/index.js' %}"></script>
+{% endblock %}

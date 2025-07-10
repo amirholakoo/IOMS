@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>👤 پروفایل - HomayOMS</title>
+    
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="{% url 'accounts:dashboard' %}">🏢 HomayOMS</a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="{% url 'accounts:logout' %}">🚪 خروج</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <h2>👤 پروفایل کاربری</h2>
+        <div class="card">
+            <div class="card-body">
+                <h5>{{ user.get_full_name|default:user.username }}</h5>
+                <p><strong>نقش:</strong> {{ user.get_role_display }}</p>
+                <p><strong>ایمیل:</strong> {{ user.email|default:"تعریف نشده" }}</p>
+                <p><strong>شماره تلفن:</strong> {{ user.phone }}</p>
+                <p><strong>وضعیت:</strong> {{ user.get_status_display }}</p>
+                <p><strong>عضو از:</strong> {{ user.date_joined|date:"Y/m/d" }}</p>
+                
+                <a href="{% url 'accounts:change_password' %}" class="btn btn-primary">🔐 تغییر رمز عبور</a>
+                <a href="{% url 'accounts:dashboard' %}" class="btn btn-secondary">🔙 بازگشت به داشبورد</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html> 
