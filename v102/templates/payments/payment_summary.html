@@ -1,0 +1,320 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}💰 خلاصه پرداخت - سفارش {{ order.order_number }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .payment-container {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding: 2rem 0;
+        font-family: 'Tahoma', sans-serif;
+    }
+
+    .payment-card {
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 20px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        backdrop-filter: blur(10px);
+    }
+
+    .payment-header {
+        background: linear-gradient(135deg, #3498db, #2980b9);
+        color: white;
+        border-radius: 15px;
+        padding: 2rem;
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+
+    .summary-section {
+        background: #f8f9fa;
+        border-radius: 15px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        border-left: 5px solid #3498db;
+    }
+
+    .cash-item {
+        background: white;
+        border-radius: 10px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        border: 1px solid #e0e0e0;
+        transition: all 0.3s ease;
+    }
+
+    .cash-item:hover {
+        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+        transform: translateY(-2px);
+    }
+
+    .gateway-card {
+        background: white;
+        border: 2px solid #e0e0e0;
+        border-radius: 15px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-align: center;
+    }
+
+    .gateway-card:hover {
+        border-color: #3498db;
+        background-color: #f8f9fa;
+        transform: scale(1.02);
+    }
+
+    .gateway-card.selected {
+        border-color: #27ae60;
+        background-color: #d4edda;
+    }
+
+    .gateway-icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+    }
+
+    .total-summary {
+        background: linear-gradient(135deg, #27ae60, #2ecc71);
+        color: white;
+        border-radius: 15px;
+        padding: 2rem;
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+
+    .proceed-btn {
+        background: linear-gradient(135deg, #e74c3c, #c0392b);
+        color: white;
+        border: none;
+        padding: 1rem 2rem;
+        border-radius: 15px;
+        font-size: 1.2rem;
+        font-weight: bold;
+        width: 100%;
+        transition: all 0.3s ease;
+    }
+
+    .proceed-btn:hover {
+        background: linear-gradient(135deg, #c0392b, #a93226);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(231, 76, 60, 0.4);
+    }
+
+    .proceed-btn:disabled {
+        background: #6c757d;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+    }
+
+    .info-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid #e0e0e0;
+    }
+
+    .info-item:last-child {
+        border-bottom: none;
+    }
+
+    .security-notice {
+        background: #fff3cd;
+        border: 1px solid #ffeaa7;
+        border-radius: 10px;
+        padding: 1rem;
+        margin-top: 2rem;
+        text-align: center;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="payment-container">
+    <div class="container">
+        <!-- Page Header -->
+        <div class="payment-header">
+            <h1 style="margin-bottom: 1rem;">💰 خلاصه پرداخت</h1>
+            <h3>سفارش {{ order.order_number }}</h3>
+            <p style="margin: 0; opacity: 0.9;">انتخاب درگاه پرداخت و تکمیل خرید</p>
+        </div>
+
+        <div class="row">
+            <!-- Payment Details -->
+            <div class="col-lg-8 mb-4">
+                <div class="payment-card">
+                    <h3 style="color: #2c3e50; margin-bottom: 1.5rem;">📋 جزئیات پرداخت</h3>
+                    
+                    <!-- Order Information -->
+                    <div class="summary-section">
+                        <h5 style="color: #2c3e50; margin-bottom: 1rem;">📦 اطلاعات سفارش</h5>
+                        <div class="info-item">
+                            <span>شماره سفارش:</span>
+                            <strong>{{ order.order_number }}</strong>
+                        </div>
+                        <div class="info-item">
+                            <span>👤 مشتری:</span>
+                            <strong>{{ order.customer.customer_name }}</strong>
+                        </div>
+                        <div class="info-item">
+                            <span>📅 تاریخ سفارش:</span>
+                            <strong>{{ order.created_at|date:"Y/m/d H:i" }}</strong>
+                        </div>
+                        <div class="info-item">
+                            <span>📊 وضعیت:</span>
+                            <span class="badge bg-success">{{ order.get_status_display }}</span>
+                        </div>
+                    </div>
+
+                    <!-- Cash Items -->
+                    <div class="summary-section">
+                        <h5 style="color: #2c3e50; margin-bottom: 1rem;">💵 اقلام نقدی قابل پرداخت</h5>
+                        
+                        {% for item in payment_details.cash_items %}
+                        <div class="cash-item">
+                            <div class="row align-items-center">
+                                <div class="col-md-6">
+                                    <h6 style="margin-bottom: 0.5rem;">{{ item.product.reel_number }}</h6>
+                                    <small class="text-muted">
+                                        📏 {{ item.product.width }}mm × 
+                                        📊 {{ item.product.gsm }}GSM × 
+                                        📐 {{ item.product.length }}m
+                                    </small>
+                                </div>
+                                <div class="col-md-3 text-center">
+                                    <span class="badge bg-primary">تعداد: {{ item.quantity }}</span>
+                                    <br>
+                                    <small>{{ item.unit_price|floatformat:0 }} ت / واحد</small>
+                                </div>
+                                <div class="col-md-3 text-end">
+                                    <strong style="color: #27ae60;">{{ item.total_price|floatformat:0 }} تومان</strong>
+                                </div>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="text-center text-muted py-4">
+                            ❌ هیچ آیتم نقدی برای پرداخت وجود ندارد
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <!-- Other Items (if any) -->
+                    {% if payment_details.other_items %}
+                    <div class="summary-section">
+                        <h5 style="color: #2c3e50; margin-bottom: 1rem;">📋 سایر اقلام (غیر نقدی)</h5>
+                        
+                        {% for item in payment_details.other_items %}
+                        <div class="cash-item" style="opacity: 0.6;">
+                            <div class="row align-items-center">
+                                <div class="col-md-6">
+                                    <h6 style="margin-bottom: 0.5rem;">{{ item.product.reel_number }}</h6>
+                                    <small class="text-muted">{{ item.get_payment_method_display }}</small>
+                                </div>
+                                <div class="col-md-3 text-center">
+                                    <span class="badge bg-secondary">تعداد: {{ item.quantity }}</span>
+                                </div>
+                                <div class="col-md-3 text-end">
+                                    <strong style="color: #6c757d;">{{ item.total_price|floatformat:0 }} تومان</strong>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                        
+                        <div class="text-center mt-2">
+                            <small class="text-muted">⚠️ این اقلام در این مرحله پرداخت نمی‌شوند</small>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Payment Gateway Selection -->
+            <div class="col-lg-4">
+                <!-- Total Amount -->
+                <div class="total-summary">
+                    <h4 style="margin-bottom: 1rem;">💰 مبلغ قابل پرداخت</h4>
+                    <h2 style="margin-bottom: 0.5rem;">{{ payment_details.total_cash_amount|floatformat:0 }}</h2>
+                    <p style="margin: 0; opacity: 0.9;">تومان</p>
+                    <hr style="border-color: rgba(255,255,255,0.3); margin: 1rem 0;">
+                    <small>معادل {{ payment_details.total_cash_amount_rial|floatformat:0 }} ریال</small>
+                </div>
+
+                <!-- Gateway Selection -->
+                <div class="payment-card">
+                    <h4 style="color: #2c3e50; margin-bottom: 1.5rem;">🌐 انتخاب درگاه پرداخت</h4>
+                    
+                    <form method="post" action="{% url 'payments:initiate_payment' order.id %}" id="paymentForm">
+                        {% csrf_token %}
+                        
+                        {% for gateway in payment_details.available_gateways %}
+                        <div class="gateway-card" onclick="selectGateway('{{ gateway.code }}')">
+                            <div class="gateway-icon">{{ gateway.icon }}</div>
+                            <h5>{{ gateway.name }}</h5>
+                            <small class="text-muted">پرداخت امن و سریع</small>
+                            <input type="radio" name="gateway" value="{{ gateway.code }}" style="display: none;">
+                        </div>
+                        {% endfor %}
+                        
+                        <button type="submit" class="proceed-btn" id="proceedBtn" disabled>
+                            🚀 ادامه پرداخت
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Security Notice -->
+                <div class="security-notice">
+                    <h6 style="color: #856404;">🔒 اطمینان از امنیت</h6>
+                    <p style="margin: 0; font-size: 0.9rem; color: #856404;">
+                        تمامی تراکنش‌ها با بالاترین استانداردهای امنیتی انجام می‌شود
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function selectGateway(gatewayCode) {
+    // Remove selected class from all cards
+    document.querySelectorAll('.gateway-card').forEach(card => {
+        card.classList.remove('selected');
+    });
+    
+    // Add selected class to clicked card
+    event.currentTarget.classList.add('selected');
+    
+    // Select the radio button
+    document.querySelector(`input[value="${gatewayCode}"]`).checked = true;
+    
+    // Enable proceed button
+    document.getElementById('proceedBtn').disabled = false;
+}
+
+// Form validation
+document.getElementById('paymentForm').addEventListener('submit', function(e) {
+    const selectedGateway = document.querySelector('input[name="gateway"]:checked');
+    
+    if (!selectedGateway) {
+        e.preventDefault();
+        alert('لطفاً یک درگاه پرداخت انتخاب کنید');
+        return false;
+    }
+    
+    // Show loading state
+    const btn = document.getElementById('proceedBtn');
+    btn.innerHTML = '⏳ در حال انتقال به درگاه...';
+    btn.disabled = true;
+    
+    return true;
+});
+</script>
+{% endblock %} 

@@ -1,0 +1,230 @@
+/* 🎨 Enhanced Selection Button Styles */
+
+/* Base Selection Button Styles */
+.selection-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 8px;
+}
+
+.selection-btn {
+    display: inline-flex !important;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    background: linear-gradient(135deg, #f8f9fa, #e9ecef) !important;
+    border: 2px solid #dee2e6 !important;
+    border-radius: 25px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #495057 !important;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    user-select: none;
+    min-width: 90px;
+    justify-content: center;
+    text-decoration: none;
+    font-family: 'Vazirmatn', Tahoma, Arial, sans-serif !important;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.selection-btn:hover {
+    background: linear-gradient(135deg, #e9ecef, #dee2e6) !important;
+    border-color: #adb5bd !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    color: #343a40 !important;
+}
+
+.selection-btn.selected {
+    background: linear-gradient(135deg, #28a745, #20c997) !important;
+    border-color: #20c997 !important;
+    color: white !important;
+    box-shadow: 0 4px 15px rgba(40, 167, 69, 0.4);
+}
+
+.selection-btn.selected:hover {
+    background: linear-gradient(135deg, #20c997, #28a745) !important;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(40, 167, 69, 0.5);
+}
+
+.selection-icon {
+    font-size: 1rem;
+    display: inline-block;
+    transition: transform 0.3s ease;
+}
+
+.selection-btn:hover .selection-icon {
+    transform: scale(1.2);
+}
+
+.selection-btn.selected .selection-icon {
+    transform: rotate(360deg);
+}
+
+/* Cash Section Selection Button */
+.cash-section .selection-btn.selected {
+    background: linear-gradient(135deg, #27ae60, #2ecc71) !important;
+    border-color: #27ae60 !important;
+    box-shadow: 0 4px 15px rgba(39, 174, 96, 0.4) !important;
+}
+
+.cash-section .selection-btn.selected:hover {
+    background: linear-gradient(135deg, #2ecc71, #27ae60) !important;
+    box-shadow: 0 6px 20px rgba(39, 174, 96, 0.5) !important;
+}
+
+.cash-section .selection-btn:hover {
+    border-color: #27ae60 !important;
+}
+
+/* Credit Section Selection Button */
+.credit-section .selection-btn.selected {
+    background: linear-gradient(135deg, #e74c3c, #c0392b) !important;
+    border-color: #e74c3c !important;
+    box-shadow: 0 4px 15px rgba(231, 76, 60, 0.4) !important;
+}
+
+.credit-section .selection-btn.selected:hover {
+    background: linear-gradient(135deg, #c0392b, #e74c3c) !important;
+    box-shadow: 0 6px 20px rgba(231, 76, 60, 0.5) !important;
+}
+
+.credit-section .selection-btn:hover {
+    border-color: #e74c3c !important;
+}
+
+/* Enhanced Row Hover Effects */
+.stock-row:hover {
+    background-color: #f8f9fa !important;
+    transform: scale(1.01) !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+}
+
+.cash-section .stock-row:hover {
+    background-color: #d5f4e6 !important;
+    border-left: 3px solid #27ae60 !important;
+    transform: translateX(5px) !important;
+}
+
+.credit-section .stock-row:hover {
+    background-color: #fdeaea !important;
+    border-left: 3px solid #e74c3c !important;
+    transform: translateX(5px) !important;
+}
+
+/* 📱 Mobile Styles (max-width: 768px) */
+@media (max-width: 768px) {
+    .selection-btn {
+        padding: 8px 10px !important;
+        font-size: 0.8rem !important;
+        min-width: 75px !important;
+        border-radius: 18px !important;
+        gap: 6px !important;
+    }
+
+    .selection-container {
+        padding: 5px !important;
+    }
+
+    .selection-icon {
+        font-size: 0.9rem !important;
+    }
+
+    .stock-row {
+        min-height: 48px !important;
+    }
+
+    .stock-table td {
+        padding: 8px 3px !important;
+        font-size: 0.8rem !important;
+    }
+
+    /* Disable hover effects on mobile */
+    .stock-row:hover {
+        transform: none !important;
+        background-color: inherit !important;
+        border-left: none !important;
+    }
+
+    .cash-section .stock-row:hover,
+    .credit-section .stock-row:hover {
+        transform: none !important;
+        background-color: inherit !important;
+        border-left: none !important;
+    }
+}
+
+/* 📱 Small Mobile Styles (max-width: 480px) */
+@media (max-width: 480px) {
+    .selection-btn {
+        padding: 6px 8px !important;
+        font-size: 0.75rem !important;
+        min-width: 60px !important;
+        border-radius: 15px !important;
+        gap: 4px !important;
+    }
+
+    .selection-container {
+        padding: 4px !important;
+    }
+
+    .selection-icon {
+        font-size: 0.8rem !important;
+    }
+
+    .stock-row {
+        min-height: 45px !important;
+    }
+
+    .stock-table td {
+        padding: 6px 2px !important;
+        font-size: 0.75rem !important;
+    }
+}
+
+/* 👆 Touch Device Optimizations */
+@media (hover: none) {
+    .stock-row:active {
+        background-color: #f0f0f0 !important;
+        transform: scale(0.98) !important;
+        transition: all 0.1s ease !important;
+    }
+
+    .selection-btn:active {
+        transform: scale(0.95) !important;
+        transition: transform 0.1s ease !important;
+    }
+
+    .cash-section .stock-row:active {
+        background-color: #d5f4e6 !important;
+    }
+
+    .credit-section .stock-row:active {
+        background-color: #fdeaea !important;
+    }
+}
+
+/* 🖱️ Desktop Hover Enhancements */
+@media (hover: hover) {
+    .stock-row:hover .selection-btn {
+        transform: translateY(-1px) !important;
+        box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2) !important;
+    }
+
+    .cash-section .stock-row:hover .selection-btn {
+        border-color: #27ae60 !important;
+    }
+
+    .credit-section .stock-row:hover .selection-btn {
+        border-color: #e74c3c !important;
+    }
+}
+
+/* Hide original checkboxes */
+.stock-checkbox {
+    display: none !important;
+}

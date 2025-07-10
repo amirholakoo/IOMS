@@ -1,0 +1,424 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}🛒 سبد خرید - HomayOMS{% endblock %}
+
+{% block extra_css %}
+<style>
+    .cart-container {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding: 2rem 0;
+        font-family: 'Tahoma', sans-serif;
+    }
+
+    .cart-card {
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 20px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        backdrop-filter: blur(10px);
+    }
+
+    .cart-item {
+        background: #f8f9fa;
+        border-radius: 15px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        border-left: 5px solid #3498db;
+        transition: all 0.3s ease;
+    }
+
+    .cart-item:hover {
+        transform: translateX(5px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .item-details h5 {
+        color: #2c3e50;
+        margin-bottom: 0.5rem;
+    }
+
+    .quantity-controls {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin: 1rem 0;
+    }
+
+    .quantity-btn {
+        background: #3498db;
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 35px;
+        height: 35px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .quantity-btn:hover {
+        background: #2980b9;
+        transform: scale(1.1);
+    }
+
+    .quantity-display {
+        background: white;
+        border: 2px solid #3498db;
+        border-radius: 10px;
+        padding: 0.5rem 1rem;
+        font-weight: bold;
+        color: #3498db;
+        min-width: 60px;
+        text-align: center;
+    }
+
+    .price-tag {
+        background: linear-gradient(135deg, #27ae60, #2ecc71);
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 10px;
+        font-weight: bold;
+        display: inline-block;
+    }
+
+    .total-summary {
+        background: linear-gradient(135deg, #3498db, #2980b9);
+        color: white;
+        border-radius: 15px;
+        padding: 2rem;
+        text-align: center;
+    }
+
+    .checkout-form {
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 15px;
+        padding: 2rem;
+        margin-top: 2rem;
+    }
+
+    .payment-method-card {
+        border: 2px solid #e0e0e0;
+        border-radius: 10px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .payment-method-card:hover,
+    .payment-method-card.selected {
+        border-color: #3498db;
+        background-color: #f8f9fa;
+        transform: scale(1.02);
+    }
+
+    .checkout-btn {
+        background: linear-gradient(135deg, #e74c3c, #c0392b);
+        color: white;
+        border: none;
+        padding: 1rem 2rem;
+        border-radius: 15px;
+        font-size: 1.1rem;
+        font-weight: bold;
+        width: 100%;
+        transition: all 0.3s ease;
+        margin-top: 1rem;
+    }
+
+    .checkout-btn:hover {
+        background: linear-gradient(135deg, #c0392b, #a93226);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(231, 76, 60, 0.4);
+    }
+
+    .empty-cart {
+        text-align: center;
+        padding: 4rem 2rem;
+        color: #7f8c8d;
+    }
+
+    .empty-cart i {
+        font-size: 4rem;
+        color: #bdc3c7;
+        margin-bottom: 1rem;
+    }
+
+    .remove-btn {
+        background: #e74c3c;
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 30px;
+        height: 30px;
+        font-size: 0.8rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .remove-btn:hover {
+        background: #c0392b;
+        transform: scale(1.1);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="cart-container">
+    <div class="container">
+        <!-- Page Header -->
+        <div class="text-center mb-4">
+            <h1 style="color: white; font-size: 3rem; font-weight: bold; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">
+                🛒 سبد خرید
+            </h1>
+            <p style="color: rgba(255,255,255,0.9); font-size: 1.2rem;">
+                بررسی و تسویه حساب اقلام انتخابی شما
+            </p>
+        </div>
+
+        {% if cart_items %}
+            <div class="row">
+                <!-- Cart Items -->
+                <div class="col-lg-8 mb-4">
+                    <div class="cart-card">
+                        <h3 style="color: #2c3e50; margin-bottom: 1.5rem;">📦 اقلام سبد خرید</h3>
+                        
+                        {% for item in cart_items %}
+                            <div class="cart-item">
+                                <div class="row align-items-center">
+                                    <div class="col-md-5">
+                                        <div class="item-details">
+                                            <h5>📦 {{ item.product.reel_number }}</h5>
+                                            <p class="text-muted mb-1">📍 {{ item.product.get_location_display }}</p>
+                                            <p class="text-muted mb-1">📏 {{ item.product.width }}mm × {{ item.product.length }}m</p>
+                                            <p class="text-muted mb-0">⚖️ {{ item.product.gsm }} g/m²</p>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="col-md-2">
+                                        <div class="quantity-controls">
+                                            <button class="quantity-btn" onclick="updateQuantity('{{ item.cart_key }}', -1)">−</button>
+                                            <div class="quantity-display">{{ item.quantity }}</div>
+                                            <button class="quantity-btn" onclick="updateQuantity('{{ item.cart_key }}', 1)">+</button>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="col-md-3">
+                                        <div class="mb-2">
+                                            <label class="form-label" style="color: #2c3e50; font-weight: bold; font-size: 0.9rem;">💳 نوع پرداخت:</label>
+                                            <select class="form-select form-select-sm" name="payment_method_{{ item.cart_key }}" 
+                                                    onchange="updatePaymentMethod('{{ item.cart_key }}', this.value)">
+                                                <option value="Cash" {% if item.payment_method == 'Cash' %}selected{% endif %}>💵 نقدی</option>
+                                                <option value="Terms" {% if item.payment_method == 'Terms' %}selected{% endif %}>📅 قسطی</option>
+                                                <option value="Bank_Transfer" {% if item.payment_method == 'Bank_Transfer' %}selected{% endif %}>🏦 حواله بانکی</option>
+                                                <option value="Check" {% if item.payment_method == 'Check' %}selected{% endif %}>📝 چک</option>
+                                            </select>
+                                        </div>
+                                        <div class="price-tag">
+                                            💰 {{ item.total_price|floatformat:0 }} ت
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="col-md-1">
+                                        <button class="remove-btn" onclick="removeItem('{{ item.cart_key }}')">
+                                            🗑️
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Order Summary & Checkout -->
+                <div class="col-lg-4">
+                    <div class="total-summary">
+                        <h4 style="margin-bottom: 1rem;">📋 خلاصه سفارش</h4>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>تعداد اقلام:</span>
+                            <strong>{{ cart_count }} عدد</strong>
+                        </div>
+                        <hr style="border-color: rgba(255,255,255,0.3);">
+                        <div class="d-flex justify-content-between">
+                            <span>مجموع:</span>
+                            <h3>{{ total_amount|floatformat:0 }} تومان</h3>
+                        </div>
+                    </div>
+
+                    <!-- Checkout Form -->
+                    <div class="checkout-form">
+                        <h4 style="color: #2c3e50; margin-bottom: 1.5rem;">✅ تسویه حساب</h4>
+                        
+                        <form method="post" action="{% url 'core:checkout' %}">
+                            {% csrf_token %}
+                            
+                            <!-- Payment Methods Summary -->
+                            <div class="mb-3">
+                                <h6 style="color: #2c3e50; margin-bottom: 1rem;">📊 خلاصه انواع پرداخت:</h6>
+                                <div class="payment-summary" id="payment-summary">
+                                    <!-- This will be populated by JavaScript -->
+                                </div>
+                            </div>
+
+                            <!-- Delivery Address -->
+                            <div class="mb-3">
+                                <label class="form-label" style="color: #2c3e50; font-weight: bold;">🚚 آدرس تحویل:</label>
+                                <textarea name="delivery_address" class="form-control" rows="3" 
+                                          placeholder="آدرس تحویل سفارش (اختیاری)">{% if customer %}{{ customer.address }}{% endif %}</textarea>
+                            </div>
+
+                            <!-- Order Notes -->
+                            <div class="mb-3">
+                                <label class="form-label" style="color: #2c3e50; font-weight: bold;">📝 توضیحات سفارش:</label>
+                                <textarea name="notes" class="form-control" rows="2" 
+                                          placeholder="توضیحات اضافی (اختیاری)"></textarea>
+                            </div>
+
+                            <!-- Checkout Button -->
+                            <button type="submit" class="checkout-btn">
+                                ✅ تسویه حساب و ثبت سفارش
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        {% else %}
+            <!-- Empty Cart -->
+            <div class="cart-card">
+                <div class="empty-cart">
+                    <i class="fas fa-shopping-cart"></i>
+                    <h3>سبد خرید شما خالی است</h3>
+                    <p>برای خرید محصولات به فروشگاه مراجعه کنید</p>
+                    <a href="{% url 'core:products_landing' %}" class="btn btn-primary btn-lg">
+                        📦 مشاهده محصولات
+                    </a>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Update Payment Method for individual items
+function updatePaymentMethod(cartKey, paymentMethod) {
+    fetch('/core/update-cart-payment-method/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        },
+        body: JSON.stringify({
+            cart_key: cartKey,
+            payment_method: paymentMethod
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            updatePaymentSummary();
+        } else {
+            alert(data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('خطا در به‌روزرسانی نوع پرداخت');
+    });
+}
+
+// Update Payment Summary
+function updatePaymentSummary() {
+    const paymentSummary = {};
+    const selects = document.querySelectorAll('select[name^="payment_method_"]');
+    
+    selects.forEach(select => {
+        const method = select.value;
+        const methodText = select.options[select.selectedIndex].text;
+        
+        if (!paymentSummary[method]) {
+            paymentSummary[method] = {
+                label: methodText,
+                count: 0
+            };
+        }
+        paymentSummary[method].count++;
+    });
+    
+    let summaryHTML = '';
+    for (const [method, data] of Object.entries(paymentSummary)) {
+        summaryHTML += `
+            <div class="d-flex justify-content-between align-items-center mb-2 p-2" style="background: #f8f9fa; border-radius: 8px;">
+                <span>${data.label}</span>
+                <span class="badge bg-primary">${data.count} محصول</span>
+            </div>
+        `;
+    }
+    
+    document.getElementById('payment-summary').innerHTML = summaryHTML;
+}
+
+// Update Quantity
+function updateQuantity(cartKey, change) {
+    fetch('/core/update-cart-quantity/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        },
+        body: JSON.stringify({
+            cart_key: cartKey,
+            change: change
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload(); // Reload to show updated quantities
+        } else {
+            alert(data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('خطا در به‌روزرسانی تعداد');
+    });
+}
+
+// Remove Item
+function removeItem(cartKey) {
+    if (confirm('آیا مطمئن هستید که می‌خواهید این محصول را از سبد خرید حذف کنید؟')) {
+        fetch('/core/remove-from-cart/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            },
+            body: JSON.stringify({
+                cart_key: cartKey
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload(); // Reload to show updated cart
+            } else {
+                alert(data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('خطا در حذف محصول');
+        });
+    }
+}
+
+// Initialize payment summary on page load
+document.addEventListener('DOMContentLoaded', function() {
+    updatePaymentSummary();
+});
+</script>
+{% endblock %} 

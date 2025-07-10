@@ -1,0 +1,506 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* 🎨 استایل‌های اختصاصی مدیریت ساعات کاری */
+    body {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        font-family: 'Vazir', sans-serif;
+        direction: rtl;
+        text-align: right;
+    }
+    
+    .main-container {
+        min-height: 100vh;
+        padding: 2rem 0;
+        background: rgba(255, 255, 255, 0.1);
+    }
+    
+    .working-hours-card {
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 20px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        padding: 2rem;
+        margin-bottom: 2rem;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(10px);
+    }
+    
+    .status-badge {
+        display: inline-block;
+        padding: 0.5rem 1rem;
+        border-radius: 25px;
+        font-weight: bold;
+        font-size: 0.9rem;
+        margin: 0.25rem;
+    }
+    
+    .status-open {
+        background: linear-gradient(45deg, #4CAF50, #8BC34A);
+        color: white;
+    }
+    
+    .status-closed {
+        background: linear-gradient(45deg, #F44336, #FF9800);
+        color: white;
+    }
+    
+    .time-input-group {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .time-input {
+        flex: 1;
+        padding: 1rem;
+        border: 2px solid #e0e0e0;
+        border-radius: 10px;
+        font-size: 1.1rem;
+        text-align: center;
+        direction: ltr;
+        transition: all 0.3s ease;
+    }
+    
+    .time-input:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        outline: none;
+    }
+    
+    .btn-set-hours {
+        background: linear-gradient(45deg, #667eea, #764ba2);
+        color: white;
+        border: none;
+        padding: 1rem 2rem;
+        border-radius: 15px;
+        font-size: 1.1rem;
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        width: 100%;
+        margin-top: 1rem;
+    }
+    
+    .btn-set-hours:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+    }
+    
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    
+    .stat-card {
+        background: rgba(255, 255, 255, 0.9);
+        padding: 1.5rem;
+        border-radius: 15px;
+        text-align: center;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+    
+    .stat-number {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #667eea;
+        margin-bottom: 0.5rem;
+    }
+    
+    .stat-label {
+        color: #666;
+        font-size: 0.9rem;
+    }
+    
+    .history-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 1rem;
+    }
+    
+    .history-table th,
+    .history-table td {
+        padding: 1rem;
+        text-align: center;
+        border-bottom: 1px solid #e0e0e0;
+    }
+    
+    .history-table th {
+        background: linear-gradient(45deg, #667eea, #764ba2);
+        color: white;
+        font-weight: bold;
+    }
+    
+    .history-table tr:hover {
+        background-color: rgba(102, 126, 234, 0.05);
+    }
+    
+    .current-status {
+        text-align: center;
+        padding: 2rem;
+        margin-bottom: 2rem;
+    }
+    
+    .current-time {
+        font-size: 3rem;
+        font-weight: bold;
+        color: #667eea;
+        margin-bottom: 1rem;
+    }
+    
+    .shop-status {
+        font-size: 1.5rem;
+        margin-bottom: 1rem;
+    }
+    
+    .alert {
+        padding: 1rem;
+        border-radius: 10px;
+        margin: 1rem 0;
+        font-weight: bold;
+    }
+    
+    .alert-success {
+        background-color: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+    }
+    
+    .alert-danger {
+        background-color: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+    }
+    
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+    
+    .form-label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: bold;
+        color: #333;
+    }
+    
+    .form-control {
+        width: 100%;
+        padding: 1rem;
+        border: 2px solid #e0e0e0;
+        border-radius: 10px;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+    }
+    
+    .form-control:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        outline: none;
+    }
+    
+    .loading {
+        display: none;
+        text-align: center;
+        color: #667eea;
+        font-weight: bold;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="main-container">
+    <div class="container">
+        
+        <!-- 📊 عنوان صفحه -->
+        <div class="working-hours-card">
+            <div class="current-status">
+                <h1 class="mb-0">⏰ مدیریت ساعات کاری فروشگاه</h1>
+                <p class="text-muted">👑 پنل مخصوص Super Admin</p>
+                
+                <!-- نمایش زمان فعلی -->
+                <div class="current-time" id="currentTime"></div>
+                
+                <!-- وضعیت فروشگاه -->
+                <div class="shop-status">
+                    {% if working_hours_stats.is_shop_open %}
+                        <span class="status-badge status-open">🟢 فروشگاه باز است</span>
+                    {% else %}
+                        <span class="status-badge status-closed">🔴 فروشگاه بسته است</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- 📊 آمار ساعات کاری -->
+        <div class="working-hours-card">
+            <h3>📊 آمار ساعات کاری</h3>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-number">{{ working_hours_stats.total_working_hours }}</div>
+                    <div class="stat-label">📋 کل ساعات کاری ثبت شده</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">{{ working_hours_stats.active_working_hours }}</div>
+                    <div class="stat-label">✅ ساعات کاری فعال</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">
+                        {% if current_working_hours %}
+                            {{ current_working_hours.get_duration_hours|floatformat:1 }}
+                        {% else %}
+                            0
+                        {% endif %}
+                    </div>
+                    <div class="stat-label">⏱️ ساعت کاری در روز</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">
+                        {% if working_hours_stats.is_shop_open %}
+                            🟢
+                        {% else %}
+                            🔴
+                        {% endif %}
+                    </div>
+                    <div class="stat-label">🏪 وضعیت فعلی</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- ⏰ تنظیم ساعات کاری جدید -->
+        <div class="working-hours-card">
+            <h3>⏰ تنظیم ساعات کاری جدید</h3>
+            
+            <div id="alertContainer"></div>
+            
+            <form id="workingHoursForm">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">🕐 زمان شروع کار</label>
+                            <input type="time" 
+                                   class="form-control time-input" 
+                                   id="startTime" 
+                                   value="09:00" 
+                                   required>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">🕔 زمان پایان کار</label>
+                            <input type="time" 
+                                   class="form-control time-input" 
+                                   id="endTime" 
+                                   value="18:00" 
+                                   required>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">📝 توضیحات (اختیاری)</label>
+                    <textarea class="form-control" 
+                              id="description" 
+                              rows="3" 
+                              placeholder="توضیحات اضافی درباره ساعات کاری..."></textarea>
+                </div>
+                
+                <button type="submit" class="btn-set-hours">
+                    ⏰ تنظیم ساعات کاری
+                </button>
+                
+                <div class="loading" id="loading">
+                    🔄 در حال تنظیم ساعات کاری...
+                </div>
+            </form>
+        </div>
+        
+        <!-- 📋 ساعات کاری فعلی -->
+        {% if current_working_hours %}
+        <div class="working-hours-card">
+            <h3>📋 ساعات کاری فعلی</h3>
+            <div class="row">
+                <div class="col-md-6">
+                    <p><strong>⏰ ساعات کار:</strong> 
+                        {{ current_working_hours.start_time|time:"H:i" }} - 
+                        {{ current_working_hours.end_time|time:"H:i" }}
+                    </p>
+                    <p><strong>⏱️ مدت زمان:</strong> 
+                        {{ current_working_hours.get_duration_hours|floatformat:1 }} ساعت
+                    </p>
+                    <p><strong>👑 تنظیم شده توسط:</strong> 
+                        {% if current_working_hours.set_by %}
+                            {{ current_working_hours.set_by.get_full_name|default:current_working_hours.set_by.username }}
+                        {% else %}
+                            سیستم
+                        {% endif %}
+                    </p>
+                </div>
+                <div class="col-md-6">
+                    <p><strong>📅 تاریخ تنظیم:</strong> 
+                        {{ current_working_hours.created_at|date:"Y/m/d H:i" }}
+                    </p>
+                    <p><strong>🔄 وضعیت:</strong> 
+                        {% if current_working_hours.is_currently_open %}
+                            <span class="status-badge status-open">🟢 باز</span>
+                        {% else %}
+                            <span class="status-badge status-closed">🔴 بسته</span>
+                        {% endif %}
+                    </p>
+                    {% if current_working_hours.description %}
+                    <p><strong>📝 توضیحات:</strong> {{ current_working_hours.description }}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- 📋 تاریخچه ساعات کاری -->
+        {% if working_hours_history %}
+        <div class="working-hours-card">
+            <h3>📋 تاریخچه ساعات کاری</h3>
+            <div class="table-responsive">
+                <table class="history-table">
+                    <thead>
+                        <tr>
+                            <th>⏰ ساعات کاری</th>
+                            <th>🔄 وضعیت</th>
+                            <th>⏱️ مدت زمان</th>
+                            <th>👑 تنظیم شده توسط</th>
+                            <th>📅 تاریخ</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for hours in working_hours_history %}
+                        <tr>
+                            <td>
+                                {{ hours.start_time|time:"H:i" }} - 
+                                {{ hours.end_time|time:"H:i" }}
+                            </td>
+                            <td>
+                                {% if hours.is_active %}
+                                    <span class="status-badge status-open">🟢 فعال</span>
+                                {% else %}
+                                    <span class="status-badge status-closed">🔴 غیرفعال</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ hours.get_duration_hours|floatformat:1 }} ساعت</td>
+                            <td>
+                                {% if hours.set_by %}
+                                    {{ hours.set_by.get_full_name|default:hours.set_by.username }}
+                                {% else %}
+                                    سیستم
+                                {% endif %}
+                            </td>
+                            <td>{{ hours.created_at|date:"Y/m/d H:i" }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+        
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // 🕐 نمایش زمان فعلی
+    function updateCurrentTime() {
+        const now = new Date();
+        const timeString = now.toLocaleTimeString('fa-IR', {
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit'
+        });
+        document.getElementById('currentTime').textContent = timeString;
+    }
+    
+    // به‌روزرسانی زمان هر ثانیه
+    setInterval(updateCurrentTime, 1000);
+    updateCurrentTime();
+    
+    // 📝 مدیریت فرم تنظیم ساعات کاری
+    document.getElementById('workingHoursForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const startTime = document.getElementById('startTime').value;
+        const endTime = document.getElementById('endTime').value;
+        const description = document.getElementById('description').value;
+        const loading = document.getElementById('loading');
+        const alertContainer = document.getElementById('alertContainer');
+        
+        // نمایش loading
+        loading.style.display = 'block';
+        alertContainer.innerHTML = '';
+        
+        // ارسال درخواست
+        fetch('/core/api/set-working-hours/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCSRFToken()
+            },
+            body: JSON.stringify({
+                start_time: startTime,
+                end_time: endTime,
+                description: description
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            loading.style.display = 'none';
+            
+            if (data.success) {
+                alertContainer.innerHTML = `
+                    <div class="alert alert-success">
+                        ✅ ${data.message}
+                    </div>
+                `;
+                
+                // به‌روزرسانی صفحه بعد از 2 ثانیه
+                setTimeout(() => {
+                    location.reload();
+                }, 2000);
+            } else {
+                alertContainer.innerHTML = `
+                    <div class="alert alert-danger">
+                        ❌ ${data.error}
+                    </div>
+                `;
+            }
+        })
+        .catch(error => {
+            loading.style.display = 'none';
+            alertContainer.innerHTML = `
+                <div class="alert alert-danger">
+                    ❌ خطا در ارتباط با سرور: ${error.message}
+                </div>
+            `;
+        });
+    });
+    
+    // 🍪 دریافت CSRF Token
+    function getCSRFToken() {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, 10) === 'csrftoken=') {
+                    cookieValue = decodeURIComponent(cookie.substring(10));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+</script>
+{% endblock %} 

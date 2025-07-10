@@ -1,0 +1,399 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}📋 مدیریت سفارشات - HomayOMS{% endblock %}
+
+{% block content %}
+{% csrf_token %}
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2>📋 مدیریت سفارشات</h2>
+            <p class="text-muted">پردازش و مدیریت سفارشات مشتریان</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'core:admin_dashboard' %}" class="btn btn-secondary">
+                ↩️ بازگشت به داشبورد
+            </a>
+        </div>
+    </div>
+
+    <!-- Filter Section -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="GET" class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label">🔍 جستجو</label>
+                    <input type="text" 
+                           name="search" 
+                           class="form-control" 
+                           placeholder="شماره سفارش، نام مشتری..."
+                           value="{{ search_query }}">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">📊 وضعیت</label>
+                    <select name="status" class="form-select">
+                        <option value="">همه وضعیت‌ها</option>
+                        {% for status_key, status_value in status_choices %}
+                            <option value="{{ status_key }}" {% if status_filter == status_key %}selected{% endif %}>
+                                {{ status_value }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">💳 نوع پرداخت</label>
+                    <select name="payment" class="form-select">
+                        <option value="">همه انواع</option>
+                        {% for payment_key, payment_value in payment_choices %}
+                            <option value="{{ payment_key }}" {% if payment_filter == payment_key %}selected{% endif %}>
+                                {{ payment_value }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">📅 از تاریخ</label>
+                    <input type="date" name="date_from" class="form-control" value="{{ date_from }}">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">📅 تا تاریخ</label>
+                    <input type="date" name="date_to" class="form-control" value="{{ date_to }}">
+                </div>
+                <div class="col-md-1">
+                    <label class="form-label">&nbsp;</label>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">
+                            🔍 فیلتر
+                        </button>
+                    </div>
+                </div>
+            </form>
+            
+            <div class="row mt-3">
+                <div class="col-md-8">
+                    <h6>📊 نتایج: {{ total_orders }} سفارش یافت شد</h6>
+                </div>
+                <div class="col-md-4 text-end">
+                    <a href="{% url 'core:orders_list' %}" class="btn btn-outline-secondary btn-sm">
+                        🔄 پاک کردن فیلترها
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Orders List -->
+    {% if page_obj %}
+        {% for order in page_obj %}
+        <div class="card mb-3">
+            <div class="card-header">
+                <div class="row align-items-center">
+                    <div class="col-md-3">
+                        <h6 class="mb-0">🏷️ {{ order.order_number }}</h6>
+                        <small class="text-muted">{{ order.created_at|date:"Y/m/d H:i" }}</small>
+                    </div>
+                    <div class="col-md-3">
+                        <h6 class="mb-0">👤 {{ order.customer.customer_name }}</h6>
+                        <small class="text-muted">📞 {{ order.customer.phone }}</small>
+                    </div>
+                    <div class="col-md-2">
+                        <span class="badge bg-primary">
+                            {{ order.get_status_display }}
+                        </span>
+                    </div>
+                    <div class="col-md-2">
+                        <span class="badge bg-success">
+                            {{ order.get_payment_method_display }}
+                        </span>
+                    </div>
+                    <div class="col-md-2 text-end">
+                        <h6 class="mb-0">💰 {{ order.final_amount|floatformat:0 }} ت</h6>
+                        <small class="text-muted">{{ order.order_items.count }} محصول</small>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-8">
+                        <h6>📦 محصولات سفارش:</h6>
+                        {% for item in order.order_items.all %}
+                        <div class="d-flex justify-content-between border-bottom py-1">
+                            <span>{{ item.product.reel_number }}</span>
+                            <span>{{ item.quantity }} × {{ item.unit_price|floatformat:0 }} ت</span>
+                        </div>
+                        {% endfor %}
+                        
+                        {% if order.notes %}
+                        <div class="mt-2">
+                            <strong>📝 یادداشت:</strong>
+                            <p class="text-muted">{{ order.notes }}</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <div class="btn-group d-grid gap-2">
+                            <a href="{% url 'core:order_detail' order.id %}" class="btn btn-outline-primary btn-sm">
+                                👁️ مشاهده جزئیات
+                            </a>
+                            
+                            {% if user.is_super_admin %}
+                                {% if order.status == 'Pending' %}
+                                    <button class="btn btn-success btn-sm confirm-order-btn" 
+                                            data-order-id="{{ order.id }}" 
+                                            data-order-number="{{ order.order_number }}">
+                                        ✅ تایید سفارش
+                                    </button>
+                                    <button class="btn btn-danger btn-sm cancel-order-btn" 
+                                            data-order-id="{{ order.id }}" 
+                                            data-order-number="{{ order.order_number }}">
+                                        ❌ لغو سفارش
+                                    </button>
+                                {% elif order.status == 'Confirmed' %}
+                                    <button class="btn btn-info btn-sm update-status-btn" 
+                                            data-order-id="{{ order.id }}" 
+                                            data-order-number="{{ order.order_number }}"
+                                            data-current-status="{{ order.status }}">
+                                        📊 تغییر وضعیت
+                                    </button>
+                                {% elif order.status == 'Processing' %}
+                                    <button class="btn btn-warning btn-sm update-status-btn" 
+                                            data-order-id="{{ order.id }}" 
+                                            data-order-number="{{ order.order_number }}"
+                                            data-current-status="{{ order.status }}">
+                                        📊 تغییر وضعیت
+                                    </button>
+                                {% elif order.status == 'Ready' %}
+                                    <button class="btn btn-primary btn-sm update-status-btn" 
+                                            data-order-id="{{ order.id }}" 
+                                            data-order-number="{{ order.order_number }}"
+                                            data-current-status="{{ order.status }}">
+                                        📊 تغییر وضعیت
+                                    </button>
+                                {% endif %}
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+        
+        <!-- Pagination -->
+        {% if page_obj.has_other_pages %}
+        <nav aria-label="صفحه‌بندی سفارشات">
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if status_filter %}status={{ status_filter }}&{% endif %}{% if payment_filter %}payment={{ payment_filter }}&{% endif %}{% if date_from %}date_from={{ date_from }}&{% endif %}{% if date_to %}date_to={{ date_to }}&{% endif %}page={{ page_obj.previous_page_number }}">قبلی</a>
+                    </li>
+                {% endif %}
+                
+                {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ num }}</span>
+                        </li>
+                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                        <li class="page-item">
+                            <a class="page-link" href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if status_filter %}status={{ status_filter }}&{% endif %}{% if payment_filter %}payment={{ payment_filter }}&{% endif %}{% if date_from %}date_from={{ date_from }}&{% endif %}{% if date_to %}date_to={{ date_to }}&{% endif %}page={{ num }}">{{ num }}</a>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+                
+                {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if status_filter %}status={{ status_filter }}&{% endif %}{% if payment_filter %}payment={{ payment_filter }}&{% endif %}{% if date_from %}date_from={{ date_from }}&{% endif %}{% if date_to %}date_to={{ date_to }}&{% endif %}page={{ page_obj.next_page_number }}">بعدی</a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    {% else %}
+        <div class="text-center py-5">
+            <div class="alert alert-info">
+                <h3>🔍 سفارش یافت نشد</h3>
+                <p class="text-muted">هیچ سفارشی با معیارهای جستجو پیدا نشد.</p>
+                <a href="{% url 'core:orders_list' %}" class="btn btn-primary">نمایش همه سفارشات</a>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // تایید سفارش
+    $('.confirm-order-btn').click(function() {
+        const orderId = $(this).data('order-id');
+        const orderNumber = $(this).data('order-number');
+        
+        if (confirm(`آیا از تایید سفارش ${orderNumber} اطمینان دارید؟`)) {
+            $.ajax({
+                url: `/core/orders/${orderId}/confirm/`,
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': $('[name=csrfmiddlewaretoken]').val()
+                },
+                success: function(response) {
+                    if (response.success) {
+                        // نمایش پیام موفقیت
+                        showAlert('success', response.message);
+                        // به‌روزرسانی صفحه
+                        setTimeout(function() {
+                            location.reload();
+                        }, 1500);
+                    } else {
+                        showAlert('error', response.message);
+                    }
+                },
+                error: function() {
+                    showAlert('error', 'خطا در ارتباط با سرور');
+                }
+            });
+        }
+    });
+    
+    // لغو سفارش
+    $('.cancel-order-btn').click(function() {
+        const orderId = $(this).data('order-id');
+        const orderNumber = $(this).data('order-number');
+        
+        if (confirm(`آیا از لغو سفارش ${orderNumber} اطمینان دارید؟`)) {
+            $.ajax({
+                url: `/core/orders/${orderId}/cancel/`,
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': $('[name=csrfmiddlewaretoken]').val()
+                },
+                success: function(response) {
+                    if (response.success) {
+                        showAlert('success', response.message);
+                        setTimeout(function() {
+                            location.reload();
+                        }, 1500);
+                    } else {
+                        showAlert('error', response.message);
+                    }
+                },
+                error: function() {
+                    showAlert('error', 'خطا در ارتباط با سرور');
+                }
+            });
+        }
+    });
+    
+    // تغییر وضعیت سفارش
+    $('.update-status-btn').click(function() {
+        const orderId = $(this).data('order-id');
+        const orderNumber = $(this).data('order-number');
+        const currentStatus = $(this).data('current-status');
+        
+        // ایجاد modal برای انتخاب وضعیت جدید
+        const statusChoices = {
+            'Confirmed': '✅ تایید شده',
+            'Processing': '🔄 در حال پردازش',
+            'Ready': '📦 آماده تحویل',
+            'Delivered': '🚚 تحویل داده شده',
+            'Cancelled': '❌ لغو شده',
+            'Returned': '↩️ مرجوع شده'
+        };
+        
+        let statusOptions = '';
+        for (const [key, value] of Object.entries(statusChoices)) {
+            if (key !== currentStatus) {
+                statusOptions += `<option value="${key}">${value}</option>`;
+            }
+        }
+        
+        const modalHtml = `
+            <div class="modal fade" id="statusModal" tabindex="-1">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">📊 تغییر وضعیت سفارش ${orderNumber}</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <p>وضعیت فعلی: <strong>${statusChoices[currentStatus]}</strong></p>
+                            <label class="form-label">وضعیت جدید:</label>
+                            <select class="form-select" id="newStatus">
+                                ${statusOptions}
+                            </select>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">انصراف</button>
+                            <button type="button" class="btn btn-primary" id="updateStatusBtn">تغییر وضعیت</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // حذف modal قبلی اگر وجود دارد
+        $('#statusModal').remove();
+        
+        // اضافه کردن modal جدید
+        $('body').append(modalHtml);
+        
+        const modal = new bootstrap.Modal(document.getElementById('statusModal'));
+        modal.show();
+        
+        // رویداد کلیک روی دکمه تغییر وضعیت
+        $('#updateStatusBtn').click(function() {
+            const newStatus = $('#newStatus').val();
+            
+            $.ajax({
+                url: `/core/orders/${orderId}/update-status/`,
+                method: 'POST',
+                data: {
+                    status: newStatus
+                },
+                headers: {
+                    'X-CSRFToken': $('[name=csrfmiddlewaretoken]').val()
+                },
+                success: function(response) {
+                    if (response.success) {
+                        modal.hide();
+                        showAlert('success', response.message);
+                        setTimeout(function() {
+                            location.reload();
+                        }, 1500);
+                    } else {
+                        showAlert('error', response.message);
+                    }
+                },
+                error: function() {
+                    showAlert('error', 'خطا در ارتباط با سرور');
+                }
+            });
+        });
+    });
+    
+    // تابع نمایش پیام‌ها
+    function showAlert(type, message) {
+        const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+        const alertHtml = `
+            <div class="alert ${alertClass} alert-dismissible fade show" role="alert">
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        `;
+        
+        // حذف پیام‌های قبلی
+        $('.alert').remove();
+        
+        // اضافه کردن پیام جدید
+        $('.container').prepend(alertHtml);
+        
+        // حذف خودکار پیام بعد از 5 ثانیه
+        setTimeout(function() {
+            $('.alert').fadeOut();
+        }, 5000);
+    }
+});
+</script>
+{% endblock %}

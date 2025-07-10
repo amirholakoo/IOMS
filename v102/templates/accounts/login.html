@@ -1,0 +1,139 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}🔐 ورود به سیستم - HomayOMS{% endblock %}
+
+{% block content %}
+<div class="login-container">
+    <div class="login-content">
+        <!-- 🏢 لوگو و عنوان اصلی -->
+        <div class="login-header">
+            <div class="login-logo">
+                <svg class="icon" style="width: 2.5rem; height: 2.5rem; color: white;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                </svg>
+            </div>
+            <h1 class="text-4xl font-bold text-center mb-2">
+                �� HomayOMS
+            </h1>
+            <p class="text-xl text-center mb-2" style="color: #6b7280;">
+                سیستم مدیریت موجودی و سفارشات
+            </p>
+            <p class="text-sm text-center" style="color: #9ca3af;">
+                لطفاً نوع ورود خود را انتخاب کنید
+            </p>
+        </div>
+
+        <!-- 💬 پیام‌های سیستم -->
+        {% if messages %}
+            <div class="messages">
+                {% for message in messages %}
+                    <div class="alert {% if message.tags == 'error' %}alert-error{% elif message.tags == 'success' %}alert-success{% else %}alert-info{% endif %}">
+                        <div style="flex-shrink: 0;">
+                            {% if message.tags == 'error' %}
+                                <svg class="icon" style="color: #dc2626;" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
+                                </svg>
+                            {% elif message.tags == 'success' %}
+                                <svg class="icon" style="color: #10b981;" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                                </svg>
+                            {% else %}
+                                <svg class="icon" style="color: #2563eb;" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+                                </svg>
+                            {% endif %}
+                        </div>
+                        <div>
+                            <p style="font-weight: 500;">{{ message }}</p>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <!-- 🎯 کارت‌های ورود -->
+        <div class="role-grid">
+            
+            <!-- 🔴 مدیر ارشد -->
+            <div class="role-card">
+                <div class="role-icon super-admin">
+                    <svg class="icon" style="width: 2rem; height: 2rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                    </svg>
+                </div>
+                <h3>🔴 مدیر ارشد</h3>
+                <p>دسترسی کامل به تمام بخش‌های سیستم</p>
+                <a href="{% url 'accounts:staff_login' %}?role=super_admin" class="btn btn-super-admin">
+                    ورود به سیستم
+                    <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
+                    </svg>
+                </a>
+            </div>
+
+            <!-- 🟡 ادمین -->
+            <div class="role-card">
+                <div class="role-icon admin">
+                    <svg class="icon" style="width: 2rem; height: 2rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4"></path>
+                    </svg>
+                </div>
+                <h3>🟡 ادمین</h3>
+                <p>مدیریت عملیات روزانه و گزارش‌گیری</p>
+                <a href="{% url 'accounts:staff_login' %}?role=admin" class="btn btn-admin">
+                    ورود به سیستم
+                    <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
+                    </svg>
+                </a>
+            </div>
+
+            <!-- 🟢 مالی -->
+            <div class="role-card">
+                <div class="role-icon finance">
+                    <svg class="icon" style="width: 2rem; height: 2rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+                    </svg>
+                </div>
+                <h3>🟢 مالی</h3>
+                <p>مدیریت مالی، قیمت‌ها و فاکتورها</p>
+                <a href="{% url 'accounts:staff_login' %}?role=finance" class="btn btn-finance">
+                    ورود به سیستم
+                    <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
+                    </svg>
+                </a>
+            </div>
+
+            <!-- 🔵 مشتری -->
+            <div class="role-card">
+                <div class="role-icon customer">
+                    <svg class="icon" style="width: 2rem; height: 2rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                    </svg>
+                </div>
+                <h3>🔵 مشتری</h3>
+                <p>ورود با احراز هویت SMS</p>
+                <a href="{% url 'accounts:customer_login' %}" class="btn btn-customer">
+                    ورود با SMS
+                    <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
+                    </svg>
+                </a>
+            </div>
+
+        </div>
+
+        <!-- 📞 اطلاعات تماس -->
+        <div class="contact-info">
+            <p class="text-sm">
+                📞 برای پشتیبانی: <a href="tel:+989123456789">0912-345-6789</a>
+            </p>
+            <p class="text-sm mt-1">
+                📧 ایمیل: <a href="mailto:support@homayoms.com">support@homayoms.com</a>
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}

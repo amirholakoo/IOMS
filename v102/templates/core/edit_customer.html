@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}✏️ ویرایش مشتری{% endblock %}
+{% block content %}
+<div class="container mt-5">
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h4>✏️ ویرایش اطلاعات مشتری</h4>
+        </div>
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label class="form-label">نام مشتری</label>
+                    <input type="text" name="customer_name" class="form-control" value="{{ customer.customer_name }}" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">شماره تلفن</label>
+                    <input type="text" name="phone" class="form-control" value="{{ customer.phone }}">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">آدرس</label>
+                    <textarea name="address" class="form-control">{{ customer.address }}</textarea>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">کد ملی</label>
+                    <input type="text" name="national_id" class="form-control" value="{{ customer.national_id }}">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">کد اقتصادی</label>
+                    <input type="text" name="economic_code" class="form-control" value="{{ customer.economic_code }}">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">کد پستی</label>
+                    <input type="text" name="postcode" class="form-control" value="{{ customer.postcode }}">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">وضعیت</label>
+                    <select name="status" class="form-select">
+                        {% for key, value in status_choices %}
+                            <option value="{{ key }}" {% if customer.status == key %}selected{% endif %}>{{ value }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">توضیحات</label>
+                    <textarea name="comments" class="form-control">{{ customer.comments }}</textarea>
+                </div>
+                <button type="submit" class="btn btn-success">ذخیره تغییرات</button>
+                <a href="{% url 'core:customers_list' %}" class="btn btn-secondary">بازگشت</a>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %} 

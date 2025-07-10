@@ -1,0 +1,405 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}📋 مدیریت سفارشات - HomayOMS{% endblock %}
+
+{% block extra_css %}
+<style>
+    .orders-header {
+        background: linear-gradient(135deg, #ffc107, #fd7e14);
+        color: white;
+        padding: 2rem 0;
+        margin-bottom: 2rem;
+        border-radius: 15px;
+    }
+    
+    .order-card {
+        border: none;
+        border-radius: 15px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+        transition: all 0.3s ease;
+        margin-bottom: 1.5rem;
+        overflow: hidden;
+    }
+    
+    .order-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+    }
+    
+    .order-header {
+        background: linear-gradient(45deg, #f8f9fa, #e9ecef);
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid #e0e0e0;
+    }
+    
+    .order-status {
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-weight: bold;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+    }
+    
+    .status-pending { background: #fff3cd; color: #856404; }
+    .status-confirmed { background: #d1ecf1; color: #0c5460; }
+    .status-processing { background: #cce5ff; color: #004085; }
+    .status-ready { background: #d4edda; color: #155724; }
+    .status-delivered { background: #d1ecf1; color: #0c5460; }
+    .status-cancelled { background: #f8d7da; color: #721c24; }
+    .status-returned { background: #e2e3e5; color: #383d41; }
+    
+    .payment-method {
+        padding: 0.3rem 0.8rem;
+        border-radius: 15px;
+        font-size: 0.75rem;
+        font-weight: bold;
+    }
+    
+    .payment-cash { background: #d4edda; color: #155724; }
+    .payment-terms { background: #fff3cd; color: #856404; }
+    .payment-bank_transfer { background: #cce5ff; color: #004085; }
+    .payment-check { background: #e2e3e5; color: #383d41; }
+    
+    .order-timeline {
+        position: relative;
+        padding-left: 2rem;
+    }
+    
+    .timeline-item {
+        position: relative;
+        padding-bottom: 1rem;
+    }
+    
+    .timeline-item::before {
+        content: '';
+        position: absolute;
+        left: -1.5rem;
+        top: 0.5rem;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: #28a745;
+    }
+    
+    .timeline-item::after {
+        content: '';
+        position: absolute;
+        left: -1.45rem;
+        top: 1rem;
+        width: 2px;
+        height: calc(100% - 1rem);
+        background: #e0e0e0;
+    }
+    
+    .timeline-item:last-child::after {
+        display: none;
+    }
+    
+    .stats-cards {
+        background: white;
+        border-radius: 15px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+    }
+    
+    .stat-item {
+        text-align: center;
+        padding: 1rem;
+        border-radius: 10px;
+    }
+    
+    .filter-section {
+        background: white;
+        border-radius: 15px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Orders Header -->
+<div class="orders-header">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 class="display-5 mb-3">📋 مدیریت سفارشات</h1>
+                <p class="lead mb-0">پردازش و مدیریت سفارشات مشتریان</p>
+            </div>
+            <div class="col-md-4 text-end">
+                <a href="{% url 'core:admin_dashboard' %}" class="btn btn-light me-2">
+                    ↩️ بازگشت به داشبورد
+                </a>
+                <button class="btn btn-outline-light">
+                    ➕ سفارش جدید
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <!-- Statistics Cards -->
+    <div class="stats-cards">
+        <div class="row">
+            <div class="col-md-2">
+                <div class="stat-item" style="background: linear-gradient(45deg, #ffc107, #fd7e14); color: white;">
+                    <h4>15</h4>
+                    <small>⏳ در انتظار</small>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="stat-item" style="background: linear-gradient(45deg, #17a2b8, #20c997); color: white;">
+                    <h4>8</h4>
+                    <small>✅ تایید شده</small>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="stat-item" style="background: linear-gradient(45deg, #007bff, #0056b3); color: white;">
+                    <h4>12</h4>
+                    <small>🔄 در حال پردازش</small>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="stat-item" style="background: linear-gradient(45deg, #28a745, #20c997); color: white;">
+                    <h4>25</h4>
+                    <small>🚚 تحویل شده</small>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="stat-item" style="background: linear-gradient(45deg, #dc3545, #c82333); color: white;">
+                    <h4>3</h4>
+                    <small>❌ لغو شده</small>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="stat-item" style="background: linear-gradient(45deg, #6c757d, #495057); color: white;">
+                    <h4>63</h4>
+                    <small>📊 کل سفارشات</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter Section -->
+    <div class="filter-section">
+        <form method="GET" class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label">🔍 جستجو</label>
+                <input type="text" 
+                       name="search" 
+                       class="form-control" 
+                       placeholder="شماره سفارش، نام مشتری..."
+                       value="{{ search_query }}">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">📊 وضعیت</label>
+                <select name="status" class="form-select">
+                    <option value="">همه وضعیت‌ها</option>
+                    {% for status_key, status_value in status_choices %}
+                        <option value="{{ status_key }}" {% if status_filter == status_key %}selected{% endif %}>
+                            {{ status_value }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">💳 نوع پرداخت</label>
+                <select name="payment" class="form-select">
+                    <option value="">همه انواع</option>
+                    {% for payment_key, payment_value in payment_choices %}
+                        <option value="{{ payment_key }}" {% if payment_filter == payment_key %}selected{% endif %}>
+                            {{ payment_value }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">📅 از تاریخ</label>
+                <input type="date" name="date_from" class="form-control" value="{{ date_from }}">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">📅 تا تاریخ</label>
+                <input type="date" name="date_to" class="form-control" value="{{ date_to }}">
+            </div>
+            <div class="col-md-1">
+                <label class="form-label">&nbsp;</label>
+                <div class="d-grid">
+                    <button type="submit" class="btn btn-primary">
+                        🔍 فیلتر
+                    </button>
+                </div>
+            </div>
+        </form>
+        
+        <div class="row mt-3">
+            <div class="col-md-8">
+                <h6>📊 نتایج: {{ total_orders }} سفارش یافت شد</h6>
+            </div>
+            <div class="col-md-4 text-end">
+                <a href="{% url 'core:orders_list' %}" class="btn btn-outline-secondary btn-sm">
+                    🔄 پاک کردن فیلترها
+                </a>
+                <button class="btn btn-success btn-sm" onclick="exportOrders()">
+                    📊 خروجی Excel
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Orders List -->
+    {% if page_obj %}
+        {% for order in page_obj %}
+        <div class="order-card">
+            <div class="order-header">
+                <div class="row align-items-center">
+                    <div class="col-md-3">
+                        <h6 class="mb-1">🏷️ {{ order.order_number }}</h6>
+                        <small class="text-muted">{{ order.created_at|date:"Y/m/d H:i" }}</small>
+                    </div>
+                    <div class="col-md-3">
+                        <h6 class="mb-1">👤 {{ order.customer.customer_name }}</h6>
+                        <small class="text-muted">📞 {{ order.customer.phone }}</small>
+                    </div>
+                    <div class="col-md-2">
+                        <span class="order-status status-{{ order.status|lower }}">
+                            {{ order.get_status_display }}
+                        </span>
+                    </div>
+                    <div class="col-md-2">
+                        <span class="payment-method payment-{{ order.payment_method|lower }}">
+                            {{ order.get_payment_method_display }}
+                        </span>
+                    </div>
+                    <div class="col-md-2 text-end">
+                        <h6 class="mb-1">💰 {{ order.final_amount|floatformat:0 }} ت</h6>
+                        <small class="text-muted">{{ order.items.count }} محصول</small>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-8">
+                        <h6>📦 محصولات سفارش:</h6>
+                        <div class="row">
+                            {% for item in order.items.all %}
+                            <div class="col-md-6">
+                                <div class="d-flex justify-content-between border-bottom py-2">
+                                    <span>{{ item.product.reel_number }}</span>
+                                    <span>{{ item.quantity }} × {{ item.price|floatformat:0 }} ت</span>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        
+                        {% if order.notes %}
+                        <div class="mt-3">
+                            <strong>📝 یادداشت:</strong>
+                            <p class="text-muted">{{ order.notes }}</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <div class="order-timeline">
+                            <div class="timeline-item">
+                                <strong>📝 ثبت سفارش</strong>
+                                <br><small>{{ order.created_at|date:"Y/m/d H:i" }}</small>
+                            </div>
+                            {% if order.status != 'Pending' %}
+                            <div class="timeline-item">
+                                <strong>✅ تایید سفارش</strong>
+                                <br><small>{{ order.updated_at|date:"Y/m/d H:i" }}</small>
+                            </div>
+                            {% endif %}
+                            {% if order.status == 'Delivered' %}
+                            <div class="timeline-item">
+                                <strong>🚚 تحویل کامل</strong>
+                                <br><small>{{ order.actual_delivery_date|date:"Y/m/d H:i"|default:"در حال بروزرسانی..." }}</small>
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mt-3">
+                            <div class="btn-group d-grid">
+                                <button class="btn btn-outline-primary btn-sm" onclick="viewOrder({{ order.id }})">
+                                    👁️ مشاهده جزئیات
+                                </button>
+                                <button class="btn btn-outline-success btn-sm" onclick="editOrder({{ order.id }})">
+                                    ✏️ ویرایش
+                                </button>
+                                <button class="btn btn-outline-info btn-sm" onclick="printOrder({{ order.id }})">
+                                    🖨️ چاپ فاکتور
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+        
+        <!-- Pagination -->
+        {% if page_obj.has_other_pages %}
+        <nav aria-label="صفحه‌بندی سفارشات">
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if status_filter %}status={{ status_filter }}&{% endif %}{% if payment_filter %}payment={{ payment_filter }}&{% endif %}{% if date_from %}date_from={{ date_from }}&{% endif %}{% if date_to %}date_to={{ date_to }}&{% endif %}page={{ page_obj.previous_page_number }}">قبلی</a>
+                    </li>
+                {% endif %}
+                
+                {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ num }}</span>
+                        </li>
+                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                        <li class="page-item">
+                            <a class="page-link" href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if status_filter %}status={{ status_filter }}&{% endif %}{% if payment_filter %}payment={{ payment_filter }}&{% endif %}{% if date_from %}date_from={{ date_from }}&{% endif %}{% if date_to %}date_to={{ date_to }}&{% endif %}page={{ num }}">{{ num }}</a>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+                
+                {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if status_filter %}status={{ status_filter }}&{% endif %}{% if payment_filter %}payment={{ payment_filter }}&{% endif %}{% if date_from %}date_from={{ date_from }}&{% endif %}{% if date_to %}date_to={{ date_to }}&{% endif %}page={{ page_obj.next_page_number }}">بعدی</a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    {% else %}
+        <div class="text-center py-5">
+            <div class="empty-state">
+                <h3>🔍 سفارش یافت نشد</h3>
+                <p class="text-muted">هیچ سفارشی با معیارهای جستجو پیدا نشد.</p>
+                <a href="{% url 'core:orders_list' %}" class="btn btn-primary">نمایش همه سفارشات</a>
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+<script>
+// Functions for order management
+function viewOrder(orderId) {
+    window.location.href = `/core/order/${orderId}/`;
+}
+
+function editOrder(orderId) {
+    alert('⚠️ قابلیت ویرایش سفارش در حال توسعه است');
+}
+
+function printOrder(orderId) {
+    alert('⚠️ قابلیت چاپ فاکتور در حال توسعه است');
+}
+
+function exportOrders() {
+    alert('⚠️ قابلیت خروجی Excel در حال توسعه است');
+}
+</script>
+{% endblock %} 

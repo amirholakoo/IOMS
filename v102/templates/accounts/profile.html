@@ -1,0 +1,102 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}پروفایل من - HomayOMS{% endblock %}
+
+{% block extra_css %}
+<style>
+    .profile-header {
+        background: linear-gradient(90deg, #3498db 0%, #6dd5fa 100%);
+        color: #fff;
+        border-radius: 1rem;
+        padding: 2rem 1rem 1rem 1rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 24px rgba(52,152,219,0.08);
+    }
+    .profile-header .avatar {
+        width: 56px;
+        height: 56px;
+        background: #2980b9;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        font-weight: bold;
+        color: #fff;
+        margin-left: 1rem;
+    }
+    .profile-card {
+        border-radius: 1rem;
+        box-shadow: 0 2px 12px rgba(52,152,219,0.07);
+        margin-bottom: 1.5rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header -->
+    <div class="profile-header d-flex align-items-center justify-content-between flex-wrap mb-4">
+        <div class="d-flex align-items-center">
+            <div class="avatar">{{ user.get_full_name|first|default:user.username|first|upper }}</div>
+            <div>
+                <h2 class="mb-1">پروفایل من</h2>
+                <div class="small">ویرایش اطلاعات کاربری</div>
+            </div>
+        </div>
+        <div class="d-flex align-items-center gap-3 mt-3 mt-md-0">
+            <a href="{% url 'accounts:customer_dashboard' %}" class="btn btn-outline-light btn-sm">🏠 داشبورد</a>
+        </div>
+    </div>
+
+    <!-- پیام‌های سیستم -->
+    {% if messages %}
+        <div class="mb-4">
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <div class="row justify-content-center">
+        <div class="col-12 col-md-8 col-lg-6">
+            <div class="card profile-card">
+                <div class="card-body">
+                    <h5 class="card-title mb-3">اطلاعات کاربری</h5>
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label class="form-label">نام</label>
+                            <input type="text" class="form-control" name="first_name" value="{{ user.first_name }}" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">نام خانوادگی</label>
+                            <input type="text" class="form-control" name="last_name" value="{{ user.last_name }}" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">شماره موبایل</label>
+                            <input type="text" class="form-control" name="phone" value="{{ user.phone }}" readonly>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">ایمیل</label>
+                            <input type="email" class="form-control" name="email" value="{{ user.email }}">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">نام کاربری</label>
+                            <input type="text" class="form-control" name="username" value="{{ user.username }}" readonly>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mt-4">
+                            <button type="submit" class="btn btn-primary">ذخیره تغییرات</button>
+                            <a href="{% url 'accounts:change_password' %}" class="btn btn-outline-secondary">تغییر رمز عبور</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

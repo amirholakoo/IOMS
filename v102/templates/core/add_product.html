@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}➕ افزودن محصول جدید{% endblock %}
+{% block content %}
+<div class="container mt-5">
+    <div class="card">
+        <div class="card-header bg-success text-white">
+            <h4>➕ افزودن محصول جدید</h4>
+        </div>
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+                {{ form.as_p }}
+                <button type="submit" class="btn btn-success btn-lg">ثبت محصول</button>
+                <a href="{% url 'core:inventory_list' %}" class="btn btn-secondary">بازگشت</a>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %} 

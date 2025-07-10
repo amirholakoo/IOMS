@@ -1,0 +1,395 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}💰 نمای کلی مالی - HomayOMS{% endblock %}
+
+{% block extra_css %}
+<style>
+    .finance-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 2rem 0;
+        margin-bottom: 2rem;
+        border-radius: 15px;
+    }
+    
+    .stat-card {
+        background: white;
+        border-radius: 15px;
+        padding: 1.5rem;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        transition: transform 0.3s ease;
+        border-left: 5px solid;
+        margin-bottom: 1.5rem;
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-5px);
+    }
+    
+    .stat-card.revenue { border-left-color: #28a745; }
+    .stat-card.expenses { border-left-color: #dc3545; }
+    .stat-card.profit { border-left-color: #007bff; }
+    .stat-card.orders { border-left-color: #ffc107; }
+    
+    .stat-number {
+        font-size: 2.5rem;
+        font-weight: bold;
+        margin-bottom: 0.5rem;
+    }
+    
+    .stat-label {
+        color: #6c757d;
+        font-size: 1rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .stat-change {
+        font-size: 0.875rem;
+        font-weight: bold;
+    }
+    
+    .stat-change.positive { color: #28a745; }
+    .stat-change.negative { color: #dc3545; }
+    
+    .report-section {
+        background: white;
+        border-radius: 15px;
+        padding: 1.5rem;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        margin-bottom: 1.5rem;
+    }
+    
+    .btn-finance {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        color: white;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        font-weight: bold;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-finance:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        color: white;
+    }
+    
+    .filter-panel {
+        background: #f8f9fa;
+        border-radius: 10px;
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .table th {
+        background-color: #667eea;
+        color: white;
+        border: none;
+    }
+    
+    .badge-status {
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: bold;
+    }
+    
+    .badge-paid { background-color: #d4edda; color: #155724; }
+    .badge-pending { background-color: #fff3cd; color: #856404; }
+    .badge-overdue { background-color: #f8d7da; color: #721c24; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Navigation -->
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'accounts:dashboard' %}">🏠 داشبورد</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'core:finance_dashboard' %}">💰 مالی</a></li>
+            <li class="breadcrumb-item active">نمای کلی</li>
+        </ol>
+    </nav>
+
+    <!-- Header Section -->
+    <div class="finance-header text-center">
+        <div class="container">
+            <h1>💰 نمای کلی مالی</h1>
+            <p class="lead mb-0">گزارش‌های تفصیلی مالی و تحلیل عملکرد</p>
+        </div>
+    </div>
+    
+    <!-- Filter Panel -->
+    <div class="filter-panel">
+        <div class="row">
+            <div class="col-md-3">
+                <label class="form-label">📅 بازه زمانی:</label>
+                <select class="form-select" id="timeRange">
+                    <option value="today">امروز</option>
+                    <option value="week">این هفته</option>
+                    <option value="month" selected>این ماه</option>
+                    <option value="quarter">این فصل</option>
+                    <option value="year">این سال</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">💰 واحد پول:</label>
+                <select class="form-select" id="currency">
+                    <option value="rial">ریال</option>
+                    <option value="toman" selected>تومان</option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">🔍 فیلتر:</label>
+                <input type="text" class="form-control" placeholder="جستجو در گزارش‌ها..." id="searchFilter">
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button class="btn btn-finance w-100" onclick="updateReports()">
+                    🔄 بروزرسانی
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Statistics Cards -->
+    <div class="row">
+        <div class="col-md-3">
+            <div class="stat-card revenue">
+                <div class="stat-number text-success" id="totalRevenue">45,250,000 ت</div>
+                <div class="stat-label">💰 کل درآمد</div>
+                <div class="stat-change positive">
+                    ↗️ +12.5% نسبت به ماه قبل
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card expenses">
+                <div class="stat-number text-danger" id="totalExpenses">12,800,000 ت</div>
+                <div class="stat-label">💸 کل هزینه‌ها</div>
+                <div class="stat-change negative">
+                    ↘️ -5.2% نسبت به ماه قبل
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card profit">
+                <div class="stat-number text-primary" id="netProfit">32,450,000 ت</div>
+                <div class="stat-label">📈 سود خالص</div>
+                <div class="stat-change positive">
+                    ↗️ +18.7% نسبت به ماه قبل
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card orders">
+                <div class="stat-number text-warning" id="totalOrders">127</div>
+                <div class="stat-label">🛒 تعداد سفارشات</div>
+                <div class="stat-change positive">
+                    ↗️ +8.3% نسبت به ماه قبل
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Financial Reports -->
+    <div class="row">
+        <div class="col-md-8">
+            <div class="report-section">
+                <h5 class="mb-3">🧾 آخرین تراکنش‌ها</h5>
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>📅 تاریخ</th>
+                                <th>📋 نوع</th>
+                                <th>💰 مبلغ</th>
+                                <th>📊 وضعیت</th>
+                                <th>👤 مشتری</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>1403/04/15</td>
+                                <td>فروش محصول</td>
+                                <td class="text-success">+2,500,000 ت</td>
+                                <td><span class="badge-status badge-paid">✅ پرداخت شده</span></td>
+                                <td>شرکت ABC</td>
+                            </tr>
+                            <tr>
+                                <td>1403/04/14</td>
+                                <td>خرید مواد اولیه</td>
+                                <td class="text-danger">-850,000 ت</td>
+                                <td><span class="badge-status badge-pending">⏳ در انتظار</span></td>
+                                <td>تامین‌کننده XYZ</td>
+                            </tr>
+                            <tr>
+                                <td>1403/04/13</td>
+                                <td>فروش محصول</td>
+                                <td class="text-success">+1,200,000 ت</td>
+                                <td><span class="badge-status badge-paid">✅ پرداخت شده</span></td>
+                                <td>مشتری DEF</td>
+                            </tr>
+                            <tr>
+                                <td>1403/04/12</td>
+                                <td>بازپرداخت</td>
+                                <td class="text-warning">-300,000 ت</td>
+                                <td><span class="badge-status badge-overdue">❌ معوقه</span></td>
+                                <td>مشتری GHI</td>
+                            </tr>
+                            <tr>
+                                <td>1403/04/11</td>
+                                <td>فروش محصول</td>
+                                <td class="text-success">+3,100,000 ت</td>
+                                <td><span class="badge-status badge-paid">✅ پرداخت شده</span></td>
+                                <td>شرکت JKL</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="text-center mt-3">
+                    <button class="btn btn-outline-primary">📄 مشاهده همه تراکنش‌ها</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="report-section">
+                <h5 class="mb-3">📈 گزارش‌های سریع</h5>
+                <div class="d-grid gap-3">
+                    <button class="btn btn-outline-success py-3">
+                        <div class="fs-2 mb-2">💰</div>
+                        <div>گزارش فروش</div>
+                        <small class="text-muted">آمار فروش ماهانه</small>
+                    </button>
+                    <button class="btn btn-outline-danger py-3">
+                        <div class="fs-2 mb-2">🛒</div>
+                        <div>گزارش خرید</div>
+                        <small class="text-muted">هزینه‌های خرید</small>
+                    </button>
+                    <button class="btn btn-outline-primary py-3">
+                        <div class="fs-2 mb-2">📊</div>
+                        <div>گزارش سودآوری</div>
+                        <small class="text-muted">تحلیل سود و زیان</small>
+                    </button>
+                    <button class="btn btn-outline-warning py-3">
+                        <div class="fs-2 mb-2">📦</div>
+                        <div>گزارش موجودی</div>
+                        <small class="text-muted">ارزش انبار</small>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Summary Section -->
+    <div class="report-section">
+        <h5 class="mb-3">📋 خلاصه عملکرد مالی</h5>
+        <div class="row">
+            <div class="col-md-6">
+                <h6>📈 نکات مثبت:</h6>
+                <ul class="list-unstyled">
+                    <li class="text-success">✅ افزایش 12.5% درآمد نسبت به ماه قبل</li>
+                    <li class="text-success">✅ کاهش 5.2% هزینه‌ها</li>
+                    <li class="text-success">✅ رشد 18.7% سود خالص</li>
+                    <li class="text-success">✅ افزایش 8.3% تعداد سفارشات</li>
+                </ul>
+            </div>
+            <div class="col-md-6">
+                <h6>⚠️ نکات قابل توجه:</h6>
+                <ul class="list-unstyled">
+                    <li class="text-warning">⚠️ 3 فاکتور معوقه</li>
+                    <li class="text-warning">⚠️ افزایش هزینه حمل و نقل</li>
+                    <li class="text-info">ℹ️ فرصت بهینه‌سازی در بخش خرید</li>
+                    <li class="text-info">ℹ️ پتانسیل رشد در بازار جدید</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Export Options -->
+    <div class="report-section">
+        <h5 class="mb-3">📤 خروجی گزارش‌ها</h5>
+        <div class="row">
+            <div class="col-md-8">
+                <p class="text-muted">گزارش‌های مالی را به فرمت‌های مختلف دانلود کنید</p>
+            </div>
+            <div class="col-md-4 text-end">
+                <button class="btn btn-outline-success me-2">
+                    📊 Excel
+                </button>
+                <button class="btn btn-outline-danger me-2">
+                    📄 PDF
+                </button>
+                <button class="btn btn-outline-primary">
+                    🖨️ چاپ
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Update Reports Function
+    function updateReports() {
+        const timeRange = document.getElementById('timeRange').value;
+        
+        // Show loading state
+        const elements = ['totalRevenue', 'totalExpenses', 'netProfit', 'totalOrders'];
+        elements.forEach(id => {
+            document.getElementById(id).textContent = '⏳ در حال بارگذاری...';
+        });
+        
+        // Simulate API call
+        setTimeout(() => {
+            // Update with sample data based on time range
+            let multiplier = 1;
+            switch(timeRange) {
+                case 'today':
+                    multiplier = 0.1;
+                    break;
+                case 'week':
+                    multiplier = 0.3;
+                    break;
+                case 'month':
+                    multiplier = 1;
+                    break;
+                case 'quarter':
+                    multiplier = 3;
+                    break;
+                case 'year':
+                    multiplier = 12;
+                    break;
+            }
+            
+            document.getElementById('totalRevenue').textContent = 
+                Math.round(45250000 * multiplier).toLocaleString() + ' ت';
+            document.getElementById('totalExpenses').textContent = 
+                Math.round(12800000 * multiplier).toLocaleString() + ' ت';
+            document.getElementById('netProfit').textContent = 
+                Math.round(32450000 * multiplier).toLocaleString() + ' ت';
+            document.getElementById('totalOrders').textContent = 
+                Math.round(127 * multiplier);
+        }, 1000);
+    }
+    
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        updateReports();
+    });
+    
+    // Add search functionality
+    document.getElementById('searchFilter').addEventListener('input', function(e) {
+        const searchTerm = e.target.value.toLowerCase();
+        const rows = document.querySelectorAll('tbody tr');
+        
+        rows.forEach(row => {
+            const text = row.textContent.toLowerCase();
+            row.style.display = text.includes(searchTerm) ? '' : 'none';
+        });
+    });
+</script>
+{% endblock %} 

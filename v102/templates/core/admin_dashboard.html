@@ -1,0 +1,533 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}📊 داشبورد مدیریت - HomayOMS{% endblock %}
+
+{% block extra_css %}
+<style>
+    .admin-hero {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 1.5rem 0;
+        margin-bottom: 1rem;
+        border-radius: 15px;
+    }
+    
+    .admin-hero > .container, .admin-hero .row:first-child { margin-top: 0 !important; padding-top: 0 !important; }
+    
+    .stats-card {
+        border: none;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+        overflow: hidden;
+        height: 100%;
+    }
+    
+    .stats-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+    }
+    
+    .stats-card .card-header {
+        border: none;
+        font-weight: bold;
+        text-align: center;
+        padding: 1.5rem;
+    }
+    
+    .stats-primary { background: linear-gradient(45deg, #667eea, #764ba2); color: white; }
+    .stats-success { background: linear-gradient(45deg, #4caf50, #45a049); color: white; }
+    .stats-warning { background: linear-gradient(45deg, #ff9800, #f57c00); color: white; }
+    .stats-info { background: linear-gradient(45deg, #2196f3, #1976d2); color: white; }
+    .stats-danger { background: linear-gradient(45deg, #f44336, #d32f2f); color: white; }
+    
+    .quick-action-card {
+        border: none;
+        border-radius: 15px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+        transition: all 0.3s ease;
+        height: 100%;
+    }
+    
+    .quick-action-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+    }
+    
+    .action-icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        display: block;
+    }
+    
+    .price-management-section {
+        background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+        border-radius: 15px;
+        padding: 2rem;
+        margin: 2rem 0;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+    }
+    
+    .product-table {
+        background: white;
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+    }
+    
+    .table th {
+        background: #667eea;
+        color: white;
+        border: none;
+        font-weight: bold;
+        text-align: center;
+    }
+    
+    .price-input {
+        border: 2px solid #e0e0e0;
+        border-radius: 25px;
+        padding: 0.5rem 1rem;
+        text-align: center;
+        transition: all 0.3s ease;
+    }
+    
+    .price-input:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+    }
+    
+    .update-btn {
+        background: linear-gradient(45deg, #4caf50, #45a049);
+        border: none;
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-weight: bold;
+        transition: all 0.3s ease;
+    }
+    
+    .update-btn:hover {
+        background: linear-gradient(45deg, #45a049, #4caf50);
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(76, 175, 80, 0.3);
+    }
+    
+    .recent-activities {
+        background: white;
+        border-radius: 15px;
+        padding: 1.5rem;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+        max-height: 400px;
+        overflow-y: auto;
+    }
+    
+    .activity-item {
+        border-left: 4px solid #667eea;
+        padding: 0.5rem 1rem;
+        margin: 0.5rem 0;
+        background: #f8f9fa;
+        border-radius: 0 10px 10px 0;
+    }
+    
+    .location-badge {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        border-radius: 50px;
+        font-size: 0.8rem;
+        font-weight: bold;
+        margin: 0.25rem;
+    }
+    
+    .location-Anbar_Akhal { background: #e3f2fd; color: #1565c0; }
+    .location-Anbar_Muhvateh_Kordan { background: #f3e5f5; color: #7b1fa2; }
+    .location-Anbar_Taleghani { background: #e8f5e8; color: #2e7d32; }
+    .location-Anbar_Khatam { background: #fff3e0; color: #ef6c00; }
+    .location-Anbar_Khayyam { background: #fce4ec; color: #c2185b; }
+    .location-Anbar_Khorasan { background: #e0f2f1; color: #00695c; }
+    .location-Anbar_Tehran { background: #f1f8e9; color: #558b2f; }
+    
+    .notification {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 1000;
+        min-width: 300px;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// 💰 تابع بروزرسانی قیمت محصول
+function updatePrice(productId, reelNumber) {
+    const newPriceInput = document.getElementById(`new-price-${productId}`);
+    const newPrice = parseFloat(newPriceInput.value);
+    
+    if (!newPrice || newPrice < 0) {
+        showNotification('لطفاً قیمت معتبری وارد کنید', 'error');
+        return;
+    }
+    
+    // تایید تغییر قیمت
+    if (!confirm(`آیا از تغییر قیمت محصول ${reelNumber} به ${newPrice.toLocaleString()} تومان اطمینان دارید؟`)) {
+        return;
+    }
+    
+    // غیرفعال کردن دکمه تا پایان عملیات
+    const updateBtn = event.target;
+    updateBtn.disabled = true;
+    updateBtn.innerHTML = '⏳ در حال بروزرسانی...';
+    
+    // ارسال درخواست AJAX
+    fetch('{% url "core:update_price_api" %}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify({
+            product_id: productId,
+            new_price: newPrice
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // بروزرسانی قیمت در جدول
+            document.getElementById(`current-price-${productId}`).innerHTML = 
+                `${data.product.new_price.toLocaleString()} تومان`;
+            
+            showNotification(data.message, 'success');
+            
+            // اضافه کردن اطلاعات بروزرسانی
+            const currentPriceCell = document.getElementById(`current-price-${productId}`);
+            currentPriceCell.innerHTML += `
+                <br><small class="text-muted">
+                    📅 ${data.product.updated_at}<br>
+                    👤 {{ user.get_full_name|default:user.username }}
+                </small>
+            `;
+        } else {
+            showNotification(data.message, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('خطا در برقراری ارتباط با سرور', 'error');
+    })
+    .finally(() => {
+        // فعال کردن مجدد دکمه
+        updateBtn.disabled = false;
+        updateBtn.innerHTML = '💰 بروزرسانی';
+    });
+}
+
+// 📱 تابع نمایش اعلان
+function showNotification(message, type = 'info') {
+    const notification = document.createElement('div');
+    notification.className = `alert alert-${type === 'error' ? 'danger' : type === 'success' ? 'success' : 'info'} notification`;
+    notification.innerHTML = `
+        <strong>${type === 'error' ? '❌' : type === 'success' ? '✅' : 'ℹ️'}</strong>
+        ${message}
+        <button type="button" class="btn-close" onclick="this.parentElement.remove()"></button>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // حذف خودکار پس از 5 ثانیه
+    setTimeout(() => {
+        if (notification.parentElement) {
+            notification.remove();
+        }
+    }, 5000);
+}
+
+// 🍪 تابع دریافت کوکی CSRF
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+</script>
+{% endblock %}
+
+{% block content %}
+<!-- Admin Hero Section -->
+<div class="admin-hero">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 class="display-4 mb-3">🎛️ داشبورد مدیریت</h1>
+                <p class="lead mb-4">مدیریت کامل سیستم HomayOMS</p>
+                <p class="mb-0">👋 خوش آمدید {{ user.get_full_name|default:user.username }}</p>
+                <small class="opacity-75">نقش: {{ user.get_role_display|default:"مدیر" }}</small>
+            </div>
+            <div class="col-md-4 text-end">
+                <div class="d-flex flex-column gap-2">
+                    <a href="{% url 'core:products_landing' %}" class="btn btn-light">🏠 صفحه اصلی</a>
+                    <a href="{% url 'accounts:logout' %}" class="btn btn-outline-light">🚪 خروج</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="card stats-card">
+                <div class="card-header stats-primary">
+                    <h2>{{ stats.total_products }}</h2>
+                    <p class="mb-0">📦 کل محصولات</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card stats-card">
+                <div class="card-header stats-success">
+                    <h2>{{ stats.available_products }}</h2>
+                    <p class="mb-0">✅ محصولات موجود</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card stats-card">
+                <div class="card-header stats-warning">
+                    <h2>{{ stats.sold_products }}</h2>
+                    <p class="mb-0">💰 محصولات فروخته</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card stats-card">
+                <div class="card-header stats-info">
+                    <h2>{{ stats.total_customers }}</h2>
+                    <p class="mb-0">👥 کل مشتریان</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h3 class="mb-3">⚡ عملیات سریع</h3>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card quick-action-card text-center">
+                <div class="card-body">
+                    <span class="action-icon">📦</span>
+                    <h5>مدیریت محصولات</h5>
+                    <p class="text-muted">مشاهده و ویرایش محصولات</p>
+                    <a href="{% url 'core:products_list' %}" class="btn btn-primary">مشاهده</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card quick-action-card text-center">
+                <div class="card-body">
+                    <span class="action-icon">👥</span>
+                    <h5>مدیریت مشتریان</h5>
+                    <p class="text-muted">مشاهده لیست مشتریان</p>
+                    <a href="{% url 'core:customers_list' %}" class="btn btn-success">مشاهده</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card quick-action-card text-center">
+                <div class="card-body">
+                    <span class="action-icon">📋</span>
+                    <h5>مدیریت سفارشات</h5>
+                    <p class="text-muted">پردازش سفارشات</p>
+                    <a href="{% url 'core:orders_list' %}" class="btn btn-warning">مشاهده</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card quick-action-card text-center">
+                <div class="card-body">
+                    <span class="action-icon">📜</span>
+                    <h5>لاگ فعالیت‌ها</h5>
+                    <p class="text-muted">مشاهده تاریخچه عملیات</p>
+                    <a href="{% url 'core:activity_logs' %}" class="btn btn-info">مشاهده</a>
+                </div>
+            </div>
+        </div>
+
+        {% if user.is_super_admin %}
+        <div class="col-md-3 mb-3">
+            <div class="card quick-action-card text-center" style="border: 3px solid #667eea; background: linear-gradient(135deg, #f8f9fa, #e3f2fd);">
+                <div class="card-body">
+                    <span class="action-icon" style="color: #667eea;">⏰</span>
+                    <h5 style="color: #667eea;">👑 ساعات کاری</h5>
+                    <p class="text-muted">تنظیم ساعات شروع و پایان کار</p>
+                    <a href="{% url 'core:working_hours_management' %}" class="btn btn-primary">
+                        ⚙️ مدیریت ساعات
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Super Admin Price Management Section -->
+    {% if user.role == 'super_admin' %}
+    <div class="price-management-section">
+        <h3 class="mb-4">💰 مدیریت قیمت محصولات (ویژه Super Admin)</h3>
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle"></i>
+            فقط Super Admin قابلیت تغییر قیمت محصولات را دارد
+        </div>
+        <div class="product-table">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>🏷️ شماره ریل</th>
+                        <th>📍 مکان</th>
+                        <th>📏 ابعاد</th>
+                        <th>💰 قیمت فعلی</th>
+                        <th>💰 قیمت جدید</th>
+                        <th>⚡ عملیات</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if products_for_price_management and products_for_price_management|length > 0 %}
+                        {% for product in products_for_price_management %}
+                        <tr id="product-row-{{ product.id }}">
+                            <td>
+                                <strong>{{ product.reel_number }}</strong>
+                                <br>
+                                <small class="text-muted">🏆 {{ product.grade }}</small>
+                            </td>
+                            <td>
+                                <span class="location-badge location-{{ product.location }}">
+                                    {{ product.get_location_display }}
+                                </span>
+                            </td>
+                            <td>
+                                <small>
+                                    📏 {{ product.width }}mm<br>
+                                    📐 {{ product.length }}m<br>
+                                    ⚖️ {{ product.gsm }} g/m²
+                                </small>
+                            </td>
+                            <td>
+                                <strong class="text-success" id="current-price-{{ product.id }}">
+                                    {{ product.price|floatformat:0 }} تومان
+                                </strong>
+                                {% if product.price_updated_at %}
+                                <br>
+                                <small class="text-muted">
+                                    📅 {{ product.price_updated_at|date:"Y/m/d H:i" }}
+                                    {% if product.price_updated_by %}
+                                    <br>👤 {{ product.price_updated_by.get_full_name|default:product.price_updated_by.username }}
+                                    {% endif %}
+                                </small>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <input type="number" 
+                                       class="form-control price-input" 
+                                       id="new-price-{{ product.id }}"
+                                       value="{{ product.price|floatformat:0 }}"
+                                       min="0"
+                                       step="1000"
+                                       placeholder="قیمت جدید">
+                            </td>
+                            <td>
+                                <button class="btn update-btn" 
+                                        onclick="updatePrice({{ product.id }}, '{{ product.reel_number }}')">
+                                    💰 بروزرسانی
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="6" class="text-center text-muted py-4">
+                                هیچ محصولی برای مدیریت قیمت وجود ندارد.
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+        <div class="mt-3">
+            <p class="text-muted">
+                <i class="fas fa-lightbulb"></i>
+                نکته: تغییرات قیمت بلافاصله اعمال و در سیستم لاگ ثبت می‌شود
+            </p>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Recent Activities and Analytics -->
+    <div class="row">
+        <div class="col-md-8">
+            <h3 class="mb-3">📊 فعالیت‌های اخیر</h3>
+            <div class="recent-activities">
+                {% for activity in stats.recent_activities %}
+                <div class="activity-item">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>{% if activity.user %}{{ activity.user.get_full_name|default:activity.user.username }}{% else %}سیستم{% endif %}</strong>
+                            <span class="text-muted">{{ activity.description }}</span>
+                        </div>
+                        <small class="text-muted">{{ activity.timestamp|date:"Y/m/d H:i" }}</small>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="text-center text-muted py-4">
+                    📝 هیچ فعالیت اخیری ثبت نشده است
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <h3 class="mb-3">📈 آمار سریع</h3>
+            <div class="card">
+                <div class="card-body">
+                    <div class="mb-3">
+                        <h6>💵 محصولات نقدی</h6>
+                        <div class="progress">
+                            <div class="progress-bar bg-success" style="width: 60%"></div>
+                        </div>
+                        <small class="text-muted">60% از کل محصولات</small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <h6>📋 محصولات اعتباری</h6>
+                        <div class="progress">
+                            <div class="progress-bar bg-warning" style="width: 40%"></div>
+                        </div>
+                        <small class="text-muted">40% از کل محصولات</small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <h6>📦 وضعیت موجودی</h6>
+                        <div class="progress">
+                            <div class="progress-bar bg-info" style="width: 75%"></div>
+                        </div>
+                        <small class="text-muted">75% موجود در انبار</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Notification Area -->
+<div id="notification" class="notification"></div>
+{% endblock %} 

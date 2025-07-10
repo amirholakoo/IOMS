@@ -4,179 +4,111 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>انتخاب محصولات</title>
+    <title>خرید محصولات - فروشگاه کاغذ</title>
     <link rel="stylesheet" href="../Index/styles.css">
     <link rel="stylesheet" href="shopping.css">
-    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@100..900&display=swap" rel="stylesheet">
+    <script src="../Admin/persian-numbers.js"></script>
 </head>
 
 <body>
-    <div class="container">
-        <header class="header">
-            <div class="header-content">
-                <h1 class="main-title">انتخاب محصولات</h1>
-                <div class="user-info">
-                    <span class="user-name" id="userName">کاربر</span>
-                    <button class="logout-btn" onclick="logout()">خروج</button>
-                </div>
+    <!-- Header Section -->
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">
+                <span class="logo-icon">📄</span>
+                <span class="logo-text">فروشگاه کاغذ</span>
             </div>
-        </header>
-
-        <main class="main-content">
-            <div class="shopping-container">
-                <!-- Cash Section -->
-                <section class="product-section cash-section">
-                    <div class="section-header">
-                        <h2 class="section-title">خرید نقدی</h2>
-                        <div class="section-icon">💵</div>
-                    </div>
-
-                    <div class="table-container">
-                        <table class="product-table cash-table">
-                            <thead>
-                                <tr>
-                                    <th>نوع کاغذ</th>
-                                    <th>گرماژ</th>
-                                    <th>اندازه</th>
-                                    <th>رنگ</th>
-                                    <th>قیمت (تومان)</th>
-                                    <th>موجودی</th>
-                                    <th>انتخاب</th>
-                                </tr>
-                            </thead>
-                            <tbody id="cashTableBody">
-                                <!-- Cash products will be loaded here -->
-                            </tbody>
-                        </table>
-                    </div>
-                </section>
-
-                <!-- Credit Section -->
-                <section class="product-section credit-section">
-                    <div class="section-header">
-                        <h2 class="section-title">خرید نسیه</h2>
-                        <div class="section-icon">📋</div>
-                    </div>
-
-                    <div class="table-container">
-                        <table class="product-table credit-table">
-                            <thead>
-                                <tr>
-                                    <th>نوع کاغذ</th>
-                                    <th>گرماژ</th>
-                                    <th>اندازه</th>
-                                    <th>رنگ</th>
-                                    <th>قیمت (تومان)</th>
-                                    <th>موجودی</th>
-                                    <th>انتخاب</th>
-                                </tr>
-                            </thead>
-                            <tbody id="creditTableBody">
-                                <!-- Credit products will be loaded here -->
-                            </tbody>
-                        </table>
-                    </div>
-                </section>
-
-                <!-- Selected Products Summary -->
-                <section class="summary-section">
-                    <div class="summary-header">
-                        <h3 class="summary-title">محصولات انتخاب شده</h3>
-                        <div class="summary-icon">🛒</div>
-                    </div>
-
-                    <div class="selected-products" id="selectedProducts">
-                        <p class="no-selection">هیچ محصولی انتخاب نشده است</p>
-                    </div>
-
-                    <div class="summary-actions">
-                        <button class="action-btn clear-btn" onclick="clearSelection()">
-                            <span class="btn-icon">🗑️</span>
-                            <span class="btn-text">پاک کردن انتخاب‌ها</span>
-                        </button>
-
-                        <button class="action-btn checkout-btn" onclick="proceedToCheckout()">
-                            <span class="btn-icon">✅</span>
-                            <span class="btn-text">ادامه خرید</span>
-                        </button>
-                    </div>
-                </section>
+            <div class="user-info">
+                <div class="user-name" id="userName">کاربر</div>
+                <button class="logout-btn" onclick="logout()">خروج</button>
             </div>
-        </main>
+        </div>
+    </header>
 
-        <footer class="footer">
-            <div class="footer-content">
-                <!-- اطلاعات تماس -->
-                <div class="footer-section contact-info">
-                    <h3 class="footer-title">اطلاعات تماس</h3>
-                    <div class="contact-items">
-                        <div class="contact-item">
-                            <span class="contact-icon">📞</span>
-                            <div class="contact-details">
-                                <span class="contact-label">تلفن تماس:</span>
-                                <span class="contact-value">۰۲۱-۱۲۳۴۵۶۷۸</span>
-                            </div>
-                        </div>
-                        <div class="contact-item">
-                            <span class="contact-icon">📱</span>
-                            <div class="contact-details">
-                                <span class="contact-label">موبایل:</span>
-                                <span class="contact-value">۰۹۱۲-۳۴۵-۶۷۸۹</span>
-                            </div>
-                        </div>
-                        <div class="contact-item">
-                            <span class="contact-icon">📧</span>
-                            <div class="contact-details">
-                                <span class="contact-label">ایمیل:</span>
-                                <span class="contact-value">info@homayounpaper.com</span>
-                            </div>
-                        </div>
-                        <div class="contact-item">
-                            <span class="contact-icon">📍</span>
-                            <div class="contact-details">
-                                <span class="contact-label">آدرس:</span>
-                                <span class="contact-value">تهران، خیابان ولیعصر، پلاک ۱۲۳</span>
-                            </div>
-                        </div>
-                    </div>
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="shopping-container">
+
+            <!-- Cash Products Section -->
+            <section class="product-section cash-section">
+                <div class="section-header">
+                    <span class="section-icon">💵</span>
+                    <h2 class="section-title">محصولات نقدی</h2>
+                </div>
+                <div class="table-container">
+                    <table class="product-table">
+                        <thead>
+                            <tr>
+                                <th>نام محصول</th>
+                                <th>قیمت</th>
+                                <th>موجودی</th>
+                                <th>عملیات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="cashTableBody">
+                            <!-- Products will be loaded here by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Credit Products Section -->
+            <section class="product-section credit-section">
+                <div class="section-header">
+                    <span class="section-icon">💳</span>
+                    <h2 class="section-title">محصولات نسیه</h2>
+                </div>
+                <div class="table-container">
+                    <table class="product-table">
+                        <thead>
+                            <tr>
+                                <th>نام محصول</th>
+                                <th>قیمت</th>
+                                <th>موجودی</th>
+                                <th>عملیات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="creditTableBody">
+                            <!-- Products will be loaded here by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Selected Products Summary -->
+            <section class="summary-section">
+                <div class="summary-header">
+                    <span class="summary-icon">🛒</span>
+                    <h2 class="summary-title">سبد خرید</h2>
                 </div>
 
-                <!-- ساعات کاری -->
-                <div class="footer-section working-hours">
-                    <h3 class="footer-title">ساعات کاری</h3>
-                    <div class="hours-info">
-                        <div class="hours-item">
-                            <span class="hours-label">شنبه تا چهارشنبه:</span>
-                            <span class="hours-value">۰۸:۰۰ - ۱۸:۰۰</span>
-                        </div>
-                        <div class="hours-item">
-                            <span class="hours-label">پنج‌شنبه:</span>
-                            <span class="hours-value">۰۸:۰۰ - ۱۶:۰۰</span>
-                        </div>
-                        <div class="hours-item">
-                            <span class="hours-label">جمعه:</span>
-                            <span class="hours-value">تعطیل</span>
-                        </div>
-                    </div>
+                <div class="selected-products" id="selectedProducts">
+                    <p class="no-selection">هیچ محصولی انتخاب نشده است</p>
                 </div>
 
-                <!-- درباره ما -->
-                <div class="footer-section about-us">
-                    <h3 class="footer-title">درباره ما</h3>
-                    <p class="about-text">
-                        کارخانه کاغذ و مقوای همایون با بیش از ۲۰ سال تجربه در تولید و فروش
-                        انواع کاغذ و مقوا، ارائه‌دهنده بهترین محصولات با کیفیت و قیمت مناسب می‌باشد.
-                    </p>
-                    <div class="social-links">
-                        <a href="#" class="social-link">📘</a>
-                        <a href="#" class="social-link">📷</a>
-                        <a href="#" class="social-link">📞</a>
-                    </div>
+                <div class="summary-actions">
+                    <button class="action-btn clear-btn" onclick="clearSelection()">
+                        <span class="btn-icon">🗑️</span>
+                        <span class="btn-text">پاک کردن همه</span>
+                    </button>
+                    <button class="action-btn checkout-btn" onclick="proceedToCheckout()">
+                        <span class="btn-icon">💳</span>
+                        <span class="btn-text">ادامه خرید</span>
+                    </button>
                 </div>
-            </div>
-        </footer>
-    </div>
-    <script src="../Admin/persian-numbers.js"></script>
+            </section>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <p>&copy; ۱۴۰۳ فروشگاه کاغذ. تمامی حقوق محفوظ است.</p>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
     <script src="shopping.js"></script>
 </body>
 

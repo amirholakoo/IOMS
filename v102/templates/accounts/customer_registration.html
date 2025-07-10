@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}📝 ثبت‌نام مشتری جدید - HomayOMS{% endblock %}
+
+{% block content %}
+<div class="registration-container">
+    <div class="registration-card">
+        <h2 class="registration-title">📝 ثبت‌نام مشتری جدید</h2>
+        <p class="registration-desc">برای استفاده از خدمات، فرم زیر را تکمیل کنید. کد تایید به شماره موبایل شما ارسال خواهد شد.</p>
+        <form method="post" autocomplete="off">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="first_name">نام</label>
+                <input type="text" id="first_name" name="first_name" class="form-control" required placeholder="نام خود را وارد کنید">
+            </div>
+            <div class="form-group">
+                <label for="last_name">نام خانوادگی</label>
+                <input type="text" id="last_name" name="last_name" class="form-control" required placeholder="نام خانوادگی خود را وارد کنید">
+            </div>
+            <div class="form-group">
+                <label for="phone">شماره موبایل</label>
+                <input type="tel" id="phone" name="phone" class="form-control" required pattern="09[0-9]{9}" maxlength="11" placeholder="مثال: 09123456789" value="{{ phone|default:'' }}">
+                <small class="form-text text-muted">کد تایید به این شماره ارسال می‌شود.</small>
+            </div>
+            <div class="form-group">
+                <label for="email">ایمیل (اختیاری)</label>
+                <input type="email" id="email" name="email" class="form-control" placeholder="ایمیل خود را وارد کنید (اختیاری)">
+            </div>
+            <button type="submit" class="btn btn-primary w-100 mt-3">📝 ثبت‌نام</button>
+        </form>
+        <div class="back-link mt-3">
+            <a href="{% url 'accounts:customer_sms_login' %}">🔙 بازگشت به ورود</a>
+        </div>
+    </div>
+</div>
+
+<style>
+.registration-container {
+    max-width: 400px;
+    margin: 40px auto;
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.08);
+    padding: 32px 24px;
+}
+.registration-title {
+    text-align: center;
+    margin-bottom: 16px;
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+.registration-desc {
+    text-align: center;
+    color: #666;
+    margin-bottom: 24px;
+    font-size: 1rem;
+}
+.form-group {
+    margin-bottom: 18px;
+}
+.form-control {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    font-size: 1rem;
+}
+.btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 12px;
+    font-size: 1.1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+.btn-primary:hover {
+    background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+}
+.back-link {
+    text-align: center;
+    margin-top: 18px;
+}
+.back-link a {
+    color: #667eea;
+    text-decoration: none;
+    font-size: 0.95rem;
+}
+.back-link a:hover {
+    text-decoration: underline;
+}
+</style>
+{% endblock %} 

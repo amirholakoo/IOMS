@@ -15,10 +15,6 @@
             <button class="navbar-toggle" onclick="toggleMenu()">☰</button>
         </div>
         <ul class="nav-list" id="navbarMenu">
-            <li class="nav-item"><a href="/" class="nav-link">خانه</a></li>
-            <li class="nav-item"><a href="#cashSection" class="nav-link">قیمت نقدی</a></li>
-            <li class="nav-item"><a href="#creditSection" class="nav-link">قیمت نسیه</a></li>
-            <li class="nav-item"><a href="#contactSection" class="nav-link">تماس با ما</a></li>
             {% if user.is_authenticated %}
             <li class="nav-item"><a href="{% url 'accounts:logout' %}" class="nav-link">خروج</a></li>
             {% else %}
@@ -104,10 +100,6 @@
         {% endif %}
         
         <section id="cashSection" class="section cash-section">
-            <div class="section-header">
-                <h2 class="section-title">محصولات موجود</h2>
-            </div>
-
             <div class="info-grid">
                 <div class="info-card">
                     <div class="info-label">تعداد محصولات</div>
@@ -132,13 +124,10 @@
                         <thead>
                             <tr>
                                 <th>انتخاب</th>
-                                <th>شماره ریل</th>
                                 <th>عرض (mm)</th>
                                 <th>گرماژ (g/m²)</th>
                                 <th>طول (m)</th>
                                 <th>قیمت (تومان)</th>
-                                <th>وضعیت</th>
-                                <th>مکان انبار</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -152,26 +141,15 @@
                                   </button>
                                   <input type="checkbox" class="stock-checkbox" data-section="cash" style="display:none;">
                                 </td>
-                                <td>{{ product.reel_number }}</td>
                                 <td>{{ product.width }}</td>
                                 <td>{{ product.gsm }}</td>
                                 <td>{{ product.length }}</td>
                                 <td>{{ product.price|floatformat:0 }}</td>
-                                <td>
-                                    {% if product.status == 'In-stock' %}
-                                    <span class="status-badge available">📦 موجود</span>
-                                    {% elif product.status == 'Sold' %}
-                                    <span class="status-badge sold">💰 فروخته شده</span>
-                                    {% elif product.status == 'Pre-order' %}
-                                    <span class="status-badge preorder">⏳ پیش‌سفارش</span>
-                                    {% endif %}
-                                </td>
-                                <td>{{ product.get_location_display }}</td>
                             </tr>
                             {% endfor %}
                             {% else %}
                             <tr>
-                                <td colspan="8" class="text-center">
+                                <td colspan="5" class="text-center">
                                     <div class="no-products-message">
                                         <p>🔍 محصولی در انبار یافت نشد</p>
                                         <small>لطفاً بعداً مراجعه کنید یا با مدیر سیستم تماس بگیرید</small>

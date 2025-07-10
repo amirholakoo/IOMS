@@ -4,10 +4,10 @@
 const userDatabase = {
     '09123456789': { status: 'approved', name: 'احمد محمدی' },
     '09187654321': { status: 'pending', name: 'علی رضایی' },
-    '09111111111': { status: 'deactive', name: 'محمد کریمی' },
+    '09111111111': { status: 'deactivate', name: 'محمد کریمی' },
     '09122222222': { status: 'approved', name: 'حسن احمدی' },
     '09133333333': { status: 'pending', name: 'رضا محمودی' },
-    '09144444444': { status: 'deactive', name: 'علی احمدی' },
+    '09144444444': { status: 'deactivate', name: 'علی احمدی' },
     '09155555555': { status: 'approved', name: 'محمد رضایی' }
 };
 
@@ -48,7 +48,7 @@ function handlePhoneSubmit(event) {
             // Show success message and redirect to verification page
             showMessage('کد تایید برای شما ارسال شد', 'success');
             setTimeout(() => {
-                window.location.href = 'verification.html';
+                window.location.href = '../ReceiveCode/verification.html';
             }, 1500);
 
         } else if (userStatus === 'pending') {
@@ -57,7 +57,7 @@ function handlePhoneSubmit(event) {
                 window.location.href = '../Index/index.html';
             }, 4000);
 
-        } else if (userStatus === 'deactive') {
+        } else if (userStatus === 'deactivate') {
             showMessage('حساب شما غیرفعال است. لطفاً با مدیر سیستم تماس بگیرید.', 'error');
             setTimeout(() => {
                 window.location.href = '../Index/index.html';
@@ -87,7 +87,7 @@ function isValidPhoneNumber(phoneNumber) {
 /**
  * Check user status in database
  * @param {string} phoneNumber - Phone number to check
- * @returns {string} - User status (approved, pending, deactive, not_found)
+ * @returns {string} - User status (approved, pending, deactivate, not_found)
  */
 function checkUserStatus(phoneNumber) {
     const user = userDatabase[phoneNumber];
@@ -342,25 +342,25 @@ function handlePhoneSubmit(event) {
                 // Show success message and redirect to verification page
                 showMessage('کد تایید برای شما ارسال شد', 'success');
                 setTimeout(() => {
-                    window.location.href = 'verification.html';
+                    window.location.href = '../ReceiveCode/verification.html';
                 }, 1500);
 
             } else if (userStatus === 'pending') {
                 showMessage('شماره شما در انتظار تایید است. لطفاً با مدیر سیستم تماس بگیرید.', 'error');
                 setTimeout(() => {
-                    window.location.href = 'index.html';
+                    window.location.href = '../Index/index.html';
                 }, 4000);
 
-            } else if (userStatus === 'deactive') {
+            } else if (userStatus === 'deactivate') {
                 showMessage('حساب شما غیرفعال است. لطفاً با مدیر سیستم تماس بگیرید.', 'error');
                 setTimeout(() => {
-                    window.location.href = 'index.html';
+                    window.location.href = '../Index/index.html';
                 }, 4000);
 
             } else {
                 showMessage('شماره شما در سیستم ثبت نشده است', 'error');
                 setTimeout(() => {
-                    window.location.href = 'index.html';
+                    window.location.href = '../Index/index.html';
                 }, 3000);
             }
 

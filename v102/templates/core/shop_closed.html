@@ -1,0 +1,403 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}🔒 فروشگاه بسته است{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* 🎨 استایل‌های صفحه بسته بودن فروشگاه */
+    body {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        font-family: 'Vazir', sans-serif;
+        direction: rtl;
+        text-align: right;
+        margin: 0;
+        padding: 0;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .shop-closed-container {
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 25px;
+        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+        padding: 3rem;
+        text-align: center;
+        max-width: 600px;
+        width: 90%;
+        margin: 2rem;
+        backdrop-filter: blur(15px);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+    
+    .closed-icon {
+        font-size: 6rem;
+        margin-bottom: 1.5rem;
+        animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+        100% { transform: scale(1); }
+    }
+    
+    .closed-title {
+        font-size: 2.5rem;
+        font-weight: bold;
+        color: #333;
+        margin-bottom: 1rem;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    
+    .closed-message {
+        font-size: 1.3rem;
+        color: #666;
+        margin-bottom: 2rem;
+        line-height: 1.6;
+    }
+    
+    .working-hours-info {
+        background: linear-gradient(45deg, #f8f9fa, #e9ecef);
+        border-radius: 15px;
+        padding: 2rem;
+        margin: 2rem 0;
+        border: 2px solid #dee2e6;
+    }
+    
+    .current-time {
+        font-size: 3rem;
+        font-weight: bold;
+        color: #667eea;
+        margin-bottom: 1rem;
+        font-family: 'Vazir', monospace;
+    }
+    
+    .working-hours {
+        font-size: 1.5rem;
+        color: #495057;
+        margin-bottom: 1rem;
+    }
+    
+    .time-until-open {
+        background: linear-gradient(45deg, #28a745, #20c997);
+        color: white;
+        padding: 1rem 2rem;
+        border-radius: 25px;
+        font-size: 1.2rem;
+        font-weight: bold;
+        display: inline-block;
+        margin: 1rem 0;
+        box-shadow: 0 5px 15px rgba(40, 167, 69, 0.3);
+    }
+    
+    .countdown-timer {
+        background: rgba(102, 126, 234, 0.1);
+        border-radius: 15px;
+        padding: 1.5rem;
+        margin: 1.5rem 0;
+        border: 2px solid rgba(102, 126, 234, 0.2);
+    }
+    
+    .countdown-title {
+        font-size: 1.2rem;
+        color: #667eea;
+        margin-bottom: 1rem;
+        font-weight: bold;
+    }
+    
+    .countdown-display {
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+    
+    .countdown-unit {
+        background: linear-gradient(45deg, #667eea, #764ba2);
+        color: white;
+        padding: 1rem;
+        border-radius: 15px;
+        min-width: 80px;
+        text-align: center;
+        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+    }
+    
+    .countdown-number {
+        font-size: 2rem;
+        font-weight: bold;
+        display: block;
+    }
+    
+    .countdown-label {
+        font-size: 0.9rem;
+        opacity: 0.9;
+    }
+    
+    .action-buttons {
+        margin-top: 2rem;
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+    
+    .btn {
+        padding: 1rem 2rem;
+        border-radius: 15px;
+        border: none;
+        font-size: 1.1rem;
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-block;
+    }
+    
+    .btn-primary {
+        background: linear-gradient(45deg, #667eea, #764ba2);
+        color: white;
+    }
+    
+    .btn-secondary {
+        background: linear-gradient(45deg, #6c757d, #495057);
+        color: white;
+    }
+    
+    .btn:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    }
+    
+    .contact-info {
+        background: rgba(255, 193, 7, 0.1);
+        border-radius: 15px;
+        padding: 1.5rem;
+        margin-top: 2rem;
+        border: 2px solid rgba(255, 193, 7, 0.2);
+    }
+    
+    .contact-title {
+        font-size: 1.3rem;
+        color: #856404;
+        margin-bottom: 1rem;
+        font-weight: bold;
+    }
+    
+    .contact-details {
+        color: #6c757d;
+        line-height: 1.8;
+    }
+    
+    .status-indicator {
+        display: inline-block;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        margin-left: 0.5rem;
+        animation: blink 1.5s infinite;
+    }
+    
+    .status-closed {
+        background-color: #dc3545;
+    }
+    
+    @keyframes blink {
+        0%, 50% { opacity: 1; }
+        51%, 100% { opacity: 0.3; }
+    }
+    
+    /* 📱 ریسپانسیو */
+    @media (max-width: 768px) {
+        .shop-closed-container {
+            padding: 2rem;
+            margin: 1rem;
+        }
+        
+        .closed-icon {
+            font-size: 4rem;
+        }
+        
+        .closed-title {
+            font-size: 2rem;
+        }
+        
+        .closed-message {
+            font-size: 1.1rem;
+        }
+        
+        .current-time {
+            font-size: 2rem;
+        }
+        
+        .countdown-unit {
+            min-width: 60px;
+            padding: 0.8rem;
+        }
+        
+        .countdown-number {
+            font-size: 1.5rem;
+        }
+        
+        .action-buttons {
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .btn {
+            width: 100%;
+            max-width: 300px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="shop-closed-container">
+    
+    <!-- 🔒 آیکون و عنوان -->
+    <div class="closed-icon">🔒</div>
+    <h1 class="closed-title">
+        متأسفانه فروشگاه بسته است
+        <span class="status-indicator status-closed"></span>
+    </h1>
+    
+    <p class="closed-message">
+        😔 عذرخواهی می‌کنیم، فروشگاه در حال حاضر بسته است و خارج از ساعات کاری می‌باشد.
+        <br>
+        لطفاً در ساعات کاری مراجعه نمایید.
+    </p>
+    
+    <!-- 🕐 زمان فعلی -->
+    <div class="working-hours-info">
+        <div class="current-time" id="currentTime"></div>
+        
+        {% if current_working_hours %}
+        <div class="working-hours">
+            ⏰ ساعات کاری: 
+            {{ current_working_hours.start_time|time:"H:i" }} - 
+            {{ current_working_hours.end_time|time:"H:i" }}
+        </div>
+        
+        {% if time_until_open %}
+        <div class="countdown-timer">
+            <div class="countdown-title">⏳ زمان باقی‌مانده تا بازگشایی:</div>
+            <div class="countdown-display" id="countdownDisplay">
+                <!-- کاؤنت‌داون با جاوااسکریپت پر می‌شود -->
+            </div>
+        </div>
+        {% endif %}
+        
+        {% else %}
+        <div class="working-hours">
+            ⚠️ ساعات کاری تنظیم نشده است
+        </div>
+        {% endif %}
+    </div>
+    
+    <!-- 🔔 دکمه‌های عمل -->
+    <div class="action-buttons">
+        {% if user.is_authenticated and user.is_super_admin %}
+        <a href="{% url 'core:working_hours_management' %}" class="btn btn-primary">
+            ⚙️ مدیریت ساعات کاری
+        </a>
+        {% endif %}
+        
+        <a href="{% url 'accounts:dashboard' %}" class="btn btn-secondary">
+            🏠 بازگشت به داشبورد
+        </a>
+        
+        <button onclick="location.reload()" class="btn btn-secondary">
+            🔄 بررسی مجدد
+        </button>
+    </div>
+    
+    <!-- 📞 اطلاعات تماس -->
+    <div class="contact-info">
+        <div class="contact-title">📞 نیاز به کمک دارید؟</div>
+        <div class="contact-details">
+            در صورت ضروری، می‌توانید با پشتیبانی تماس بگیرید:
+            <br>
+            📧 support@homayoms.com
+            <br>
+            📞 021-12345678
+        </div>
+    </div>
+    
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // 🕐 نمایش زمان فعلی
+    function updateCurrentTime() {
+        const now = new Date();
+        const timeString = now.toLocaleTimeString('fa-IR', {
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit'
+        });
+        document.getElementById('currentTime').textContent = timeString;
+    }
+    
+    // به‌روزرسانی زمان هر ثانیه
+    setInterval(updateCurrentTime, 1000);
+    updateCurrentTime();
+    
+    {% if time_until_open %}
+    // ⏳ کاؤنت‌داون تا بازگشایی
+    let timeUntilOpen = {{ time_until_open.total_seconds|floatformat:0 }}; // ثانیه
+    
+    function updateCountdown() {
+        if (timeUntilOpen <= 0) {
+            // زمان بازگشایی رسیده - صفحه را رفرش کن
+            location.reload();
+            return;
+        }
+        
+        const hours = Math.floor(timeUntilOpen / 3600);
+        const minutes = Math.floor((timeUntilOpen % 3600) / 60);
+        const seconds = timeUntilOpen % 60;
+        
+        const countdownDisplay = document.getElementById('countdownDisplay');
+        countdownDisplay.innerHTML = `
+            <div class="countdown-unit">
+                <span class="countdown-number">${hours.toString().padStart(2, '0')}</span>
+                <span class="countdown-label">ساعت</span>
+            </div>
+            <div class="countdown-unit">
+                <span class="countdown-number">${minutes.toString().padStart(2, '0')}</span>
+                <span class="countdown-label">دقیقه</span>
+            </div>
+            <div class="countdown-unit">
+                <span class="countdown-number">${seconds.toString().padStart(2, '0')}</span>
+                <span class="countdown-label">ثانیه</span>
+            </div>
+        `;
+        
+        timeUntilOpen--;
+    }
+    
+    // به‌روزرسانی کاؤنت‌داون هر ثانیه
+    setInterval(updateCountdown, 1000);
+    updateCountdown();
+    {% endif %}
+    
+    // 🔄 بررسی دوره‌ای وضعیت فروشگاه (هر 30 ثانیه)
+    setInterval(() => {
+        fetch('/api/dashboard-stats/')
+            .then(response => response.json())
+            .then(data => {
+                // اگر فروشگاه باز شده، صفحه را رفرش کن
+                if (data.shop_status === 'open') {
+                    location.reload();
+                }
+            })
+            .catch(error => {
+                console.log('خطا در بررسی وضعیت فروشگاه:', error);
+            });
+    }, 30000);
+</script>
+{% endblock %} 

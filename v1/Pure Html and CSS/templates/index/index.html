@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}صفحه اصلی - قیمت و موجودی{% endblock %}
+{% block title %}کارخانه کاغذ و مقوای همایون{% endblock %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/styles.css' %}">
@@ -9,21 +9,14 @@
 
 {% block header %}
 <header class="header">
-    <h1 class="main-title">کارخانه کاغد و مقوای همایون</h1>
-    <h4 class="main-subtitle">قیمت و موجودی</h4>
+    <h1 class="main-title">کارخانه کاغذ و مقوای همایون</h1>
+    <h4 class="main-subtitle" id="pageSubtitle">قیمت و موجودی</h4>
 </header>
 {% endblock %}
 
 {% block content %}
-<main class="main-content">
-    <!-- <div class="header-actions">
-        <button class="login-btn" onclick="goToLogin()" id="loginBtn">
-            <span class="btn-icon">🔐</span>
-            <span class="btn-text">ورود</span>
-        </button>
-    </div> -->
-
-    <!-- بخش نقدی -->
+<!-- Main Content - Shown during working hours -->
+<main class="main-content" id="mainContent">
     <section class="section cash-section">
         <div class="section-header">
             <h2 class="section-title">نقدی</h2>
@@ -49,7 +42,6 @@
         </div>
     </section>
 
-    <!-- بخش نسیه -->
     <section class="section credit-section">
         <div class="section-header">
             <h2 class="section-title">نسیه</h2>
@@ -75,11 +67,107 @@
         </div>
     </section>
 </main>
+
+<!-- Closed Content - Shown outside working hours -->
+<main class="closed-content" id="closedContent" style="display: none;">
+    <div class="closed-container">
+        <div class="closed-icon">🔒</div>
+        <h2 class="closed-title">سایت در حال حاضر بسته است</h2>
+
+        <p class="closed-message">
+            متأسفانه در حال حاضر خارج از ساعت کاری هستیم.
+            لطفاً در ساعت کاری مجدداً مراجعه فرمایید.
+        </p>
+
+        <div class="working-hours-info">
+            <h3 class="working-hours-title">ساعت کاری:</h3>
+            <div class="working-hours-time" id="workingHoursDisplay">
+                از {{ working_start|default:'08:00' }} تا {{ working_end|default:'18:00' }}
+            </div>
+        </div>
+
+        <div class="contact-info-closed">
+            <h4>اطلاعات تماس:</h4>
+            <p>📞 تلفن: {{ contact_phone|default:'021-12345678' }}</p>
+            <p>📧 ایمیل: {{ contact_email|default:'info@homayounpaper.com' }}</p>
+            <p>📍 آدرس: {{ contact_address|default:'تهران، خیابان ولیعصر' }}</p>
+        </div>
+
+        <button class="refresh-btn" onclick="checkWorkingHours()">
+            <span class="btn-icon">🔄</span>
+            <span class="btn-text">بررسی مجدد</span>
+        </button>
+    </div>
+</main>
 {% endblock %}
 
 {% block footer %}
 <footer class="footer">
-    <p>آخرین بروزرسانی: {{ last_updated|default:'امروز' }}</p>
+    <div class="footer-content">
+        <div class="footer-section contact-info">
+            <h3 class="footer-title">اطلاعات تماس</h3>
+            <div class="contact-items">
+                <div class="contact-item">
+                    <span class="contact-icon">📞</span>
+                    <div class="contact-details">
+                        <span class="contact-label">تلفن تماس:</span>
+                        <span class="contact-value">{{ contact_phone|default:'۰۲۱-۱۲۳۴۵۶۷۸' }}</span>
+                    </div>
+                </div>
+                <div class="contact-item">
+                    <span class="contact-icon">📱</span>
+                    <div class="contact-details">
+                        <span class="contact-label">موبایل:</span>
+                        <span class="contact-value">{{ contact_mobile|default:'۰۹۱۲-۳۴۵-۶۷۸۹' }}</span>
+                    </div>
+                </div>
+                <div class="contact-item email-item">
+                    <span class="contact-icon">📧</span>
+                    <div class="contact-details">
+                        <span class="contact-label">ایمیل:</span>
+                        <span class="contact-value">{{ contact_email|default:'info@homayounpaper.com' }}</span>
+                    </div>
+                </div>
+                <div class="contact-item">
+                    <span class="contact-icon">📍</span>
+                    <div class="contact-details">
+                        <span class="contact-label">آدرس:</span>
+                        <span class="contact-value">{{ contact_address|default:'تهران، خیابان ولیعصر، پلاک ۱۲۳' }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer-section working-hours">
+            <h3 class="footer-title">ساعات کاری</h3>
+            <div class="hours-info">
+                <div class="hours-item">
+                    <span class="hours-label">شنبه تا چهارشنبه:</span>
+                    <span class="hours-value">{{ working_hours_weekday|default:'۰۸:۰۰ - ۱۸:۰۰' }}</span>
+                </div>
+                <div class="hours-item">
+                    <span class="hours-label">پنج‌شنبه:</span>
+                    <span class="hours-value">{{ working_hours_thursday|default:'۰۸:۰۰ - ۱۶:۰۰' }}</span>
+                </div>
+                <div class="hours-item">
+                    <span class="hours-label">جمعه:</span>
+                    <span class="hours-value">{{ working_hours_friday|default:'تعطیل' }}</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer-section about-us">
+            <h3 class="footer-title">درباره ما</h3>
+            <p class="about-text">
+                {{ about_text|default:'کارخانه کاغذ و مقوای همایون با بیش از ۲۰ سال تجربه در تولید و فروش انواع کاغذ و مقوا، ارائه‌دهنده بهترین محصولات با کیفیت و قیمت مناسب می‌باشد.' }}
+            </p>
+            <div class="social-links">
+                <a href="{{ social_facebook|default:'#' }}" class="social-link">📘</a>
+                <a href="{{ social_instagram|default:'#' }}" class="social-link">📷</a>
+                <a href="{{ social_telegram|default:'#' }}" class="social-link">📞</a>
+            </div>
+        </div>
+    </div>
 </footer>
 {% endblock %}
 
