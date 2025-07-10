@@ -1236,6 +1236,13 @@ class WorkingHours(BaseModel):
         help_text="متنی که به مشتری هنگام تعطیلی نمایش داده می‌شود (مثلاً: به علت شهادت حضرت علی تعطیل رسمی می‌باشد)"
     )
     
+    # 🔢 حداکثر تعداد محصولات قابل انتخاب
+    max_selection_limit = models.PositiveIntegerField(
+        default=6,
+        verbose_name="حداکثر تعداد محصولات قابل انتخاب",
+        help_text="حداکثر تعداد محصولاتی که مشتری می‌تواند در یک بار انتخاب کند (پیش‌فرض: 6)"
+    )
+    
     # 👑 کاربری که ساعات کاری را تنظیم کرده
     set_by = models.ForeignKey(
         User,
@@ -1445,6 +1452,7 @@ class WorkingHours(BaseModel):
             'is_thursday_open': self.is_thursday_open,
             'is_holiday': self.is_holiday,
             'holiday_help_text': self.holiday_help_text,
+            'max_selection_limit': self.max_selection_limit,
             'time_until_open': self.time_until_open(),
             'time_until_close': self.time_until_close(),
             'set_by': str(self.set_by) if self.set_by else 'تعیین نشده',

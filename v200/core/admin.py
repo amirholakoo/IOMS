@@ -823,6 +823,7 @@ class WorkingHoursAdmin(ModelAdmin):
                 'is_thursday_open',
                 'is_holiday',
                 'holiday_help_text',
+                'max_selection_limit',
                 'description'
             ),
             'classes': ('wide',),

@@ -87,68 +87,6 @@ def get_client_ip(request):
     return ip
 
 
-def index_view(request):
-    """🏠 صفحه اصلی کارخانه کاغذ و مقوای همایون"""
-    
-    # 📜 ثبت لاگ مشاهده صفحه اصلی (فقط اگر کاربر لاگین باشد)
-    if request.user.is_authenticated:
-        ActivityLog.log_activity(
-            user=request.user,
-            action='VIEW',
-            description='مشاهده صفحه اصلی کارخانه',
-            ip_address=get_client_ip(request),
-            user_agent=request.META.get('HTTP_USER_AGENT', ''),
-            severity='LOW'
-        )
-    
-    # دریافت محصولات واقعی از مدل Product
-    products = Product.objects.filter(status='In-stock').order_by('-created_at')
-    credit_products = Product.objects.filter(status='In-stock').order_by('-created_at')
-    # اگر نوع پرداخت در مدل دارید، می‌توانید فیلتر کنید (مثلاً payment_type='credit')
-    # credit_products = Product.objects.filter(status='In-stock', payment_type='credit').order_by('-created_at')
-
-    price_data = {
-        'cash': {
-            'price': products.first().price if products.exists() else 0,
-            'stock': products.count()
-        },
-        'credit': {
-            'price': credit_products.first().price if credit_products.exists() else 0,
-            'stock': credit_products.count()
-        }
-    }
-    
-    # 🔄 Get unpaid orders for authenticated customers
-    unpaid_orders = []
-    if request.user.is_authenticated and request.user.role == User.UserRole.CUSTOMER:
-        from payments.models import Payment
-        user_name = (request.user.get_full_name() or request.user.username).strip().lower()
-        user_phone = request.user.phone
-        customer_orders = Order.objects.filter(
-            Q(customer__phone=user_phone) |
-            Q(customer__customer_name__icontains=user_name)
-        ).exclude(status='Cancelled').distinct()
-        for order in customer_orders:
-            has_any_payments = Payment.objects.filter(order=order).exists()
-            print(f"[DEBUG] Checking order {order.order_number}: payment_method={order.payment_method}, status={order.status}, has_any_payments={has_any_payments}")
-            if order.payment_method == 'Cash' and not has_any_payments:
-                unpaid_orders.append(order)
-                print(f"[DEBUG] Added CASH order {order.order_number} to unpaid_orders")
-            elif order.payment_method == 'Terms' and order.status == 'Pending':
-                unpaid_orders.append(order)
-                print(f"[DEBUG] Added TERMS order {order.order_number} to unpaid_orders")
-    
-    context = {
-        'title': 'کارخانه کاغذ و مقوای همایون',
-        'price_data': price_data,
-        'products': products,
-        'credit_products': credit_products,
-        'user': request.user,
-        'unpaid_orders': unpaid_orders,
-    }
-    return render(request, 'index.html', context)
-
-
 @login_required
 def admin_dashboard_view(request):
     """📊 داشبورد مدیریت"""
@@ -1085,12 +1023,27 @@ def set_working_hours_view(request):
         is_thursday_open = data.get('is_thursday_open', False)
         is_holiday = data.get('is_holiday', False)
         holiday_help_text = data.get('holiday_help_text', '')
+        max_selection_limit = data.get('max_selection_limit', 6)
         
         # 🧹 اعتبارسنجی داده‌ها
         if not start_time or not end_time:
             return JsonResponse({
                 'success': False,
                 'error': '⏰ زمان شروع و پایان کار الزامی است'
+            }, status=400)
+        
+        # 🔢 اعتبارسنجی حداکثر انتخاب
+        try:
+            max_selection_limit = int(max_selection_limit)
+            if max_selection_limit < 1 or max_selection_limit > 50:
+                return JsonResponse({
+                    'success': False,
+                    'error': '🔢 حداکثر انتخاب باید بین 1 تا 50 باشد'
+                }, status=400)
+        except (ValueError, TypeError):
+            return JsonResponse({
+                'success': False,
+                'error': '🔢 حداکثر انتخاب باید عدد معتبر باشد'
             }, status=400)
         
         # 🕐 تبدیل به فرمت زمان
@@ -1118,6 +1071,7 @@ def set_working_hours_view(request):
             is_thursday_open=is_thursday_open,
             is_holiday=is_holiday,
             holiday_help_text=holiday_help_text,
+            max_selection_limit=max_selection_limit,
             set_by=request.user,
             is_active=True
         )
@@ -1191,6 +1145,69 @@ def check_working_hours_middleware(view_func):
 
 
 # اعمال میدل‌ویر ساعات کاری به صفحات مشتری
+@check_working_hours_middleware
+def index_view(request):
+    """🏠 صفحه اصلی کارخانه کاغذ و مقوای همایون"""
+    
+    # 📜 ثبت لاگ مشاهده صفحه اصلی (فقط اگر کاربر لاگین باشد)
+    if request.user.is_authenticated:
+        ActivityLog.log_activity(
+            user=request.user,
+            action='VIEW',
+            description='مشاهده صفحه اصلی کارخانه',
+            ip_address=get_client_ip(request),
+            user_agent=request.META.get('HTTP_USER_AGENT', ''),
+            severity='LOW'
+        )
+    
+    # دریافت محصولات واقعی از مدل Product
+    products = Product.objects.filter(status='In-stock').order_by('-created_at')
+    credit_products = Product.objects.filter(status='In-stock').order_by('-created_at')
+    # اگر نوع پرداخت در مدل دارید، می‌توانید فیلتر کنید (مثلاً payment_type='credit')
+    # credit_products = Product.objects.filter(status='In-stock', payment_type='credit').order_by('-created_at')
+
+    price_data = {
+        'cash': {
+            'price': products.first().price if products.exists() else 0,
+            'stock': products.count()
+        },
+        'credit': {
+            'price': credit_products.first().price if credit_products.exists() else 0,
+            'stock': credit_products.count()
+        }
+    }
+    
+    # 🔄 Get unpaid orders for authenticated customers
+    unpaid_orders = []
+    if request.user.is_authenticated and request.user.role == User.UserRole.CUSTOMER:
+        from payments.models import Payment
+        user_name = (request.user.get_full_name() or request.user.username).strip().lower()
+        user_phone = request.user.phone
+        customer_orders = Order.objects.filter(
+            Q(customer__phone=user_phone) |
+            Q(customer__customer_name__icontains=user_name)
+        ).exclude(status='Cancelled').distinct()
+        for order in customer_orders:
+            has_any_payments = Payment.objects.filter(order=order).exists()
+            print(f"[DEBUG] Checking order {order.order_number}: payment_method={order.payment_method}, status={order.status}, has_any_payments={has_any_payments}")
+            if order.payment_method == 'Cash' and not has_any_payments:
+                unpaid_orders.append(order)
+                print(f"[DEBUG] Added CASH order {order.order_number} to unpaid_orders")
+            elif order.payment_method == 'Terms' and order.status == 'Pending':
+                unpaid_orders.append(order)
+                print(f"[DEBUG] Added TERMS order {order.order_number} to unpaid_orders")
+    
+    context = {
+        'title': 'کارخانه کاغذ و مقوای همایون',
+        'price_data': price_data,
+        'products': products,
+        'credit_products': credit_products,
+        'user': request.user,
+        'unpaid_orders': unpaid_orders,
+    }
+    return render(request, 'index.html', context)
+
+
 @check_working_hours_middleware
 def products_landing_view(request):
     """🛍️ صفحه اصلی محصولات"""
@@ -2164,10 +2181,18 @@ def selected_products_view(request):
         messages.error(request, f'❌ خطا در ایجاد سفارش: {str(e)}')
         return redirect('core:products_landing')
 
+    # Get working hours configuration for dynamic limit
+    try:
+        working_hours = WorkingHours.objects.first()
+        max_selection_limit = working_hours.max_selection_limit if working_hours else 6
+    except:
+        max_selection_limit = 6
+
     # After rendering, clear the session value so it doesn't persist
     response = render(request, 'core/selected_products.html', {
         'products': products,
         'default_payment_method': default_payment_method,
+        'max_selection_limit': max_selection_limit,
     })
     if 'default_payment_method' in request.session:
         del request.session['default_payment_method']
@@ -2562,6 +2587,154 @@ def product_delete_api(request):
         return JsonResponse({'success': True, 'message': f'Product {reel_number} deleted successfully.'})
     except Exception as e:
         return JsonResponse({'success': False, 'message': f'Error: {str(e)}'}, status=500)
+
+@require_http_methods(["GET"])
+def get_working_hours_config_api(request):
+    """
+    ⚙️ دریافت تنظیمات ساعات کاری برای فرانت‌اند
+    
+    🎯 این API برای دریافت تنظیمات ساعات کاری و محدودیت‌های انتخاب محصول استفاده می‌شود
+    📱 فرانت‌اند از این اطلاعات برای اعمال محدودیت‌های انتخاب استفاده می‌کند
+    """
+    
+    try:
+        current_hours = WorkingHours.get_current_working_hours()
+        
+        if not current_hours:
+            return JsonResponse({
+                'success': False,
+                'error': '⏰ ساعات کاری تنظیم نشده است'
+            }, status=404)
+        
+        config = {
+            'success': True,
+            'max_selection_limit': current_hours.max_selection_limit,
+            'is_shop_open': WorkingHours.is_shop_open(),
+            'is_thursday_open': current_hours.is_thursday_open,
+            'is_holiday': current_hours.is_holiday,
+            'holiday_help_text': current_hours.holiday_help_text,
+            'working_hours': current_hours.get_working_hours_info()
+        }
+        
+        return JsonResponse(config)
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': f'❌ خطا در دریافت تنظیمات: {str(e)}'
+        }, status=500)
+
+
+@login_required
+@check_user_permission('is_super_admin')
+@require_http_methods(["POST"])
+def set_working_hours_view(request):
+    """
+    ⏰ تنظیم ساعات کاری جدید - فقط Super Admin
+    
+    🎯 این API برای تنظیم ساعات کاری فروشگاه استفاده می‌شود
+    ✅ فقط یک ساعت کاری می‌تواند فعال باشد
+    """
+    
+    try:
+        # 📥 دریافت داده‌ها از درخواست
+        data = json.loads(request.body)
+        start_time = data.get('start_time')
+        end_time = data.get('end_time')
+        description = data.get('description', '')
+        is_thursday_open = data.get('is_thursday_open', False)
+        is_holiday = data.get('is_holiday', False)
+        holiday_help_text = data.get('holiday_help_text', '')
+        max_selection_limit = data.get('max_selection_limit', 6)
+        
+        # 🧹 اعتبارسنجی داده‌ها
+        if not start_time or not end_time:
+            return JsonResponse({
+                'success': False,
+                'error': '⏰ زمان شروع و پایان کار الزامی است'
+            }, status=400)
+        
+        # 🔢 اعتبارسنجی حداکثر انتخاب
+        try:
+            max_selection_limit = int(max_selection_limit)
+            if max_selection_limit < 1 or max_selection_limit > 50:
+                return JsonResponse({
+                    'success': False,
+                    'error': '🔢 حداکثر انتخاب باید بین 1 تا 50 باشد'
+                }, status=400)
+        except (ValueError, TypeError):
+            return JsonResponse({
+                'success': False,
+                'error': '🔢 حداکثر انتخاب باید عدد معتبر باشد'
+            }, status=400)
+        
+        # 🕐 تبدیل به فرمت زمان
+        try:
+            start_time_obj = datetime.strptime(start_time, '%H:%M').time()
+            end_time_obj = datetime.strptime(end_time, '%H:%M').time()
+        except ValueError:
+            return JsonResponse({
+                'success': False,
+                'error': '⏰ فرمت زمان نامعتبر است (HH:MM)'
+            }, status=400)
+        
+        # 🔍 بررسی منطقی بودن زمان‌ها
+        if start_time_obj >= end_time_obj:
+            return JsonResponse({
+                'success': False,
+                'error': '⏰ زمان پایان کار باید بعد از زمان شروع کار باشد'
+            }, status=400)
+        
+        # 💾 ایجاد ساعات کاری جدید
+        working_hours = WorkingHours.objects.create(
+            start_time=start_time_obj,
+            end_time=end_time_obj,
+            description=description,
+            is_thursday_open=is_thursday_open,
+            is_holiday=is_holiday,
+            holiday_help_text=holiday_help_text,
+            max_selection_limit=max_selection_limit,
+            set_by=request.user,
+            is_active=True
+        )
+        
+        # 📜 ثبت لاگ
+        ActivityLog.log_activity(
+            user=request.user,
+            action='CREATE',
+            description=f'تنظیم ساعات کاری جدید: {start_time} - {end_time}',
+            ip_address=get_client_ip(request),
+            user_agent=request.META.get('HTTP_USER_AGENT', ''),
+            severity='HIGH'
+        )
+        
+        return JsonResponse({
+            'success': True,
+            'message': f'✅ ساعات کاری با موفقیت تنظیم شد: {working_hours}',
+            'working_hours': working_hours.get_working_hours_info()
+        })
+        
+    except json.JSONDecodeError:
+        return JsonResponse({
+            'success': False,
+            'error': '📄 فرمت JSON نامعتبر است'
+        }, status=400)
+    
+    except Exception as e:
+        # 📜 ثبت خطا
+        ActivityLog.log_activity(
+            user=request.user,
+            action='ERROR',
+            description=f'خطا در تنظیم ساعات کاری: {str(e)}',
+            ip_address=get_client_ip(request),
+            user_agent=request.META.get('HTTP_USER_AGENT', ''),
+            severity='HIGH'
+        )
+        
+        return JsonResponse({
+            'success': False,
+            'error': f'❌ خطا در تنظیم ساعات کاری: {str(e)}'
+        }, status=500)
 
 
 

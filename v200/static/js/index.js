@@ -4,24 +4,44 @@ let selectedItems = {
     credit: 0
 };
 
-const MAX_TOTAL_SELECTION = 6;
+let MAX_TOTAL_SELECTION = 6; // Default value, will be updated from API
+
+// Fetch working hours configuration to get dynamic limit
+async function fetchWorkingHoursConfig() {
+    try {
+        const response = await fetch('/core/api/working-hours-config/');
+        if (response.ok) {
+            const data = await response.json();
+            if (data.success) {
+                MAX_TOTAL_SELECTION = data.max_selection_limit;
+                console.log(`🔢 Max selection limit updated to: ${MAX_TOTAL_SELECTION}`);
+            }
+        }
+    } catch (error) {
+        console.warn('⚠️ Could not fetch working hours config, using default limit:', error);
+        // Keep default value of 6
+    }
+}
 
 // Initialize the page
 document.addEventListener('DOMContentLoaded', function () {
-    initializeSelectionButtons();
-    updateSelectionCount('cash');
-    updateSelectionCount('credit');
-    updateProductCounts();
-    // Add row click functionality
-    const stockRows = document.querySelectorAll('.stock-row');
-    stockRows.forEach(row => {
-        row.addEventListener('click', function (e) {
-            if (!e.target.closest('.quantity-controls')) {
-                const plusBtn = this.querySelector('.plus-btn');
-                if (plusBtn) {
-                    handleQuantityChange(plusBtn);
+    // Fetch working hours configuration first
+    fetchWorkingHoursConfig().then(() => {
+        initializeSelectionButtons();
+        updateSelectionCount('cash');
+        updateSelectionCount('credit');
+        updateProductCounts();
+        // Add row click functionality
+        const stockRows = document.querySelectorAll('.stock-row');
+        stockRows.forEach(row => {
+            row.addEventListener('click', function (e) {
+                if (!e.target.closest('.quantity-controls')) {
+                    const plusBtn = this.querySelector('.plus-btn');
+                    if (plusBtn) {
+                        handleQuantityChange(plusBtn);
+                    }
                 }
-            }
+            });
         });
     });
 });
@@ -107,8 +127,8 @@ function handleSelectionButtonClick(button) {
         updateSelectionCount(section);
         return;
     }
-    if (selectedItems[section] >= 6) {
-        showAlert('حداکثر 6 مورد قابل انتخاب است!', 'warning');
+    if (selectedItems[section] >= MAX_TOTAL_SELECTION) {
+        showAlert(`حداکثر ${MAX_TOTAL_SELECTION} مورد قابل انتخاب است!`, 'warning');
         return;
     }
     // Directly select the product (no confirmation popup)
@@ -125,9 +145,9 @@ function handleCheckboxChange(checkbox) {
     const row = checkbox.closest('.stock-row');
     const button = row.querySelector('.selection-btn');
     if (checkbox.checked) {
-        if (selectedItems[section] >= 6) {
+        if (selectedItems[section] >= MAX_TOTAL_SELECTION) {
             checkbox.checked = false;
-            showAlert('حداکثر 6 مورد قابل انتخاب است!', 'warning');
+            showAlert(`حداکثر ${MAX_TOTAL_SELECTION} مورد قابل انتخاب است!`, 'warning');
             return;
         }
         button.classList.add('selected');
@@ -276,7 +296,7 @@ function handleQuantityChange(button) {
         if (canIncreaseQuantity(section)) {
             currentValue++;
         } else {
-            showAlert('حداکثر ۶ محصول می‌توانید انتخاب کنید', 'warning', 'محدودیت انتخاب');
+            showAlert(`حداکثر ${MAX_TOTAL_SELECTION} محصول می‌توانید انتخاب کنید`, 'warning', 'محدودیت انتخاب');
             return;
         }
     } else if (action === 'minus' && currentValue > 0) {
@@ -298,7 +318,7 @@ function handleQuantityInputChange(input) {
     let othersTotal = otherInputs.reduce((sum, i) => sum + (parseInt(i.value) || 0), 0);
     if (value + othersTotal > MAX_TOTAL_SELECTION) {
         value = Math.max(0, MAX_TOTAL_SELECTION - othersTotal);
-        showAlert('حداکثر ۶ محصول می‌توانید انتخاب کنید', 'warning', 'محدودیت انتخاب');
+        showAlert(`حداکثر ${MAX_TOTAL_SELECTION} محصول می‌توانید انتخاب کنید`, 'warning', 'محدودیت انتخاب');
     }
     input.value = value;
     input.classList.add('updated');

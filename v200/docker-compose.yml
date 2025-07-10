@@ -1,16 +1,14 @@
-# 🐳 Docker Compose برای HomayOMS
+# 🐳 Docker Compose برای HomayOMS v200
 # 🏗️ شامل Django، PostgreSQL و pgAdmin
-
-version: '3.8'
 
 services:
   # 🐘 PostgreSQL Database
   db:
     image: postgres:15-alpine
-    container_name: homayoms_db
+    container_name: homayoms_v200_db
     restart: unless-stopped
     environment:
-      POSTGRES_DB: homayoms_db
+      POSTGRES_DB: homayoms_v200_db
       POSTGRES_USER: homayoms_user
       POSTGRES_PASSWORD: homayoms_password
     volumes:
@@ -18,9 +16,9 @@ services:
     ports:
       - "5432:5432"
     networks:
-      - homayoms_network
+      - homayoms_v200_network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U homayoms_user -d homayoms_db"]
+      test: ["CMD-SHELL", "pg_isready -U homayoms_user -d homayoms_v200_db"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -28,7 +26,7 @@ services:
   # 🐘 pgAdmin - مدیریت پایگاه داده
   pgadmin:
     image: dpage/pgadmin4:latest
-    container_name: homayoms_pgadmin
+    container_name: homayoms_v200_pgadmin
     restart: unless-stopped
     environment:
       PGADMIN_DEFAULT_EMAIL: admin@homayoms.com
@@ -39,14 +37,14 @@ services:
     ports:
       - "5050:80"
     networks:
-      - homayoms_network
+      - homayoms_v200_network
     depends_on:
       - db
 
   # 🐍 Django Web Application
   web:
     build: .
-    container_name: homayoms_web
+    container_name: homayoms_v200_web
     restart: unless-stopped
     environment:
       # 🔐 تنظیمات امنیتی
@@ -57,10 +55,10 @@ services:
       # 🗄️ تنظیمات پایگاه داده
       DB_HOST: db
       DB_PORT: 5432
-      DB_NAME: homayoms_db
+      DB_NAME: homayoms_v200_db
       DB_USER: homayoms_user
       DB_PASSWORD: homayoms_password
-      DATABASE_URL: postgresql://homayoms_user:homayoms_password@db:5432/homayoms_db
+      DATABASE_URL: postgresql://homayoms_user:homayoms_password@db:5432/homayoms_v200_db
       
       # 🌐 تنظیمات CORS
       CORS_ALLOWED_ORIGINS: http://localhost:8000,http://127.0.0.1:8000
@@ -91,7 +89,7 @@ services:
     ports:
       - "8000:8000"
     networks:
-      - homayoms_network
+      - homayoms_v200_network
     depends_on:
       db:
         condition: service_healthy
@@ -109,5 +107,5 @@ volumes:
 
 # 🌐 Network برای ارتباط بین سرویس‌ها
 networks:
-  homayoms_network:
+  homayoms_v200_network:
     driver: bridge 

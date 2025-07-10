@@ -17,6 +17,7 @@ downloads/
 eggs/
 cursor/
 .eggs/
+token.txt
 lib/
 lib64/
 parts/

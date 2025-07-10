@@ -8,7 +8,7 @@
             <h4>🛒 محصولات انتخاب‌شده برای خرید</h4>
             <div class="selected-summary mt-2">
                 <span class="badge bg-light text-dark fs-6">
-                    📦 تعداد کل: <span id="total-items">0</span> از 6 آیتم
+                    📦 تعداد کل: <span id="total-items">0</span> از <span id="max-items-display">{{ max_selection_limit }}</span> آیتم
                 </span>
             </div>
         </div>
@@ -31,7 +31,7 @@
                         </thead>
                         <tbody>
                             {% for product in products %}
-                            <tr class="product-row" data-product-id="{{ product.id }}" data-max-quantity="6">
+                            <tr class="product-row" data-product-id="{{ product.id }}" data-max-quantity="{{ max_selection_limit }}">
                                 <td class="align-middle">
                                     <strong>{{ product.reel_number }}</strong>
                                 </td>
@@ -52,7 +52,7 @@
                                                class="qty-input-large" 
                                                value="{{ product.selected_quantity }}" 
                                                min="0" 
-                                               max="6" 
+                                               max="{{ max_selection_limit }}" 
                                                data-product-id="{{ product.id }}"
                                                data-original-price="{{ product.price }}"
                                                onchange="updateQuantity({{ product.id }}, this.value)">
@@ -354,37 +354,103 @@
 
 <script>
 let totalItems = 0;
-const maxItems = 6;
+let maxItems = {{ max_selection_limit }}; // Initial value from server, will be updated from API
 
-// Initialize page
-document.addEventListener('DOMContentLoaded', function() {
-    updateTotalItems();
-    updateOrderSummary();
-});
-
-// Change quantity with buttons
-function changeQuantity(productId, change) {
-    const input = document.querySelector(`input[data-product-id="${productId}"]`);
-    const currentValue = parseInt(input.value) || 0;
-    const newValue = Math.max(0, Math.min(6, currentValue + change));
-    
-    if (newValue !== currentValue) {
-        input.value = newValue;
-        updateQuantity(productId, newValue);
+// Fetch working hours configuration to get dynamic limit
+async function fetchWorkingHoursConfig() {
+    try {
+        const response = await fetch('/core/api/working-hours-config/');
+        if (response.ok) {
+            const data = await response.json();
+            if (data.success) {
+                maxItems = data.max_selection_limit;
+                updateMaxItemsDisplay();
+                updateAllInputMaxValues();
+                console.log(`🔢 Max selection limit updated to: ${maxItems}`);
+            }
+        }
+    } catch (error) {
+        console.warn('⚠️ Could not fetch working hours config, using default limit:', error);
+        // Keep default value of 6
     }
 }
 
-// Update quantity from input
-function updateQuantity(productId, newValue) {
+// Update the display of max items
+function updateMaxItemsDisplay() {
+    const maxItemsDisplay = document.getElementById('max-items-display');
+    if (maxItemsDisplay) {
+        maxItemsDisplay.textContent = maxItems;
+    }
+}
+
+// Update all input max values
+function updateAllInputMaxValues() {
+    document.querySelectorAll('.qty-input-large').forEach(input => {
+        input.max = maxItems;
+    });
+}
+
+// Initialize when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    fetchWorkingHoursConfig().then(() => {
+        updateTotalItems();
+        updateOrderSummary();
+        updateButtonStates();
+    });
+});
+
+// Change quantity function
+function changeQuantity(productId, change) {
     const input = document.querySelector(`input[data-product-id="${productId}"]`);
-    const hiddenInput = document.querySelector(`input[name="quantity_${productId}"]`);
+    let currentValue = parseInt(input.value) || 0;
+    let newValue = currentValue + change;
     
-    // Validate input
-    let value = parseInt(newValue) || 0;
-    value = Math.max(0, Math.min(6, value));
+    // Check limits
+    if (newValue < 0) {
+        newValue = 0;
+    }
     
-    input.value = value;
-    hiddenInput.value = value;
+    // Check total items limit
+    const otherInputs = Array.from(document.querySelectorAll('.qty-input-large')).filter(i => i !== input);
+    const othersTotal = otherInputs.reduce((sum, i) => sum + (parseInt(i.value) || 0), 0);
+    
+    if (newValue + othersTotal > maxItems) {
+        showError(`حداکثر ${maxItems} محصول می‌توانید انتخاب کنید`);
+        return;
+    }
+    
+    input.value = newValue;
+    document.querySelector(`input[name="quantity_${productId}"]`).value = newValue;
+    
+    // Add animation
+    input.classList.add('updated');
+    setTimeout(() => input.classList.remove('updated'), 300);
+    
+    updateTotalItems();
+    updateOrderSummary();
+    updateButtonStates();
+}
+
+// Update quantity function
+function updateQuantity(productId, value) {
+    const input = document.querySelector(`input[data-product-id="${productId}"]`);
+    let newValue = parseInt(value) || 0;
+    
+    if (newValue < 0) {
+        newValue = 0;
+    }
+    
+    // Check total items limit
+    const otherInputs = Array.from(document.querySelectorAll('.qty-input-large')).filter(i => i !== input);
+    const othersTotal = otherInputs.reduce((sum, i) => sum + (parseInt(i.value) || 0), 0);
+    
+    if (newValue + othersTotal > maxItems) {
+        newValue = Math.max(0, maxItems - othersTotal);
+        showError(`حداکثر ${maxItems} محصول می‌توانید انتخاب کنید`);
+    }
+    
+    input.value = newValue;
+    document.querySelector(`input[name="quantity_${productId}"]`).value = newValue;
     
     // Add animation
     input.classList.add('updated');
@@ -428,7 +494,7 @@ function updateButtonStates() {
         if (btn.classList.contains('minus-btn')) {
             btn.disabled = currentValue <= 0;
         } else if (btn.classList.contains('plus-btn')) {
-            btn.disabled = currentValue >= 6 || totalItems >= maxItems;
+            btn.disabled = currentValue >= maxItems || totalItems >= maxItems;
         }
     });
 }

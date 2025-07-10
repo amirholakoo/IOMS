@@ -1,0 +1,82 @@
+# 🐳 Docker Ignore File برای HomayOMS v200
+# 📁 فایل‌ها و پوشه‌هایی که در Docker build نادیده گرفته می‌شوند
+
+# 🔧 فایل‌های توسعه
+.git
+.gitignore
+README.md
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# 🐍 Python
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+env
+pip-log.txt
+pip-delete-this-directory.txt
+.tox
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.log
+.git
+.mypy_cache
+.pytest_cache
+.hypothesis
+
+# 🏗️ Django
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+db_dev.sqlite3
+
+# 📦 Virtual Environment
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# 🔧 IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# 📁 Media and Static (will be created in container)
+media/
+staticfiles/
+
+# 📊 Logs
+logs/
+*.log
+
+# 🧪 Tests
+test_*.py
+*_test.py
+tests/
+
+# 📄 Documentation
+*.md
+docs/
+
+# 🔧 Configuration
+.env
+.env.local
+.env.production
+config.py
+
+# 📁 Temporary files
+*.tmp
+*.temp
+.DS_Store
+Thumbs.db 

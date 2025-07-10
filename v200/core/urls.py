@@ -68,6 +68,7 @@ urlpatterns = [
     # ⏰ مدیریت ساعات کاری - فقط Super Admin
     path('working-hours/', views.working_hours_management_view, name='working_hours_management'),
     path('api/set-working-hours/', views.set_working_hours_view, name='set_working_hours'),
+    path('api/working-hours-config/', views.get_working_hours_config_api, name='get_working_hours_config'),
     
     path('save-selected-products/', views.save_selected_products_view, name='save_selected_products'),
     path('selected-products/', views.selected_products_view, name='selected_products'),

@@ -348,6 +348,21 @@
                     </small>
                 </div>
                 
+                <!-- 🔢 حداکثر تعداد محصولات قابل انتخاب -->
+                <div class="form-group">
+                    <label class="form-label">🔢 حداکثر تعداد محصولات قابل انتخاب</label>
+                    <input type="number" 
+                           class="form-control" 
+                           id="maxSelectionLimit" 
+                           value="6"
+                           min="1"
+                           max="50"
+                           placeholder="6">
+                    <small class="form-text text-muted">
+                        حداکثر تعداد محصولاتی که مشتری می‌تواند در یک بار انتخاب کند (پیش‌فرض: 6)
+                    </small>
+                </div>
+                
                 <button type="submit" class="btn-set-hours">
                     ⏰ تنظیم ساعات کاری
                 </button>
@@ -409,6 +424,9 @@
                         {% else %}
                             <span class="status-badge status-open">🟢 باز</span>
                         {% endif %}
+                    </p>
+                    <p><strong>🔢 حداکثر انتخاب:</strong> 
+                        {{ current_working_hours.max_selection_limit }} محصول
                     </p>
                 </div>
             </div>
@@ -492,6 +510,7 @@
         const isThursdayOpen = document.getElementById('isThursdayOpen').checked;
         const isHoliday = document.getElementById('isHoliday').checked;
         const holidayHelpText = document.getElementById('holidayHelpText').value;
+        const maxSelectionLimit = document.getElementById('maxSelectionLimit').value;
         const loading = document.getElementById('loading');
         const alertContainer = document.getElementById('alertContainer');
         
@@ -512,7 +531,8 @@
                 description: description,
                 is_thursday_open: isThursdayOpen,
                 is_holiday: isHoliday,
-                holiday_help_text: holidayHelpText
+                holiday_help_text: holidayHelpText,
+                max_selection_limit: maxSelectionLimit
             })
         })
         .then(response => response.json())
