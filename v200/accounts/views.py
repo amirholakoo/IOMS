@@ -396,18 +396,36 @@ def terms_and_request_view(request):
     نمایش شرایط استفاده و ثبت درخواست مشتری جدید
     """
     phone = request.GET.get('phone') or request.session.get('registration_phone', '')
+    
+    # بررسی وجود مشتری با وضعیت Requested
+    if phone:
+        from core.models import Customer
+        requested_customer = Customer.objects.filter(phone=phone, status='Requested').first()
+        if requested_customer:
+            messages.warning(request, '⏳ درخواست شما قبلاً ثبت شده و در حال بررسی توسط مدیریت است. به محض تایید با شما تماس خواهیم گرفت.')
+            return redirect('accounts:customer_sms_login')
     if request.method == 'POST':
         # ثبت درخواست مشتری جدید با شماره موبایل
         from core.models import Customer
         if phone:
-            # اگر قبلاً درخواست داده نشده باشد
-            if not Customer.objects.filter(phone=phone, status='Requested').exists():
-                Customer.objects.create(
-                    customer_name=f'درخواست جدید ({phone})',
-                    phone=phone,
-                    status='Requested',
-                    comments='🟢 درخواست ثبت‌نام جدید از طریق فرم شرایط استفاده'
-                )
+            # بررسی وجود مشتری با وضعیت Requested
+            if Customer.objects.filter(phone=phone, status='Requested').exists():
+                messages.warning(request, '⏳ درخواست شما قبلاً ثبت شده و در حال بررسی توسط مدیریت است. به محض تایید با شما تماس خواهیم گرفت.')
+                return redirect('accounts:customer_sms_login')
+            
+            # بررسی وجود مشتری با وضعیت‌های دیگر
+            existing_customer = Customer.objects.filter(phone=phone).exclude(status='Requested').first()
+            if existing_customer:
+                messages.error(request, '❌ مشتری با این شماره تلفن قبلاً در سیستم ثبت شده است.')
+                return redirect('accounts:customer_sms_login')
+            
+            # ایجاد درخواست جدید
+            Customer.objects.create(
+                customer_name=f'درخواست جدید ({phone})',
+                phone=phone,
+                status='Requested',
+                comments='🟢 درخواست ثبت‌نام جدید از طریق فرم شرایط استفاده'
+            )
             messages.success(request, '✅ درخواست شما با موفقیت ثبت شد و پس از تایید مدیریت، ثبت‌نام تکمیل خواهد شد.')
             return redirect('accounts:customer_sms_login')
         else:
@@ -503,9 +521,18 @@ def customer_sms_login_view(request):
             return redirect('accounts:customer_sms_verify')
             
         except User.DoesNotExist:
-            # به جای پیام خطا، هدایت به صفحه شرایط استفاده
-            request.session['registration_phone'] = phone
-            return redirect(f"{reverse('accounts:terms_and_request')}?phone={phone}")
+            # بررسی وجود مشتری با وضعیت Requested
+            from core.models import Customer
+            requested_customer = Customer.objects.filter(phone=phone, status='Requested').first()
+            
+            if requested_customer:
+                # اگر مشتری با وضعیت Requested وجود دارد، پیام مناسب نمایش دهید
+                messages.warning(request, '⏳ صبور باشید، درخواست شما در حال بررسی توسط مدیریت است. به محض تایید با شما تماس خواهیم گرفت.')
+                return render(request, 'accounts/customer_sms_login.html')
+            else:
+                # به جای پیام خطا، هدایت به صفحه شرایط استفاده
+                request.session['registration_phone'] = phone
+                return redirect(f"{reverse('accounts:terms_and_request')}?phone={phone}")
         
         except Exception as e:
             print(f"❌ DEBUG: Exception occurred: {e}")

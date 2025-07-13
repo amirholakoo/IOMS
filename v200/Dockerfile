@@ -44,8 +44,8 @@ RUN adduser --disabled-password --gecos '' django && \
     chown -R django:django /app
 USER django
 
-# 🔧 جمع‌آوری فایل‌های استاتیک
-RUN python manage.py collectstatic --noinput --settings=HomayOMS.settings.production
+# 🔧 جمع‌آوری فایل‌های استاتیک (moved to entrypoint script)
+# RUN python manage.py collectstatic --noinput --settings=HomayOMS.settings.production
 
 # 🌐 Expose پورت
 EXPOSE 8000

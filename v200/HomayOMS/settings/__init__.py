@@ -11,7 +11,12 @@ import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 
 # 📥 واردات نوع سرور از فایل پیکربندی
-from config import SERVER_TYPE
+try:
+    from config import SERVER_TYPE
+except ImportError:
+    # Fallback for Docker environment
+    import os
+    SERVER_TYPE = os.environ.get('TYPE', 'production')
 
 # 🔀 انتخاب تنظیمات مناسب بر اساس نوع محیط
 if SERVER_TYPE == 'production':

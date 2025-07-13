@@ -14,7 +14,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
-      - "5432:5432"
+      - "5433:5432"
     networks:
       - homayoms_v200_network
     healthcheck:
@@ -35,7 +35,7 @@ services:
     volumes:
       - pgadmin_data:/var/lib/pgadmin
     ports:
-      - "5050:80"
+      - "5051:80"
     networks:
       - homayoms_v200_network
     depends_on:
@@ -49,7 +49,7 @@ services:
     environment:
       # 🔐 تنظیمات امنیتی
       SECRET_KEY: your-super-secret-key-change-this-in-production
-      DEBUG: 'False'
+      DEBUG: 'True'
       ALLOWED_HOSTS: localhost,127.0.0.1,0.0.0.0
       
       # 🗄️ تنظیمات پایگاه داده
@@ -61,7 +61,7 @@ services:
       DATABASE_URL: postgresql://homayoms_user:homayoms_password@db:5432/homayoms_v200_db
       
       # 🌐 تنظیمات CORS
-      CORS_ALLOWED_ORIGINS: http://localhost:8000,http://127.0.0.1:8000
+      CORS_ALLOWED_ORIGINS: http://localhost:9001,http://127.0.0.1:9001
       
       # 📧 تنظیمات ایمیل (اختیاری)
       EMAIL_HOST: smtp.gmail.com
@@ -81,13 +81,14 @@ services:
       MEDIA_ROOT: /app/media
       
       # 🔧 تنظیمات Django
-      DJANGO_SETTINGS_MODULE: HomayOMS.settings.production
+      DJANGO_SETTINGS_MODULE: HomayOMS.settings.dev
+      TYPE: dev
       
     volumes:
       - static_volume:/app/staticfiles
       - media_volume:/app/media
     ports:
-      - "8000:8000"
+      - "9001:8000"
     networks:
       - homayoms_v200_network
     depends_on:

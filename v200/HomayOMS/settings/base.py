@@ -12,11 +12,26 @@ import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 
 # 📥 واردات متغیرهای پیکربندی از config.py
-from config import (
-    SECRET_KEY, DEBUG, ALLOWED_HOSTS, 
-    STATIC_URL, STATIC_ROOT, STATICFILES_DIRS,
-    MEDIA_URL, MEDIA_ROOT, CORS_ALLOWED_ORIGINS
-)
+try:
+    from config import (
+        SECRET_KEY, DEBUG, ALLOWED_HOSTS, 
+        STATIC_URL, STATIC_ROOT, STATICFILES_DIRS,
+        MEDIA_URL, MEDIA_ROOT, CORS_ALLOWED_ORIGINS
+    )
+except ImportError:
+    # Fallback for Docker environment
+    import os
+    from decouple import config, Csv
+    
+    SECRET_KEY = config('SECRET_KEY', default='django-insecure-change-this-key')
+    DEBUG = config('DEBUG', default=False, cast=bool)
+    ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1,0.0.0.0', cast=Csv())
+    STATIC_URL = '/static/'
+    STATIC_ROOT = '/app/staticfiles'
+    STATICFILES_DIRS = ['/app/static']
+    MEDIA_URL = '/media/'
+    MEDIA_ROOT = '/app/media'
+    CORS_ALLOWED_ORIGINS = config('CORS_ALLOWED_ORIGINS', default='http://localhost:9001,http://127.0.0.1:9001', cast=Csv())
 
 # 📁 مسیر اصلی پروژه
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
