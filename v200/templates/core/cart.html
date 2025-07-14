@@ -212,8 +212,6 @@
                                                     onchange="updatePaymentMethod('{{ item.cart_key }}', this.value)">
                                                 <option value="Cash" {% if item.payment_method == 'Cash' %}selected{% endif %}>💵 نقدی</option>
                                                 <option value="Terms" {% if item.payment_method == 'Terms' %}selected{% endif %}>📅 قسطی</option>
-                                                <option value="Bank_Transfer" {% if item.payment_method == 'Bank_Transfer' %}selected{% endif %}>🏦 حواله بانکی</option>
-                                                <option value="Check" {% if item.payment_method == 'Check' %}selected{% endif %}>📝 چک</option>
                                             </select>
                                         </div>
                                         <div class="price-tag">

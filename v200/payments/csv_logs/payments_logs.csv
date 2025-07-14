@@ -1,45 +1,5 @@
 payment_id,order_id,order_number,log_line
-32,38,ORD-20250708-VZA9,"[2025-07-08 09:32:03] LOG_ERROR: save() prohibited to prevent data loss due to unsaved related object 'content_object'. - SAVE: پرداخت PAY1751967123bc470188 ذخیره شد - وضعیت: 🟡 آغاز شده
-[2025-07-08 09:32:03] SAVE: پرداخت PAY1751967123bc470188 ذخیره شد - وضعیت: 🟡 آغاز شده
-[2025-07-08 09:32:03] SAVE: پرداخت PAY1751967123bc470188 ذخیره شد - وضعیت: 🔄 هدایت شده
-[2025-07-08 09:32:05] SAVE: پرداخت PAY1751967123bc470188 ذخیره شد - وضعیت: ❌ ناموفق"
-33,40,ORD-20250708-Q8H5,"[2025-07-08 10:42:06] LOG_ERROR: save() prohibited to prevent data loss due to unsaved related object 'content_object'. - SAVE: پرداخت PAY1751971326ca38b511 ذخیره شد - وضعیت: 🟡 آغاز شده
-[2025-07-08 10:42:06] SAVE: پرداخت PAY1751971326ca38b511 ذخیره شد - وضعیت: 🟡 آغاز شده
-[2025-07-08 10:42:06] SAVE: پرداخت PAY1751971326ca38b511 ذخیره شد - وضعیت: 🔄 هدایت شده
-[2025-07-08 10:42:08] SAVE: پرداخت PAY1751971326ca38b511 ذخیره شد - وضعیت: ❌ ناموفق"
-34,42,ORD-20250708-PFYY,"[2025-07-08 10:48:58] LOG_ERROR: save() prohibited to prevent data loss due to unsaved related object 'content_object'. - SAVE: پرداخت PAY17519717383fe423f9 ذخیره شد - وضعیت: 🟡 آغاز شده
-[2025-07-08 10:48:58] SAVE: پرداخت PAY17519717383fe423f9 ذخیره شد - وضعیت: 🟡 آغاز شده
-[2025-07-08 10:48:58] SAVE: پرداخت PAY17519717383fe423f9 ذخیره شد - وضعیت: 🔄 هدایت شده
-[2025-07-08 10:49:00] SAVE: پرداخت PAY17519717383fe423f9 ذخیره شد - وضعیت: ✅ موفق"
-35,43,ORD-20250708-LN03,"[2025-07-08 11:30:42] LOG_ERROR: save() prohibited to prevent data loss due to unsaved related object 'content_object'. - SAVE: پرداخت PAY175197424200d84d06 ذخیره شد - وضعیت: 🟡 آغاز شده
-[2025-07-08 11:30:42] SAVE: پرداخت PAY175197424200d84d06 ذخیره شد - وضعیت: 🟡 آغاز شده
-[2025-07-08 11:30:42] SAVE: پرداخت PAY175197424200d84d06 ذخیره شد - وضعیت: 🔄 هدایت شده
-[2025-07-08 11:30:45] SAVE: پرداخت PAY175197424200d84d06 ذخیره شد - وضعیت: ✅ موفق"
-36,44,ORD-20250708-S1XA,"[2025-07-08 12:50:02] LOG_ERROR: save() prohibited to prevent data loss due to unsaved related object 'content_object'. - SAVE: پرداخت PAY17519790024e3f975c ذخیره شد - وضعیت: 🟡 آغاز شده
-[2025-07-08 12:50:02] SAVE: پرداخت PAY17519790024e3f975c ذخیره شد - وضعیت: 🟡 آغاز شده
-[2025-07-08 12:50:02] SAVE: پرداخت PAY17519790024e3f975c ذخیره شد - وضعیت: 🔄 هدایت شده
-[2025-07-08 12:50:04] SAVE: پرداخت PAY17519790024e3f975c ذخیره شد - وضعیت: ✅ موفق"
-37,46,ORD-20250710-NRX8,"[2025-07-10 12:10:38] LOG_ERROR: save() prohibited to prevent data loss due to unsaved related object 'content_object'. - SAVE: پرداخت PAY175214943825c63153 ذخیره شد - وضعیت: 🟡 آغاز شده
-[2025-07-10 12:10:38] SAVE: پرداخت PAY175214943825c63153 ذخیره شد - وضعیت: 🟡 آغاز شده
-[2025-07-10 12:10:38] SAVE: پرداخت PAY175214943825c63153 ذخیره شد - وضعیت: 🔄 هدایت شده
-[2025-07-10 12:10:39] SAVE: پرداخت PAY175214943825c63153 ذخیره شد - وضعیت: ✅ موفق"
-39,48,ORD-20250710-HGVZ,"[2025-07-10 12:34:48] LOG_ERROR: save() prohibited to prevent data loss due to unsaved related object 'content_object'. - SAVE: پرداخت PAY175215088827f6f9a8 ذخیره شد - وضعیت: 🟡 آغاز شده
-[2025-07-10 12:34:48] SAVE: پرداخت PAY175215088827f6f9a8 ذخیره شد - وضعیت: 🟡 آغاز شده
-[2025-07-10 12:34:48] SAVE: پرداخت PAY175215088827f6f9a8 ذخیره شد - وضعیت: 🔄 هدایت شده
-[2025-07-10 12:34:56] SAVE: پرداخت PAY175215088827f6f9a8 ذخیره شد - وضعیت: ✅ موفق"
-40,49,ORD-20250710-51PX,"[2025-07-10 12:37:41] LOG_ERROR: save() prohibited to prevent data loss due to unsaved related object 'content_object'. - SAVE: پرداخت PAY1752151061687f5d02 ذخیره شد - وضعیت: 🟡 آغاز شده
-[2025-07-10 12:37:41] SAVE: پرداخت PAY1752151061687f5d02 ذخیره شد - وضعیت: 🟡 آغاز شده
-[2025-07-10 12:37:41] SAVE: پرداخت PAY1752151061687f5d02 ذخیره شد - وضعیت: 🔄 هدایت شده
-[2025-07-10 12:37:50] SAVE: پرداخت PAY1752151061687f5d02 ذخیره شد - وضعیت: ❌ ناموفق"
-41,50,ORD-20250710-P6BT,"[2025-07-10 13:01:05] LOG_ERROR: save() prohibited to prevent data loss due to unsaved related object 'content_object'. - SAVE: پرداخت PAY1752152465066401cb ذخیره شد - وضعیت: 🟡 آغاز شده
-[2025-07-10 13:01:05] SAVE: پرداخت PAY1752152465066401cb ذخیره شد - وضعیت: 🟡 آغاز شده
-[2025-07-10 13:01:05] SAVE: پرداخت PAY1752152465066401cb ذخیره شد - وضعیت: 🔄 هدایت شده
-[2025-07-10 13:01:07] SAVE: پرداخت PAY1752152465066401cb ذخیره شد - وضعیت: ✅ موفق"
-42,51,ORD-20250710-74UO,"[2025-07-10 14:03:44] LOG_ERROR: save() prohibited to prevent data loss due to unsaved related object 'content_object'. - SAVE: پرداخت PAY17521562247abe96ad ذخیره شد - وضعیت: 🟡 آغاز شده
-[2025-07-10 14:03:44] SAVE: پرداخت PAY17521562247abe96ad ذخیره شد - وضعیت: 🟡 آغاز شده
-[2025-07-10 14:03:44] SAVE: پرداخت PAY17521562247abe96ad ذخیره شد - وضعیت: 🔄 هدایت شده
-[2025-07-10 14:03:47] SAVE: پرداخت PAY17521562247abe96ad ذخیره شد - وضعیت: ✅ موفق"
-43,52,ORD-20250710-0ZYY,"[2025-07-10 14:16:39] LOG_ERROR: save() prohibited to prevent data loss due to unsaved related object 'content_object'. - SAVE: پرداخت PAY17521569995319f00e ذخیره شد - وضعیت: 🟡 آغاز شده
-[2025-07-10 14:16:39] SAVE: پرداخت PAY17521569995319f00e ذخیره شد - وضعیت: 🟡 آغاز شده
-[2025-07-10 14:16:39] SAVE: پرداخت PAY17521569995319f00e ذخیره شد - وضعیت: 🔄 هدایت شده
-[2025-07-10 14:16:41] SAVE: پرداخت PAY17521569995319f00e ذخیره شد - وضعیت: ✅ موفق"
+44,56,ORD-20250714-L9JH,"[2025-07-14 11:23:43] LOG_ERROR: save() prohibited to prevent data loss due to unsaved related object 'content_object'. - SAVE: پرداخت PAY17524922234fdda38b ذخیره شد - وضعیت: 🟡 آغاز شده
+[2025-07-14 11:23:43] SAVE: پرداخت PAY17524922234fdda38b ذخیره شد - وضعیت: 🟡 آغاز شده
+[2025-07-14 11:23:43] SAVE: پرداخت PAY17524922234fdda38b ذخیره شد - وضعیت: 🔄 هدایت شده
+[2025-07-14 11:23:53] SAVE: پرداخت PAY17524922234fdda38b ذخیره شد - وضعیت: ✅ موفق"

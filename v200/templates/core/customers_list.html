@@ -187,16 +187,6 @@
         <div class="col-md-8">
             <h5>📊 نتایج: {{ page_obj.paginator.count }} مشتری یافت شد</h5>
         </div>
-        <div class="col-md-4 text-end">
-            <div class="btn-group">
-                <button class="btn btn-outline-primary" onclick="exportCustomers()">
-                    📤 خروجی Excel
-                </button>
-                <button class="btn btn-outline-success" onclick="sendBulkSMS()">
-                    📱 پیامک گروهی
-                </button>
-            </div>
-        </div>
     </div>
 
     <!-- Customers List -->
@@ -239,7 +229,9 @@
                                         <ul class="dropdown-menu">
                                             <li><a class="dropdown-item" href="#" onclick="openViewCustomerModal({{ customer.id }})">👁️ مشاهده</a></li>
                                             <li><a class="dropdown-item" href="#" onclick="openEditCustomerModal({{ customer.id }})">✏️ ویرایش</a></li>
-                                            <li><a class="dropdown-item" href="{% url 'core:orders_list' %}?customer_id={{ customer.id }}">🛒 سفارشات</a></li>
+                                            {% if customer.status != 'Requested' %}
+                                                <li><a class="dropdown-item" href="{% url 'core:orders_list' %}?customer_id={{ customer.id }}">🛒 سفارشات</a></li>
+                                            {% endif %}
                                             <li><hr class="dropdown-divider"></li>
                                             <li><a class="dropdown-item text-danger" href="#" onclick="openDeleteCustomerModal({{ customer.id }}, '{{ customer.customer_name|escapejs }}')">🗑️ حذف</a></li>
                                         </ul>

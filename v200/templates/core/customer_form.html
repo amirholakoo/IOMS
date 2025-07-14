@@ -16,13 +16,21 @@
                     </div>
                 {% endif %}
                 {% for field in form.visible_fields %}
-                    <div class="mb-3">
-                        <label class="form-label">{{ field.label }}</label>
-                        {{ field }}
-                        {% if field.errors %}
-                            <div class="text-danger small">{{ field.errors|striptags }}</div>
-                        {% endif %}
-                    </div>
+                    {% if field.name == 'status' and request.user.is_super_admin and is_create %}
+                        <input type="hidden" name="status" value="Active">
+                        <div class="mb-3">
+                            <label class="form-label">وضعیت</label>
+                            <input type="text" class="form-control" value="فعال" disabled>
+                        </div>
+                    {% elif field.name != 'status' or not request.user.is_super_admin or not is_create %}
+                        <div class="mb-3">
+                            <label class="form-label">{{ field.label }}</label>
+                            {{ field }}
+                            {% if field.errors %}
+                                <div class="text-danger small">{{ field.errors|striptags }}</div>
+                            {% endif %}
+                        </div>
+                    {% endif %}
                 {% endfor %}
                 <button type="submit" class="btn btn-success">{% if is_create %}ایجاد مشتری{% else %}ذخیره تغییرات{% endif %}</button>
                 <a href="{% url 'core:customers_list' %}" class="btn btn-secondary">بازگشت</a>

@@ -5,6 +5,90 @@
 📊 داشبورد - HomayOMS
 {% endblock %}
 
+{% block extra_css %}
+<style>
+    .feature-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white !important;
+        border-radius: 15px;
+        padding: 20px;
+        margin-bottom: 20px;
+        text-decoration: none;
+        display: block;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.2);
+    }
+    
+    .feature-card:hover {
+        color: white !important;
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        text-decoration: none;
+    }
+    
+    .feature-card h5 {
+        color: white !important;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+    
+    .feature-card p {
+        color: rgba(255, 255, 255, 0.9) !important;
+        margin-bottom: 0;
+    }
+    
+    .sidebar {
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        padding: 20px;
+        height: fit-content;
+    }
+    
+    .role-badge {
+        font-size: 0.9rem;
+        padding: 8px 15px;
+        border-radius: 20px;
+        font-weight: 600;
+    }
+    
+    .card {
+        border: none;
+        border-radius: 15px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+    }
+    
+    .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    }
+    
+    .stat-card {
+        background: linear-gradient(135deg, #3498db, #2980b9);
+        color: white;
+        padding: 1.5rem;
+        border-radius: 15px;
+        margin-bottom: 1rem;
+        text-align: center;
+        box-shadow: 0 4px 15px rgba(52, 152, 219, 0.2);
+    }
+    
+    .stat-card h3 {
+        color: white !important;
+        font-size: 2rem;
+        font-weight: bold;
+        margin-bottom: 0.5rem;
+    }
+    
+    .stat-card p {
+        color: rgba(255, 255, 255, 0.9) !important;
+        margin-bottom: 0;
+        font-size: 0.9rem;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
     <!-- Navigation -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
@@ -126,12 +210,6 @@
 
                                          {% if user.is_finance or user.is_super_admin %}
                          <div class="col-md-6 mb-3">
-                             <a href="{% url 'core:finance_dashboard' %}" class="feature-card">
-                                 <h5>💰 داشبورد مالی</h5>
-                                 <p class="mb-0">مدیریت امور مالی</p>
-                             </a>
-                         </div>
-                         <div class="col-md-6 mb-3">
                              <a href="{% url 'core:finance_overview' %}" class="feature-card">
                                  <h5>📊 گزارش‌های مالی</h5>
                                  <p class="mb-0">مشاهده گزارش‌های مالی</p>
@@ -141,13 +219,13 @@
 
                      {% if user.is_customer %}
                          <div class="col-md-6 mb-3">
-                             <a href="#" class="feature-card">
+                             <a href="{% url 'core:customer_orders' %}" class="feature-card">
                                  <h5>📋 سفارشات من</h5>
                                  <p class="mb-0">مشاهده و پیگیری سفارشات</p>
                              </a>
                          </div>
                          <div class="col-md-6 mb-3">
-                             <a href="#" class="feature-card">
+                             <a href="{% url 'core:products_landing' %}" class="feature-card">
                                  <h5>🛒 ثبت سفارش جدید</h5>
                                  <p class="mb-0">انتخاب و سفارش محصولات</p>
                              </a>
@@ -159,7 +237,7 @@
                              </a>
                          </div>
                          <div class="col-md-6 mb-3">
-                             <a href="#" class="feature-card">
+                             <a href="{% url 'accounts:customer_dashboard' %}" class="feature-card">
                                  <h5>📞 پشتیبانی</h5>
                                  <p class="mb-0">درخواست کمک و راهنمایی</p>
                              </a>

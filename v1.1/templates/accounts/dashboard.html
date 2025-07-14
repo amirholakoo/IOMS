@@ -125,12 +125,7 @@
                     {% endif %}
 
                                          {% if user.is_finance or user.is_super_admin %}
-                         <div class="col-md-6 mb-3">
-                             <a href="{% url 'core:finance_dashboard' %}" class="feature-card">
-                                 <h5>💰 داشبورد مالی</h5>
-                                 <p class="mb-0">مدیریت امور مالی</p>
-                             </a>
-                         </div>
+                
                          <div class="col-md-6 mb-3">
                              <a href="{% url 'core:finance_overview' %}" class="feature-card">
                                  <h5>📊 گزارش‌های مالی</h5>

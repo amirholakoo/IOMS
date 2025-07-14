@@ -243,7 +243,8 @@ def customer_registration_view(request):
 @login_required
 def customer_dashboard_view(request):
     """🔵 داشبورد مخصوص مشتریان"""
-    if not request.user.is_customer():
+    # Super Admin می‌تواند به تمام بخش‌ها دسترسی داشته باشد
+    if not request.user.is_customer() and not request.user.is_super_admin():
         messages.error(request, '❌ شما دسترسی به این بخش را ندارید')
         return redirect('accounts:dashboard')
     
@@ -285,13 +286,105 @@ def dashboard_view(request):
 
 @login_required
 def profile_view(request):
-    """👤 نمایش پروفایل کاربر"""
-    return render(request, 'accounts/profile.html')
+    """👤 نمایش و ویرایش پروفایل کاربر"""
+    if request.method == 'POST':
+        # دریافت داده‌های فرم
+        first_name = request.POST.get('first_name', '').strip()
+        last_name = request.POST.get('last_name', '').strip()
+        email = request.POST.get('email', '').strip()
+        
+        # اعتبارسنجی داده‌ها
+        errors = []
+        if not first_name:
+            errors.append('نام نمی‌تواند خالی باشد')
+        if not last_name:
+            errors.append('نام خانوادگی نمی‌تواند خالی باشد')
+        if email and '@' not in email:
+            errors.append('ایمیل وارد شده معتبر نیست')
+        
+        if errors:
+            for error in errors:
+                messages.error(request, f'❌ {error}')
+        else:
+            try:
+                # بروزرسانی اطلاعات کاربر
+                user = request.user
+                user.first_name = first_name
+                user.last_name = last_name
+                user.email = email
+                user.save()
+                
+                messages.success(request, '✅ اطلاعات پروفایل با موفقیت بروزرسانی شد')
+                
+                # ثبت فعالیت
+                ActivityLog.log_activity(
+                    user=user,
+                    action='profile_updated',
+                    description=f'پروفایل کاربر {user.username} بروزرسانی شد',
+                    ip_address=request.META.get('REMOTE_ADDR', ''),
+                    user_agent=request.META.get('HTTP_USER_AGENT', '')
+                )
+                
+                return redirect('accounts:profile')
+                
+            except Exception as e:
+                messages.error(request, f'❌ خطا در بروزرسانی اطلاعات: {str(e)}')
+    
+    context = {
+        'user': request.user,
+    }
+    return render(request, 'accounts/profile.html', context)
 
 
 @login_required
 def change_password_view(request):
     """🔐 تغییر رمز عبور"""
+    if request.method == 'POST':
+        old_password = request.POST.get('old_password')
+        new_password1 = request.POST.get('new_password1')
+        new_password2 = request.POST.get('new_password2')
+        
+        # اعتبارسنجی رمز عبور فعلی
+        if not request.user.check_password(old_password):
+            messages.error(request, '❌ رمز عبور فعلی اشتباه است')
+            return render(request, 'accounts/change_password.html')
+        
+        # بررسی تطابق رمزهای عبور جدید
+        if new_password1 != new_password2:
+            messages.error(request, '❌ رمزهای عبور جدید مطابقت ندارند')
+            return render(request, 'accounts/change_password.html')
+        
+        # بررسی طول رمز عبور
+        if len(new_password1) < 8:
+            messages.error(request, '❌ رمز عبور جدید باید حداقل 8 کاراکتر باشد')
+            return render(request, 'accounts/change_password.html')
+        
+        try:
+            # تغییر رمز عبور
+            user = request.user
+            user.set_password(new_password1)
+            user.save()
+            
+            # بروزرسانی نشست کاربر
+            from django.contrib.auth import update_session_auth_hash
+            update_session_auth_hash(request, user)
+            
+            messages.success(request, '✅ رمز عبور با موفقیت تغییر یافت')
+            
+            # ثبت فعالیت
+            ActivityLog.log_activity(
+                user=user,
+                action='password_changed',
+                description=f'رمز عبور کاربر {user.username} تغییر یافت',
+                ip_address=request.META.get('REMOTE_ADDR', ''),
+                user_agent=request.META.get('HTTP_USER_AGENT', '')
+            )
+            
+            return redirect('accounts:change_password')
+            
+        except Exception as e:
+            messages.error(request, f'❌ خطا در تغییر رمز عبور: {str(e)}')
+    
     return render(request, 'accounts/change_password.html')
 
 

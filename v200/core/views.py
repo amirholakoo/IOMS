@@ -179,7 +179,56 @@ def inventory_list_view(request):
         severity='LOW'
     )
     
-    context = {'title': '📦 مدیریت موجودی'}
+    # 📊 محاسبه آمار کلی موجودی
+    total_products = Product.objects.count()
+    in_stock_count = Product.objects.filter(status='In-stock').count()
+    sold_count = Product.objects.filter(status='Sold').count()
+    pre_order_count = Product.objects.filter(status='Pre-order').count()
+    
+    # محاسبه درصد ظرفیت انبار (بر اساس محصولات موجود)
+    warehouse_capacity_percentage = round((in_stock_count / max(total_products, 1)) * 100)
+    
+    # تعداد انبارها
+    warehouses_count = len(Product.LOCATION_CHOICES)
+    
+    # آمار بر اساس مکان انبار
+    location_stats = {}
+    for location_code, location_name in Product.LOCATION_CHOICES:
+        location_products = Product.objects.filter(location=location_code)
+        location_in_stock = location_products.filter(status='In-stock').count()
+        location_total = location_products.count()
+        location_sold = location_products.filter(status='Sold').count()
+        location_pre_order = location_products.filter(status='Pre-order').count()
+        
+        # فقط انبارهایی که حداقل یک محصول دارند را نمایش بده
+        if location_total > 0:
+            location_stats[location_code] = {
+                'name': location_name,
+                'total': location_total,
+                'in_stock': location_in_stock,
+                'sold': location_sold,
+                'pre_order': location_pre_order,
+                'capacity_percentage': round((location_in_stock / max(location_total, 1)) * 100),
+                'products': location_products.order_by('-created_at')[:4]  # آخرین 4 محصول برای نمایش
+            }
+    
+    # آمار کلی
+    inventory_stats = {
+        'total_products': total_products,
+        'in_stock_count': in_stock_count,
+        'sold_count': sold_count,
+        'pre_order_count': pre_order_count,
+        'warehouse_capacity_percentage': warehouse_capacity_percentage,
+        'warehouses_count': warehouses_count,
+        'low_stock_count': 0,  # می‌توانید منطق کم موجودی را اضافه کنید
+        'out_of_stock_count': 0,  # می‌توانید منطق ناموجودی را اضافه کنید
+        'location_stats': location_stats,
+    }
+    
+    context = {
+        'title': '📦 مدیریت موجودی',
+        'inventory_stats': inventory_stats,
+    }
     return render(request, 'core/inventory_list.html', context)
 
 
@@ -210,7 +259,16 @@ def orders_list_view(request):
             Q(customer__customer_name__icontains=user_name)
         )
         logger.info(f"[DEBUG] orders_list_view: customer, user_phone={user_phone}, user_name={user_name}")
-    
+
+    # --- Add this block for customer_id filtering ---
+    customer_id = request.GET.get('customer_id')
+    if customer_id:
+        try:
+            orders = orders.filter(customer_id=int(customer_id))
+        except ValueError:
+            pass
+    # --- End block ---
+
     # دریافت پارامترهای فیلتر از URL
     search_query = request.GET.get('search', '').strip()
     status_filter = request.GET.get('status', '').strip()
@@ -349,6 +407,8 @@ def create_customer_view(request):
         form = CustomerForm(request.POST)
         if form.is_valid():
             customer = form.save(commit=False)
+            if request.user.is_super_admin():
+                customer.status = 'Active'
             customer.save()
             
             # 📜 ثبت لاگ ایجاد مشتری
@@ -633,11 +693,19 @@ def products_list_view(request):
     
     # 🔍 اعمال فیلترها
     if search_query:
-        products = products.filter(
+        # جستجو در فیلدهای متنی
+        search_filters = (
             Q(reel_number__icontains=search_query) |
             Q(grade__icontains=search_query) |
             Q(qr_code__icontains=search_query)
         )
+        
+        # جستجو در فیلد عرض (width) اگر ورودی عددی باشد
+        if search_query.isdigit():
+            width_value = int(search_query)
+            search_filters |= Q(width=width_value)
+        
+        products = products.filter(search_filters)
     
     if location_filter:
         products = products.filter(location=location_filter)
@@ -2022,7 +2090,7 @@ def create_order_for_customer_view(request, customer_id):
 class ProductForm(ModelForm):
     class Meta:
         model = Product
-        fields = ['reel_number', 'location', 'status', 'width', 'gsm', 'length', 'grade', 'breaks', 'qr_code', 'price']
+        fields = ['reel_number', 'location', 'width', 'gsm', 'length', 'grade', 'breaks', 'qr_code', 'price']
 
 @login_required
 @super_admin_permission_required('manage_inventory')

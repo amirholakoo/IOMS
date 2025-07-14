@@ -163,14 +163,6 @@
         text-decoration: none;
     }
     
-    .filters-section {
-        background: white;
-        border-radius: 15px;
-        padding: 1.5rem;
-        margin-bottom: 2rem;
-        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
-    }
-    
     .action-btn-strong {
         font-weight: bold;
         font-size: 1.1rem;
@@ -229,37 +221,37 @@
         <div class="row">
             <div class="col-md-2">
                 <div class="stat-box stat-primary">
-                    <h3>245</h3>
+                    <h3>{{ inventory_stats.total_products }}</h3>
                     <small>📦 کل اقلام</small>
                 </div>
             </div>
             <div class="col-md-2">
                 <div class="stat-box stat-success">
-                    <h3>198</h3>
+                    <h3>{{ inventory_stats.in_stock_count }}</h3>
                     <small>✅ موجود</small>
                 </div>
             </div>
             <div class="col-md-2">
                 <div class="stat-box stat-warning">
-                    <h3>32</h3>
-                    <small>⚠️ کم موجود</small>
+                    <h3>{{ inventory_stats.sold_count }}</h3>
+                    <small>💰 فروخته شده</small>
                 </div>
             </div>
             <div class="col-md-2">
                 <div class="stat-box stat-danger">
-                    <h3>15</h3>
-                    <small>❌ ناموجود</small>
+                    <h3>{{ inventory_stats.pre_order_count }}</h3>
+                    <small>⏳ پیش‌سفارش</small>
                 </div>
             </div>
             <div class="col-md-2">
                 <div class="stat-box stat-info">
-                    <h3>85%</h3>
+                    <h3>{{ inventory_stats.warehouse_capacity_percentage }}%</h3>
                     <small>📈 ظرفیت انبار</small>
                 </div>
             </div>
             <div class="col-md-2">
                 <div class="stat-box stat-primary">
-                    <h3>7</h3>
+                    <h3>{{ inventory_stats.warehouses_count }}</h3>
                     <small>🏢 انبارها</small>
                 </div>
             </div>
@@ -287,59 +279,37 @@
         </div>
     </div>
 
-    <!-- Filters -->
-    <div class="filters-section">
-        <form method="GET" class="row g-3">
-            <div class="col-md-4">
-                <label class="form-label">🔍 جستجو محصول</label>
-                <input type="text" name="search" class="form-control" placeholder="شماره ریل، نام محصول...">
-            </div>
-            <div class="col-md-3">
-                <label class="form-label">📍 انبار</label>
-                <select name="warehouse" class="form-select">
-                    <option value="">همه انبارها</option>
-                    <option value="Anbar_Akhal">📍 انبار آخال</option>
-                    <option value="Anbar_Muhvateh_Kordan">📍 انبار محوطه کردان</option>
-                    <option value="Anbar_Khamir_Kordan">📍 انبار کردان</option>
-                    <option value="Anbar_Khamir_Ghadim">📍 انبار خمیر قدیم</option>
-                    <option value="Anbar_Koochak">📍 انبار کوچک</option>
-                    <option value="Anbar_Salon_Tolid">📍 انبار سالن تولید</option>
-                    <option value="Anbar_Sangin">📍 انبار سنگین</option>
-                </select>
-            </div>
-            <div class="col-md-3">
-                <label class="form-label">📊 وضعیت موجودی</label>
-                <select name="status" class="form-select">
-                    <option value="">همه وضعیت‌ها</option>
-                    <option value="available">✅ موجود</option>
-                    <option value="low">⚠️ کم موجود</option>
-                    <option value="out">❌ ناموجود</option>
-                </select>
-            </div>
-            <div class="col-md-2">
-                <label class="form-label">&nbsp;</label>
-                <div class="d-grid">
-                    <button type="submit" class="btn btn-primary">🔍 جستجو</button>
-                </div>
-            </div>
-        </form>
-    </div>
+
 
     <!-- Warehouses Overview -->
     <div class="warehouse-section">
         <h4 class="mb-4">🏢 نمای کلی انبارها</h4>
         
-        <!-- Warehouse 1: انبار آخال -->
+        <!-- Dynamic Warehouse Cards -->
+        {% for location_code, location_data in inventory_stats.location_stats.items %}
         <div class="warehouse-card">
             <div class="warehouse-header">
                 <div>
-                    <div class="warehouse-name">📍 انبار آخال</div>
-                    <small class="text-muted">انبار اصلی محصولات</small>
+                    <div class="warehouse-name">{{ location_data.name }}</div>
+                    <small class="text-muted">
+                        {% if location_code == 'Anbar_Akhal' %}انبار اصلی محصولات
+                        {% elif location_code == 'Anbar_Muhvateh_Kordan' %}انبار فرعی محوطه
+                        {% elif location_code == 'Anbar_Khamir_Kordan' %}انبار کردان
+                        {% elif location_code == 'Anbar_Khamir_Ghadim' %}انبار خمیر قدیم
+                        {% elif location_code == 'Anbar_Koochak' %}انبار کوچک
+                        {% elif location_code == 'Anbar_Salon_Tolid' %}انبار سالن تولید
+                        {% elif location_code == 'Anbar_Sangin' %}انبار سنگین
+                        {% else %}انبار محصولات{% endif %}
+                    </small>
                 </div>
                 <div class="text-end">
-                    <span class="badge bg-success">✅ فعال</span>
+                    {% if location_data.total > 0 %}
+                        <span class="badge bg-success">✅ فعال</span>
+                    {% else %}
+                        <span class="badge bg-secondary">⏸️ خالی</span>
+                    {% endif %}
                     <div class="mt-1">
-                        <small class="text-muted">ظرفیت: 85%</small>
+                        <small class="text-muted">ظرفیت: {{ location_data.capacity_percentage }}%</small>
                     </div>
                 </div>
             </div>
@@ -347,135 +317,68 @@
             <div class="row">
                 <div class="col-md-3">
                     <div class="text-center">
-                        <h5 class="text-primary">45</h5>
+                        <h5 class="text-primary">{{ location_data.total }}</h5>
                         <small class="text-muted">📦 محصولات</small>
                     </div>
                 </div>
                 <div class="col-md-3">
                     <div class="text-center">
-                        <h5 class="text-success">38</h5>
+                        <h5 class="text-success">{{ location_data.in_stock }}</h5>
                         <small class="text-muted">✅ موجود</small>
                     </div>
                 </div>
                 <div class="col-md-3">
                     <div class="text-center">
-                        <h5 class="text-warning">5</h5>
-                        <small class="text-muted">⚠️ کم موجود</small>
+                        <h5 class="text-warning">{{ location_data.sold }}</h5>
+                        <small class="text-muted">💰 فروخته شده</small>
                     </div>
                 </div>
                 <div class="col-md-3">
                     <div class="text-center">
-                        <h5 class="text-danger">2</h5>
-                        <small class="text-muted">❌ ناموجود</small>
+                        <h5 class="text-danger">{{ location_data.pre_order }}</h5>
+                        <small class="text-muted">⏳ پیش‌سفارش</small>
                     </div>
                 </div>
             </div>
             
             <div class="capacity-bar">
-                <div class="capacity-fill capacity-high" style="width: 85%"></div>
+                <div class="capacity-fill 
+                    {% if location_data.capacity_percentage >= 70 %}capacity-high
+                    {% elif location_data.capacity_percentage >= 40 %}capacity-medium
+                    {% else %}capacity-low{% endif %}" 
+                    style="width: {{ location_data.capacity_percentage }}%"></div>
             </div>
             
             <div class="product-grid">
+                {% for product in location_data.products %}
                 <div class="product-mini-card">
-                    <div class="product-status status-available"></div>
-                    <strong>R001</strong>
-                    <div><small>1500m - A+</small></div>
-                    <div><small class="text-success">موجود</small></div>
+                    <div class="product-status 
+                        {% if product.status == 'In-stock' %}status-available
+                        {% elif product.status == 'Sold' %}status-out
+                        {% else %}status-low{% endif %}"></div>
+                    <strong>{{ product.reel_number }}</strong>
+                    <div><small>{{ product.length }}m - {{ product.grade }}</small></div>
+                    <div><small class="
+                        {% if product.status == 'In-stock' %}text-success
+                        {% elif product.status == 'Sold' %}text-danger
+                        {% else %}text-warning{% endif %}">
+                        {% if product.status == 'In-stock' %}موجود
+                        {% elif product.status == 'Sold' %}فروخته شده
+                        {% else %}پیش‌سفارش{% endif %}
+                    </small></div>
                 </div>
-                <div class="product-mini-card">
-                    <div class="product-status status-available"></div>
-                    <strong>R002</strong>
-                    <div><small>1200m - A</small></div>
-                    <div><small class="text-success">موجود</small></div>
+                {% empty %}
+                <div class="text-center text-muted">
+                    <small>📦 محصولی در این انبار موجود نیست</small>
                 </div>
-                <div class="product-mini-card">
-                    <div class="product-status status-low"></div>
-                    <strong>R003</strong>
-                    <div><small>800m - B+</small></div>
-                    <div><small class="text-warning">کم موجود</small></div>
-                </div>
-                <div class="product-mini-card">
-                    <div class="product-status status-out"></div>
-                    <strong>R004</strong>
-                    <div><small>0m - A</small></div>
-                    <div><small class="text-danger">ناموجود</small></div>
-                </div>
+                {% endfor %}
             </div>
         </div>
-
-        <!-- Warehouse 2: انبار محوطه کردان -->
-        <div class="warehouse-card">
-            <div class="warehouse-header">
-                <div>
-                    <div class="warehouse-name">📍 انبار محوطه کردان</div>
-                    <small class="text-muted">انبار فرعی</small>
-                </div>
-                <div class="text-end">
-                    <span class="badge bg-success">✅ فعال</span>
-                    <div class="mt-1">
-                        <small class="text-muted">ظرفیت: 62%</small>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="row">
-                <div class="col-md-3">
-                    <div class="text-center">
-                        <h5 class="text-primary">32</h5>
-                        <small class="text-muted">📦 محصولات</small>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="text-center">
-                        <h5 class="text-success">28</h5>
-                        <small class="text-muted">✅ موجود</small>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="text-center">
-                        <h5 class="text-warning">3</h5>
-                        <small class="text-muted">⚠️ کم موجود</small>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="text-center">
-                        <h5 class="text-danger">1</h5>
-                        <small class="text-muted">❌ ناموجود</small>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="capacity-bar">
-                <div class="capacity-fill capacity-medium" style="width: 62%"></div>
-            </div>
-            
-            <div class="product-grid">
-                <div class="product-mini-card">
-                    <div class="product-status status-available"></div>
-                    <strong>R005</strong>
-                    <div><small>2000m - A+</small></div>
-                    <div><small class="text-success">موجود</small></div>
-                </div>
-                <div class="product-mini-card">
-                    <div class="product-status status-available"></div>
-                    <strong>R006</strong>
-                    <div><small>1800m - A</small></div>
-                    <div><small class="text-success">موجود</small></div>
-                </div>
-                <div class="product-mini-card">
-                    <div class="product-status status-low"></div>
-                    <strong>R007</strong>
-                    <div><small>300m - B</small></div>
-                    <div><small class="text-warning">کم موجود</small></div>
-                </div>
-                <div class="product-mini-card">
-                    <div class="product-status status-available"></div>
-                    <strong>R008</strong>
-                    <div><small>1500m - A+</small></div>
-                    <div><small class="text-success">موجود</small></div>
-                </div>
-            </div>
+        {% empty %}
+        <div class="text-center">
+            <p class="text-muted">📦 هیچ انباری یافت نشد</p>
         </div>
+        {% endfor %}
 
         <!-- More warehouses can be added here -->
         <div class="text-center mt-4">
