@@ -238,6 +238,7 @@
             <!-- Payment Gateway Selection -->
             <div class="col-lg-4">
                 <!-- Total Amount -->
+                {% if payment_details.cash_items and payment_details.total_cash_amount > 0 %}
                 <div class="total-summary">
                     <h4 style="margin-bottom: 1rem;">💰 مبلغ قابل پرداخت</h4>
                     <h2 style="margin-bottom: 0.5rem;">{{ payment_details.total_cash_amount|floatformat:0 }}</h2>
@@ -245,8 +246,24 @@
                     <hr style="border-color: rgba(255,255,255,0.3); margin: 1rem 0;">
                     <small>معادل {{ payment_details.total_cash_amount_rial|floatformat:0 }} ریال</small>
                 </div>
+                {% else %}
+                <div class="total-summary" style="background: linear-gradient(135deg, #e74c3c, #c0392b);">
+                    <h4 style="margin-bottom: 1rem;">⚠️ عدم امکان پرداخت</h4>
+                    <h2 style="margin-bottom: 0.5rem;">0</h2>
+                    <p style="margin: 0; opacity: 0.9;">تومان</p>
+                    <hr style="border-color: rgba(255,255,255,0.3); margin: 1rem 0;">
+                    <small>
+                        {% if payment_details.cash_items.count == 0 %}
+                            هیچ آیتم نقدی وجود ندارد
+                        {% else %}
+                            مبلغ قابل پرداخت صفر است
+                        {% endif %}
+                    </small>
+                </div>
+                {% endif %}
 
                 <!-- Gateway Selection -->
+                {% if payment_details.cash_items and payment_details.total_cash_amount > 0 %}
                 <div class="payment-card">
                     <h4 style="color: #2c3e50; margin-bottom: 1.5rem;">🌐 انتخاب درگاه پرداخت</h4>
                     
@@ -267,6 +284,30 @@
                         </button>
                     </form>
                 </div>
+                {% else %}
+                <!-- No Payment Available -->
+                <div class="payment-card" style="background: #f8f9fa; border: 2px dashed #dee2e6;">
+                    <div class="text-center p-4">
+                        <div style="font-size: 3rem; margin-bottom: 1rem;">⚠️</div>
+                        <h5 style="color: #6c757d; margin-bottom: 1rem;">امکان پرداخت وجود ندارد</h5>
+                        <p class="text-muted mb-3">
+                            {% if payment_details.cash_items.count == 0 %}
+                                هیچ آیتم نقدی در این سفارش وجود ندارد.
+                            {% else %}
+                                مبلغ قابل پرداخت صفر است.
+                            {% endif %}
+                        </p>
+                        <div class="d-grid gap-2">
+                            <a href="{% url 'core:order_detail' order.id %}" class="btn btn-outline-secondary">
+                                📋 مشاهده جزئیات سفارش
+                            </a>
+                            <a href="{% url 'core:customer_orders' %}" class="btn btn-outline-primary">
+                                📋 بازگشت به لیست سفارشات
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
 
                 <!-- Security Notice -->
                 <div class="security-notice">

@@ -216,6 +216,14 @@
 {% block content %}
 <div class="main-container">
     <div class="container">
+        <!-- Back to Admin Dashboard Button -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <a href="{% url 'core:admin_dashboard' %}" class="btn btn-light btn-lg" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 15px; padding: 12px 25px; font-weight: 600; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3); transition: all 0.3s ease;">
+                    ↩️ بازگشت به داشبورد مدیریت
+                </a>
+            </div>
+        </div>
         
         <!-- 📊 عنوان صفحه -->
         <div class="working-hours-card">

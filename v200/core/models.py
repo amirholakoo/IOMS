@@ -725,8 +725,6 @@ class Order(BaseModel):
     PAYMENT_METHOD_CHOICES = [
         ('Cash', '💵 نقدی'),
         ('Terms', '📅 قسطی'),
-        ('Bank_Transfer', '🏦 حواله بانکی'),
-        ('Check', '📝 چک'),
     ]
     
     # 📝 لاگ‌های تحلیلی
@@ -1015,8 +1013,6 @@ class OrderItem(BaseModel):
     PAYMENT_METHOD_CHOICES = [
         ('Cash', '💵 نقدی'),
         ('Terms', '📅 قسطی'),
-        ('Bank_Transfer', '🏦 حواله بانکی'),
-        ('Check', '📝 چک'),
     ]
     
     # 🛒 سفارش مربوطه

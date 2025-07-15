@@ -107,7 +107,7 @@
     <!-- Navigation -->
     <nav aria-label="breadcrumb">
         <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="{% url 'accounts:dashboard' %}">🏠 داشبورد</a></li>
+                            <li class="breadcrumb-item"><a href="{% url 'core:admin_dashboard' %}">🏠 داشبورد</a></li>
             <li class="breadcrumb-item"><a href="{% url 'core:finance_dashboard' %}">💰 مالی</a></li>
             <li class="breadcrumb-item active">نمای کلی</li>
         </ol>
@@ -308,26 +308,6 @@
         </div>
     </div>
     
-    <!-- Export Options -->
-    <div class="report-section">
-        <h5 class="mb-3">📤 خروجی گزارش‌ها</h5>
-        <div class="row">
-            <div class="col-md-8">
-                <p class="text-muted">گزارش‌های مالی را به فرمت‌های مختلف دانلود کنید</p>
-            </div>
-            <div class="col-md-4 text-end">
-                <button class="btn btn-outline-success me-2">
-                    📊 Excel
-                </button>
-                <button class="btn btn-outline-danger me-2">
-                    📄 PDF
-                </button>
-                <button class="btn btn-outline-primary">
-                    🖨️ چاپ
-                </button>
-            </div>
-        </div>
-    </div>
 </div>
 {% endblock %}
 

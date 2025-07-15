@@ -103,7 +103,9 @@
                     </a>
                     <ul class="dropdown-menu dropdown-menu-end">
                         <li><a class="dropdown-item" href="{% url 'accounts:profile' %}">📄 پروفایل</a></li>
-                        <li><a class="dropdown-item" href="{% url 'accounts:change_password' %}">🔐 تغییر رمز</a></li>
+                        {% if user.role != 'customer' %}
+                            <li><a class="dropdown-item" href="{% url 'accounts:change_password' %}">🔐 تغییر رمز</a></li>
+                        {% endif %}
                         <li><hr class="dropdown-divider"></li>
                         <li><a class="dropdown-item" href="{% url 'accounts:logout' %}">🚪 خروج</a></li>
                     </ul>
@@ -174,12 +176,6 @@
                 <div class="row">
                     {% if user.is_super_admin %}
                         <div class="col-md-6 mb-3">
-                            <a href="{% url 'accounts:user_list' %}" class="feature-card">
-                                <h5>👥 مدیریت کاربران</h5>
-                                <p class="mb-0">مشاهده و مدیریت تمام کاربران سیستم</p>
-                            </a>
-                        </div>
-                        <div class="col-md-6 mb-3">
                             <a href="{% url 'core:admin_dashboard' %}" class="feature-card">
                                 <h5>🎛️ داشبورد مدیریت</h5>
                                 <p class="mb-0">مدیریت کامل سیستم</p>
@@ -200,22 +196,7 @@
                                 <p class="mb-0">مشاهده و پردازش سفارشات</p>
                             </a>
                         </div>
-                        <div class="col-md-6 mb-3">
-                            <a href="{% url 'core:inventory_list' %}" class="feature-card">
-                                <h5>📦 مدیریت موجودی</h5>
-                                <p class="mb-0">کنترل و مدیریت موجودی کالاها</p>
-                            </a>
-                        </div>
                     {% endif %}
-
-                                         {% if user.is_finance or user.is_super_admin %}
-                         <div class="col-md-6 mb-3">
-                             <a href="{% url 'core:finance_overview' %}" class="feature-card">
-                                 <h5>📊 گزارش‌های مالی</h5>
-                                 <p class="mb-0">مشاهده گزارش‌های مالی</p>
-                             </a>
-                         </div>
-                     {% endif %}
 
                      {% if user.is_customer %}
                          <div class="col-md-6 mb-3">

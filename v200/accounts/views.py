@@ -26,7 +26,10 @@ from django.db import IntegrityError, transaction
 def login_view(request):
     """🔐 صفحه ورود اصلی با 4 گزینه مختلف"""
     if request.user.is_authenticated:
-        return redirect('accounts:dashboard')
+        if request.user.is_customer():
+            return redirect('accounts:customer_dashboard')
+        else:
+            return redirect('core:admin_dashboard')
     
     return render(request, 'accounts/login.html')
 
@@ -34,7 +37,7 @@ def login_view(request):
 def staff_login_view(request):
     """👥 ورود کارمندان (Super Admin, Admin, Finance)"""
     if request.user.is_authenticated:
-        return redirect('accounts:dashboard')
+        return redirect('core:admin_dashboard')
     
     if request.method == 'POST':
         username = request.POST.get('username')
@@ -61,7 +64,7 @@ def staff_login_view(request):
                 User.UserRole.FINANCE: 'مالی'
             }
             messages.success(request, f'🎉 خوش آمدید {role_names[role]} {user.get_full_name() or user.username}!')
-            return redirect('accounts:dashboard')
+            return redirect('core:admin_dashboard')
         else:
             messages.error(request, '❌ نام کاربری، رمز عبور یا نقش اشتباه است')
     
@@ -74,7 +77,7 @@ def customer_login_view(request):
         if request.user.is_customer():
             return redirect('accounts:customer_dashboard')
         else:
-            return redirect('accounts:dashboard')
+            return redirect('core:admin_dashboard')
     
     # مستقیماً به صفحه SMS login هدایت می‌کنیم
     return redirect('accounts:customer_sms_login')
@@ -246,7 +249,7 @@ def customer_dashboard_view(request):
     # Super Admin می‌تواند به تمام بخش‌ها دسترسی داشته باشد
     if not request.user.is_customer() and not request.user.is_super_admin():
         messages.error(request, '❌ شما دسترسی به این بخش را ندارید')
-        return redirect('accounts:dashboard')
+        return redirect('core:admin_dashboard')
     
     # دریافت اطلاعات مشتری مرتبط
     customer = Customer.objects.filter(
@@ -462,6 +465,263 @@ def update_user_status(request, user_id):
         return JsonResponse({'success': True, 'message': 'وضعیت بروزرسانی شد'})
     
     return JsonResponse({'success': False, 'message': 'وضعیت نامعتبر'})
+
+
+@login_required
+@super_admin_permission_required('accounts.manage_all_users')
+def add_user_view(request):
+    """➕ اضافه کردن کاربر جدید"""
+    if request.method == 'POST':
+        # دریافت داده‌های فرم
+        username = request.POST.get('username', '').strip()
+        first_name = request.POST.get('first_name', '').strip()
+        last_name = request.POST.get('last_name', '').strip()
+        email = request.POST.get('email', '').strip()
+        phone = request.POST.get('phone', '').strip()
+        password = request.POST.get('password', '').strip()
+        role = request.POST.get('role', '').strip()
+        status = request.POST.get('status', '').strip()
+        department = request.POST.get('department', '').strip()
+        notes = request.POST.get('notes', '').strip()
+        
+        # اعتبارسنجی داده‌ها
+        errors = []
+        
+        # بررسی فیلدهای اجباری
+        if not username:
+            errors.append('نام کاربری اجباری است')
+        elif User.objects.filter(username=username).exists():
+            errors.append('نام کاربری قبلاً استفاده شده است')
+        
+        if not first_name:
+            errors.append('نام اجباری است')
+        
+        if not last_name:
+            errors.append('نام خانوادگی اجباری است')
+        
+        if not phone:
+            errors.append('شماره تلفن اجباری است')
+        elif User.objects.filter(phone=phone).exists():
+            errors.append('شماره تلفن قبلاً استفاده شده است')
+        elif not phone.startswith('09'):
+            errors.append('شماره تلفن باید با 09 شروع شود')
+        
+        # برای نقش‌های غیر از Customer، رمز عبور اجباری است
+        if role != 'customer':
+            if not password:
+                errors.append('رمز عبور اجباری است')
+            elif len(password) < 6:
+                errors.append('رمز عبور باید حداقل 6 کاراکتر باشد')
+        # برای Customer، رمز عبور اختیاری است
+        elif password and len(password) < 6:
+            errors.append('رمز عبور باید حداقل 6 کاراکتر باشد')
+        
+        if role not in [choice[0] for choice in User.UserRole.choices]:
+            errors.append('نقش انتخاب شده نامعتبر است')
+        
+        if status not in [choice[0] for choice in User.UserStatus.choices]:
+            errors.append('وضعیت انتخاب شده نامعتبر است')
+        
+        if email and '@' not in email:
+            errors.append('ایمیل وارد شده معتبر نیست')
+        
+        if errors:
+            for error in errors:
+                messages.error(request, f'❌ {error}')
+        else:
+            try:
+                with transaction.atomic():
+                    # ایجاد کاربر جدید
+                    user = User.objects.create_user(
+                        username=username,
+                        email=email,
+                        password=password if password else None,  # برای Customer رمز عبور اختیاری است
+                        first_name=first_name,
+                        last_name=last_name,
+                        phone=phone,
+                        role=role,
+                        status=status,
+                        department=department,
+                        notes=notes,
+                        is_active=True if status == User.UserStatus.ACTIVE else False
+                    )
+                    
+                    # ثبت فعالیت
+                    ActivityLog.log_activity(
+                        user=request.user,
+                        action='user_created',
+                        description=f'کاربر جدید {username} با نقش {role} ایجاد شد',
+                        ip_address=request.META.get('REMOTE_ADDR', ''),
+                        user_agent=request.META.get('HTTP_USER_AGENT', '')
+                    )
+                    
+                    messages.success(request, f'✅ کاربر {user.get_full_name() or username} با موفقیت ایجاد شد')
+                    return redirect('accounts:user_list')
+                    
+            except Exception as e:
+                messages.error(request, f'❌ خطا در ایجاد کاربر: {str(e)}')
+    
+    context = {
+        'user_roles': User.UserRole.choices,
+        'user_statuses': User.UserStatus.choices,
+        'form_action': 'add',
+        'form_title': 'اضافه کردن کاربر جدید'
+    }
+    return render(request, 'accounts/user_form.html', context)
+
+
+@login_required
+@super_admin_permission_required('accounts.manage_all_users')
+def edit_user_view(request, user_id):
+    """✏️ ویرایش کاربر"""
+    user_obj = get_object_or_404(User, id=user_id)
+    
+    # جلوگیری از ویرایش خودی توسط Super Admin
+    if user_obj == request.user:
+        messages.warning(request, '⚠️ شما نمی‌توانید اطلاعات خود را از اینجا ویرایش کنید. از بخش پروفایل استفاده کنید.')
+        return redirect('accounts:user_list')
+    
+    if request.method == 'POST':
+        # دریافت داده‌های فرم
+        username = request.POST.get('username', '').strip()
+        first_name = request.POST.get('first_name', '').strip()
+        last_name = request.POST.get('last_name', '').strip()
+        email = request.POST.get('email', '').strip()
+        phone = request.POST.get('phone', '').strip()
+        password = request.POST.get('password', '').strip()
+        role = request.POST.get('role', '').strip()
+        status = request.POST.get('status', '').strip()
+        department = request.POST.get('department', '').strip()
+        notes = request.POST.get('notes', '').strip()
+        
+        # اعتبارسنجی داده‌ها
+        errors = []
+        
+        # بررسی فیلدهای اجباری
+        if not username:
+            errors.append('نام کاربری اجباری است')
+        elif User.objects.filter(username=username).exclude(id=user_id).exists():
+            errors.append('نام کاربری قبلاً استفاده شده است')
+        
+        if not first_name:
+            errors.append('نام اجباری است')
+        
+        if not last_name:
+            errors.append('نام خانوادگی اجباری است')
+        
+        if not phone:
+            errors.append('شماره تلفن اجباری است')
+        elif User.objects.filter(phone=phone).exclude(id=user_id).exists():
+            errors.append('شماره تلفن قبلاً استفاده شده است')
+        elif not phone.startswith('09'):
+            errors.append('شماره تلفن باید با 09 شروع شود')
+        
+        if password and len(password) < 6:
+            errors.append('رمز عبور باید حداقل 6 کاراکتر باشد')
+        
+        if role not in [choice[0] for choice in User.UserRole.choices]:
+            errors.append('نقش انتخاب شده نامعتبر است')
+        
+        if status not in [choice[0] for choice in User.UserStatus.choices]:
+            errors.append('وضعیت انتخاب شده نامعتبر است')
+        
+        if email and '@' not in email:
+            errors.append('ایمیل وارد شده معتبر نیست')
+        
+        if errors:
+            for error in errors:
+                messages.error(request, f'❌ {error}')
+        else:
+            try:
+                with transaction.atomic():
+                    # بروزرسانی اطلاعات کاربر
+                    user_obj.username = username
+                    user_obj.first_name = first_name
+                    user_obj.last_name = last_name
+                    user_obj.email = email
+                    user_obj.phone = phone
+                    user_obj.role = role
+                    user_obj.status = status
+                    user_obj.department = department
+                    user_obj.notes = notes
+                    user_obj.is_active = True if status == User.UserStatus.ACTIVE else False
+                    
+                    # اگر رمز عبور وارد شده، تغییر دهید
+                    if password:
+                        user_obj.set_password(password)
+                    
+                    user_obj.save()
+                    
+                    # ثبت فعالیت
+                    ActivityLog.log_activity(
+                        user=request.user,
+                        action='user_updated',
+                        description=f'کاربر {username} با نقش {role} به‌روزرسانی شد',
+                        ip_address=request.META.get('REMOTE_ADDR', ''),
+                        user_agent=request.META.get('HTTP_USER_AGENT', '')
+                    )
+                    
+                    messages.success(request, f'✅ کاربر {user_obj.get_full_name() or username} با موفقیت به‌روزرسانی شد')
+                    return redirect('accounts:user_list')
+                    
+            except Exception as e:
+                messages.error(request, f'❌ خطا در به‌روزرسانی کاربر: {str(e)}')
+    
+    context = {
+        'user_obj': user_obj,
+        'user_roles': User.UserRole.choices,
+        'user_statuses': User.UserStatus.choices,
+        'form_action': 'edit',
+        'form_title': f'ویرایش کاربر: {user_obj.get_full_name() or user_obj.username}'
+    }
+    return render(request, 'accounts/user_form.html', context)
+
+
+@login_required
+@super_admin_permission_required('accounts.manage_all_users')
+def delete_user_view(request, user_id):
+    """🗑️ حذف کاربر"""
+    user_obj = get_object_or_404(User, id=user_id)
+    
+    # جلوگیری از حذف خودی توسط Super Admin
+    if user_obj == request.user:
+        messages.error(request, '❌ شما نمی‌توانید حساب کاربری خود را حذف کنید')
+        return redirect('accounts:user_list')
+    
+    # جلوگیری از حذف Super Admin توسط Super Admin دیگر
+    if user_obj.is_super_admin():
+        messages.error(request, '❌ امکان حذف Super Admin وجود ندارد')
+        return redirect('accounts:user_list')
+    
+    if request.method == 'POST':
+        try:
+            with transaction.atomic():
+                username = user_obj.username
+                full_name = user_obj.get_full_name() or username
+                
+                # ثبت فعالیت قبل از حذف
+                ActivityLog.log_activity(
+                    user=request.user,
+                    action='user_deleted',
+                    description=f'کاربر {username} با نقش {user_obj.role} حذف شد',
+                    ip_address=request.META.get('REMOTE_ADDR', ''),
+                    user_agent=request.META.get('HTTP_USER_AGENT', '')
+                )
+                
+                # حذف کاربر
+                user_obj.delete()
+                
+                messages.success(request, f'✅ کاربر {full_name} با موفقیت حذف شد')
+                return redirect('accounts:user_list')
+                
+        except Exception as e:
+            messages.error(request, f'❌ خطا در حذف کاربر: {str(e)}')
+    
+    context = {
+        'user_obj': user_obj,
+        'form_title': f'حذف کاربر: {user_obj.get_full_name() or user_obj.username}'
+    }
+    return render(request, 'accounts/user_delete.html', context)
 
 
 @login_required

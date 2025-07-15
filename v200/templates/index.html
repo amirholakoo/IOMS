@@ -7,6 +7,7 @@
 <link rel="stylesheet" href="{% static 'css/selection-styles.css' %}">
 {% endblock %}
 {% block content %}
+{% csrf_token %}
 
 <div class="container">
     <nav class="navbar">
@@ -45,10 +46,20 @@
                             <p class="order-date">{{ order.created_at|date:"Y/m/d H:i" }}</p>
                         </div>
                         <div class="order-status">
-                            {% if order.payment_method == 'Terms' %}
+                            {% if order.incomplete_reason == 'no_payment_initiated' %}
+                                <span class="status-badge warning">💳 آماده پرداخت</span>
+                            {% elif order.incomplete_reason == 'payment_pending' %}
+                                <span class="status-badge info">🔄 در حال پردازش پرداخت</span>
+                            {% elif order.incomplete_reason == 'payment_failed' %}
+                                <span class="status-badge danger">❌ پرداخت ناموفق</span>
+                            {% elif order.incomplete_reason == 'awaiting_admin_approval' %}
                                 <span class="status-badge pending">⏳ در انتظار تایید ادمین</span>
+                            {% elif order.incomplete_reason == 'mixed_cash_unpaid' %}
+                                <span class="status-badge warning">💳 نیاز به تکمیل پرداخت</span>
+                            {% elif order.incomplete_reason == 'processing_unfinalized' %}
+                                <span class="status-badge info">🔄 نیاز به تکمیل خرید</span>
                             {% else %}
-                                <span class="status-badge pending">⏳ منتظر پرداخت نقدی</span>
+                                <span class="status-badge pending">⏳ در انتظار بررسی</span>
                             {% endif %}
                         </div>
                     </div>
@@ -82,16 +93,48 @@
                     </div>
                     
                     <div class="order-actions">
-                        {% if order.payment_method == 'Cash' %}
-                        <a href="{% url 'payments:payment_summary' order.id %}" class="btn btn-primary complete-order-btn">
+                        <!-- Customer Action Message -->
+                        <div class="customer-message">
+                            <p class="message-text">{{ order.customer_message }}</p>
+                        </div>
+                        
+                        <!-- Primary Action Button -->
+                        {% if order.can_pay %}
+                            {% if order.incomplete_reason == 'no_payment_initiated' or order.incomplete_reason == 'mixed_cash_unpaid' %}
+                                <a href="{% url 'payments:payment_summary' order.id %}" class="btn {{ order.action_class }} complete-order-btn">
                             <span class="btn-icon">💳</span>
-                            <span class="btn-text">تکمیل پرداخت</span>
+                                    <span class="btn-text">{{ order.action_text }}</span>
                         </a>
+                            {% elif order.incomplete_reason == 'payment_failed' %}
+                                <a href="{% url 'payments:payment_summary' order.id %}" class="btn {{ order.action_class }} retry-payment-btn">
+                                    <span class="btn-icon">🔄</span>
+                                    <span class="btn-text">{{ order.action_text }}</span>
+                                </a>
+                            {% elif order.incomplete_reason == 'processing_unfinalized' %}
+                                <button class="btn {{ order.action_class }} complete-processing-btn" data-order-id="{{ order.id }}" data-order-number="{{ order.order_number }}">
+                                    <span class="btn-icon">🚀</span>
+                                    <span class="btn-text">{{ order.action_text }}</span>
+                                </button>
+                            {% endif %}
+                        {% else %}
+                            {% if order.incomplete_reason == 'payment_pending' %}
+                                <a href="{% url 'core:order_detail' order.id %}" class="btn {{ order.action_class }} check-status-btn">
+                                    <span class="btn-icon">🔍</span>
+                                    <span class="btn-text">{{ order.action_text }}</span>
+                                </a>
+                            {% elif order.incomplete_reason == 'awaiting_admin_approval' %}
+                                <button class="btn {{ order.action_class }} disabled" disabled>
+                                    <span class="btn-icon">⏳</span>
+                                    <span class="btn-text">{{ order.action_text }}</span>
+                                </button>
+                            {% endif %}
                         {% endif %}
-                        <button class="btn btn-outline-secondary view-order-btn" onclick="viewOrderDetails({{ order.id }})">
+                        
+                        <!-- Secondary Action - View Details -->
+                        <a href="{% url 'core:order_detail' order.id %}" class="btn btn-outline-secondary view-order-btn">
                             <span class="btn-icon">👁️</span>
                             <span class="btn-text">مشاهده جزئیات</span>
-                        </button>
+                        </a>
                     </div>
                 </div>
                 {% endfor %}
@@ -333,5 +376,72 @@
 {% endblock %}
 
 {% block extra_js %}
+<script>
+    // Handle complete processing order button
+    $(document).on('click', '.complete-processing-btn', function(e) {
+        e.preventDefault();
+        
+        console.log('[DEBUG] Complete processing button clicked');
+        
+        const button = $(this);
+        const orderId = button.data('order-id');
+        const orderNumber = button.data('order-number');
+        
+        console.log('[DEBUG] Order ID:', orderId);
+        console.log('[DEBUG] Order Number:', orderNumber);
+        
+        // Disable button and show loading
+        button.prop('disabled', true);
+        const originalText = button.find('.btn-text').text();
+        button.find('.btn-text').text('در حال پردازش...');
+        
+        // Get CSRF token
+        const csrfToken = $('[name=csrfmiddlewaretoken]').val();
+        console.log('[DEBUG] CSRF Token:', csrfToken ? 'Found' : 'Not found');
+        
+        // Make AJAX call to complete the processing order
+        $.ajax({
+            url: `/core/complete-processing-order/${orderId}/`,
+            type: 'POST',
+            headers: {
+                'X-CSRFToken': csrfToken,
+                'Content-Type': 'application/json'
+            },
+            success: function(response) {
+                console.log('[DEBUG] AJAX Success:', response);
+                if (response.success) {
+                    // Show success message
+                    alert(response.message);
+                    
+                    // Redirect to payment summary
+                    if (response.redirect_url) {
+                        console.log('[DEBUG] Redirecting to:', response.redirect_url);
+                        window.location.href = response.redirect_url;
+                    } else {
+                        // Reload page to update order status
+                        console.log('[DEBUG] Reloading page');
+                        window.location.reload();
+                    }
+                } else {
+                    console.log('[DEBUG] Error in response:', response.error);
+                    alert('خطا: ' + response.error);
+                    // Re-enable button
+                    button.prop('disabled', false);
+                    button.find('.btn-text').text(originalText);
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('[DEBUG] AJAX Error:', error);
+                console.error('[DEBUG] Status:', status);
+                console.error('[DEBUG] Response:', xhr.responseText);
+                alert('خطا در ارتباط با سرور. لطفاً مجدداً تلاش کنید.');
+                // Re-enable button
+                button.prop('disabled', false);
+                button.find('.btn-text').text(originalText);
+            }
+        });
+    });
+</script>
+
 <script src="{% static 'js/index.js' %}"></script>
 {% endblock %}

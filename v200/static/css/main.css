@@ -2498,6 +2498,72 @@ html {
     grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
 }
 
+/* Customer Message Styles */
+.customer-message {
+    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    margin-bottom: 1rem;
+    border-left: 4px solid #3b82f6;
+}
+
+.customer-message .message-text {
+    margin: 0;
+    color: #334155;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+/* Enhanced Status Badge Styles */
+.status-badge.warning {
+    background: linear-gradient(135deg, #f59e0b, #f97316);
+    color: white;
+}
+
+.status-badge.info {
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    color: white;
+}
+
+.status-badge.danger {
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    color: white;
+}
+
+.status-badge.pending {
+    background: linear-gradient(135deg, #6b7280, #4b5563);
+    color: white;
+}
+
+/* Action Button Styles */
+.retry-payment-btn {
+    background: linear-gradient(135deg, #f59e0b, #f97316) !important;
+    border: none !important;
+    color: white !important;
+}
+
+.retry-payment-btn:hover {
+    background: linear-gradient(135deg, #f97316, #ea580c) !important;
+    color: white !important;
+}
+
+.check-status-btn {
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8) !important;
+    border: none !important;
+    color: white !important;
+}
+
+.check-status-btn:hover {
+    background: linear-gradient(135deg, #1d4ed8, #1e40af) !important;
+    color: white !important;
+}
+
+.btn.disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
 .unpaid-order-card {
     background: white;
     border-radius: var(--border-radius);

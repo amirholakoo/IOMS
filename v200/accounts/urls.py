@@ -34,7 +34,10 @@ urlpatterns = [
     
     # 👥 مدیریت کاربران (Super Admin فقط)
     path('users/', views.user_list_view, name='user_list'),
+    path('users/add/', views.add_user_view, name='add_user'),
     path('users/<int:user_id>/', views.user_detail_view, name='user_detail'),
+    path('users/<int:user_id>/edit/', views.edit_user_view, name='edit_user'),
+    path('users/<int:user_id>/delete/', views.delete_user_view, name='delete_user'),
     path('users/<int:user_id>/update-status/', views.update_user_status, name='update_user_status'),
     
     # 🔗 API endpoints

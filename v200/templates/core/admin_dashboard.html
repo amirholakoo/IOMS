@@ -154,6 +154,8 @@
         z-index: 1000;
         min-width: 300px;
     }
+    
+
 </style>
 {% endblock %}
 
@@ -273,9 +275,21 @@ function getCookie(name) {
                 <small class="opacity-75">نقش: {{ user.get_role_display|default:"مدیر" }}</small>
             </div>
             <div class="col-md-4 text-end">
-                <div class="d-flex flex-column gap-2">
-                    <a href="{% url 'core:products_landing' %}" class="btn btn-light">🏠 صفحه اصلی</a>
-                    <a href="{% url 'accounts:logout' %}" class="btn btn-outline-light">🚪 خروج</a>
+                <div class="d-flex align-items-center gap-3">
+                    <div class="dropdown">
+                        <button class="btn btn-light dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            👤 {{ user.get_full_name|default:user.username }}
+                            <span class="badge bg-danger ms-2">{{ user.get_role_display }}</span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="{% url 'accounts:profile' %}">📄 پروفایل</a></li>
+                            {% if user.role != 'customer' %}
+                                <li><a class="dropdown-item" href="{% url 'accounts:change_password' %}">🔐 تغییر رمز</a></li>
+                            {% endif %}
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{% url 'accounts:logout' %}">🚪 خروج</a></li>
+                        </ul>
+                    </div>
                 </div>
             </div>
         </div>
@@ -283,39 +297,6 @@ function getCookie(name) {
 </div>
 
 <div class="container">
-    <!-- Statistics Cards -->
-    <div class="row mb-4">
-        <div class="col-md-3 mb-3">
-            <div class="card stats-card">
-                <div class="card-header stats-primary">
-                    <h2>{{ stats.total_products }}</h2>
-                    <p class="mb-0">📦 کل محصولات</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3 mb-3">
-            <div class="card stats-card">
-                <div class="card-header stats-success">
-                    <h2>{{ stats.available_products }}</h2>
-                    <p class="mb-0">✅ محصولات موجود</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3 mb-3">
-            <div class="card stats-card">
-                <div class="card-header stats-warning">
-                    <h2>{{ stats.sold_products }}</h2>
-                    <p class="mb-0">💰 محصولات فروخته</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3 mb-3">
-            <div class="card stats-card">
-                <div class="card-header stats-info">
-                    <h2>{{ stats.total_customers }}</h2>
-                    <p class="mb-0">👥 کل مشتریان</p>
-                </div>
-            </div>
         </div>
     </div>
 
@@ -330,7 +311,7 @@ function getCookie(name) {
                     <span class="action-icon">📦</span>
                     <h5>مدیریت محصولات</h5>
                     <p class="text-muted">مشاهده و ویرایش محصولات</p>
-                    <a href="{% url 'core:products_list' %}" class="btn btn-primary">مشاهده</a>
+                    <a href="{% url 'core:products_list' %}" class="btn" style="background: linear-gradient(135deg, #007bff 0%, #0056b3 100%); color: white; border: none; border-radius: 15px; padding: 12px 25px; font-weight: 600; box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3); transition: all 0.3s ease;">مشاهده</a>
                 </div>
             </div>
         </div>
@@ -340,7 +321,7 @@ function getCookie(name) {
                     <span class="action-icon">👥</span>
                     <h5>مدیریت مشتریان</h5>
                     <p class="text-muted">مشاهده لیست مشتریان</p>
-                    <a href="{% url 'core:customers_list' %}" class="btn btn-success">مشاهده</a>
+                    <a href="{% url 'core:customers_list' %}" class="btn" style="background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%); color: white; border: none; border-radius: 15px; padding: 12px 25px; font-weight: 600; box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3); transition: all 0.3s ease;">مشاهده</a>
                 </div>
             </div>
         </div>
@@ -350,7 +331,7 @@ function getCookie(name) {
                     <span class="action-icon">📋</span>
                     <h5>مدیریت سفارشات</h5>
                     <p class="text-muted">پردازش سفارشات</p>
-                    <a href="{% url 'core:orders_list' %}" class="btn btn-warning">مشاهده</a>
+                    <a href="{% url 'core:orders_list' %}" class="btn" style="background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%); color: white; border: none; border-radius: 15px; padding: 12px 25px; font-weight: 600; box-shadow: 0 4px 15px rgba(255, 193, 7, 0.3); transition: all 0.3s ease;">مشاهده</a>
                 </div>
             </div>
         </div>
@@ -360,10 +341,50 @@ function getCookie(name) {
                     <span class="action-icon">📜</span>
                     <h5>لاگ فعالیت‌ها</h5>
                     <p class="text-muted">مشاهده تاریخچه عملیات</p>
-                    <a href="{% url 'core:activity_logs' %}" class="btn btn-info">مشاهده</a>
+                    <a href="{% url 'core:activity_logs' %}" class="btn" style="background: linear-gradient(135deg, #17a2b8 0%, #138496 100%); color: white; border: none; border-radius: 15px; padding: 12px 25px; font-weight: 600; box-shadow: 0 4px 15px rgba(23, 162, 184, 0.3); transition: all 0.3s ease;">مشاهده</a>
                 </div>
             </div>
         </div>
+
+        <!-- مدیریت موجودی -->
+        <div class="col-md-3 mb-3">
+            <div class="card quick-action-card text-center">
+                <div class="card-body">
+                    <span class="action-icon">📦</span>
+                    <h5>مدیریت موجودی</h5>
+                    <p class="text-muted">کنترل و مدیریت موجودی کالاها</p>
+                    <a href="{% url 'core:inventory_list' %}" class="btn" style="background: linear-gradient(135deg, #6c757d 0%, #545b62 100%); color: white; border: none; border-radius: 15px; padding: 12px 25px; font-weight: 600; box-shadow: 0 4px 15px rgba(108, 117, 125, 0.3); transition: all 0.3s ease;">مشاهده</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- گزارش‌های مالی -->
+        {% if user.is_finance or user.is_super_admin %}
+        <div class="col-md-3 mb-3">
+            <div class="card quick-action-card text-center">
+                <div class="card-body">
+                    <span class="action-icon">📊</span>
+                    <h5>گزارش‌های مالی</h5>
+                    <p class="text-muted">مشاهده گزارش‌های مالی</p>
+                    <a href="{% url 'core:finance_dashboard' %}" class="btn" style="background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%); color: white; border: none; border-radius: 15px; padding: 12px 25px; font-weight: 600; box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3); transition: all 0.3s ease;">مشاهده</a>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- مدیریت کاربران (فقط برای Super Admin) -->
+        {% if user.is_super_admin %}
+        <div class="col-md-3 mb-3">
+            <div class="card quick-action-card text-center">
+                <div class="card-body">
+                    <span class="action-icon">👥</span>
+                    <h5>مدیریت کاربران</h5>
+                    <p class="text-muted">مشاهده و مدیریت تمام کاربران سیستم</p>
+                    <a href="{% url 'accounts:user_list' %}" class="btn" style="background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); color: white; border: none; border-radius: 15px; padding: 12px 25px; font-weight: 600; box-shadow: 0 4px 15px rgba(220, 53, 69, 0.3); transition: all 0.3s ease;">مشاهده</a>
+                </div>
+            </div>
+        </div>
+        {% endif %}
 
         {% if user.is_super_admin %}
         <div class="col-md-3 mb-3">
@@ -372,7 +393,7 @@ function getCookie(name) {
                     <span class="action-icon" style="color: #667eea;">⏰</span>
                     <h5 style="color: #667eea;">👑 ساعات کاری و محدودیت خرید کاربر</h5>
                     <p class="text-muted">تنظیم ساعات شروع و پایان کار و محدودیت خرید کاربر</p>
-                    <a href="{% url 'core:working_hours_management' %}" class="btn btn-primary">
+                    <a href="{% url 'core:working_hours_management' %}" class="btn" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 15px; padding: 12px 25px; font-weight: 600; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3); transition: all 0.3s ease;">
                         ⚙️ مدیریت ساعات و محدودیت خرید کاربر
                     </a>
                 </div>
@@ -393,7 +414,7 @@ function getCookie(name) {
             <table class="table table-hover mb-0">
                 <thead>
                     <tr>
-                        <th>🏷️ شماره ریل</th>
+                        <th>🏷️ شماره رول</th>
                         <th>📍 مکان</th>
                         <th>📏 ابعاد</th>
                         <th>💰 قیمت فعلی</th>

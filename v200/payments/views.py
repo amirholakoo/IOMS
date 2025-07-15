@@ -54,30 +54,50 @@ def payment_summary(request, order_id):
                 return render(request, 'payments/payment_summary.html', {'order': order})
         
         # بررسی وضعیت سفارش
-        if order.status != 'Pending':
-            messages.error(request, "این سفارش آماده پرداخت نیست")
-            return render(request, 'payments/payment_summary.html', {'order': order})
+        if order.status not in ['Pending', 'Processing']:
+            messages.warning(request, f"وضعیت سفارش '{order.get_status_display()}' - ممکن است آماده پرداخت نباشد")
         
-        # محاسبه اقلام نقدی
-        cash_items = order.order_items.filter(payment_method='Cash')
+        # محاسبه اقلام نقدی - اگر سفارش Cash است، همه اقلام را Cash در نظر بگیر
+        if order.payment_method == 'Cash':
+            # برای سفارش نقدی، همه اقلام قابل پرداخت هستند
+            cash_items = order.order_items.all()
+        else:
+            # برای سفارشات مختلط، فقط اقلام با payment_method='Cash'
+            cash_items = order.order_items.filter(payment_method='Cash')
+        
         total_cash_amount = sum(item.total_price for item in cash_items)
         
-        if total_cash_amount <= 0:
-            messages.error(request, "هیچ مبلغی برای پرداخت وجود ندارد")
-            return render(request, 'payments/payment_summary.html', {'order': order})
+        # Debug information (only show for admins or in development)
+        if request.user.is_super_admin():
+            logger.info(f"Payment Summary Debug - Order {order.id}: payment_method={order.payment_method}, "
+                       f"items_count={order.order_items.count()}, cash_items_count={cash_items.count()}, "
+                       f"total_cash_amount={total_cash_amount}")
         
         # محاسبه جزئیات پرداخت
+        # برای other_items، اگر سفارش Cash است، هیچ آیتم دیگری نیست
+        if order.payment_method == 'Cash':
+            other_items = order.order_items.none()  # Empty queryset
+        else:
+            other_items = order.order_items.exclude(payment_method='Cash')
+        
         payment_details = {
             'order': order,
             'cash_items': cash_items,
             'total_cash_amount': total_cash_amount,
             'total_cash_amount_rial': total_cash_amount * 10,
-            'other_items': order.order_items.exclude(payment_method='Cash'),
+            'other_items': other_items,
             'available_gateways': [
                 {'code': 'zarinpal', 'name': 'زرین‌پال', 'icon': '💎'},
                 {'code': 'shaparak', 'name': 'شاپرک', 'icon': '🏦'},
             ]
         }
+        
+        # Add helpful message if no cash items
+        if total_cash_amount <= 0:
+            if cash_items.count() == 0:
+                messages.info(request, "هیچ آیتم نقدی در این سفارش وجود ندارد")
+            else:
+                messages.warning(request, "مبلغ اقلام نقدی صفر است - لطفاً با پشتیبانی تماس بگیرید")
         
         context = {
             'payment_details': payment_details,

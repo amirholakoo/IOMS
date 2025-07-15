@@ -64,6 +64,7 @@ urlpatterns = [
     path('api/product-qr/<str:qr_code>/', views.product_qr_api, name='product_qr_api'),
     path('api/update-price/', views.update_price_api, name='update_price_api'),
     path('api/delete-product/', views.product_delete_api, name='product_delete_api'),
+    path('api/bulk-delete-products/', views.bulk_delete_products_api, name='bulk_delete_products_api'),
     
     # ⏰ مدیریت ساعات کاری - فقط Super Admin
     path('working-hours/', views.working_hours_management_view, name='working_hours_management'),
@@ -73,4 +74,5 @@ urlpatterns = [
     path('save-selected-products/', views.save_selected_products_view, name='save_selected_products'),
     path('selected-products/', views.selected_products_view, name='selected_products'),
     path('process-order/', views.process_order_view, name='process_order'),
+    path('complete-processing-order/<int:order_id>/', views.complete_processing_order_view, name='complete_processing_order'),
 ] 

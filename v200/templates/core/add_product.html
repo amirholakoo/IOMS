@@ -12,7 +12,7 @@
                 {% csrf_token %}
                 {{ form.as_p }}
                 <button type="submit" class="btn btn-success btn-lg">ثبت محصول</button>
-                <a href="{% url 'core:inventory_list' %}" class="btn btn-secondary">بازگشت</a>
+                <a href="{% url 'core:admin_dashboard' %}" class="btn btn-secondary" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 15px; padding: 12px 25px; font-weight: 600; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3); transition: all 0.3s ease;">↩️ بازگشت به داشبورد مدیریت</a>
             </form>
         </div>
     </div>

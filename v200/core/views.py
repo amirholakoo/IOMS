@@ -792,6 +792,8 @@ def activity_logs_view(request):
     action_filter = request.GET.get('action', '')
     severity_filter = request.GET.get('severity', '')
     user_filter = request.GET.get('user', '')
+    date_from = request.GET.get('date_from', '')
+    date_to = request.GET.get('date_to', '')
     
     logs = ActivityLog.objects.select_related('user', 'content_type')
     
@@ -805,11 +807,34 @@ def activity_logs_view(request):
     if user_filter:
         logs = logs.filter(user__username__icontains=user_filter)
     
+    if date_from:
+        logs = logs.filter(created_at__date__gte=date_from)
+    
+    if date_to:
+        logs = logs.filter(created_at__date__lte=date_to)
+    
     # 📊 آمار لاگ‌ها
+    from django.utils import timezone
+    from datetime import timedelta
+    
+    # محاسبه آمار بر اساس سطح اهمیت
+    severity_stats = {}
+    for severity_code, severity_name in ActivityLog.SEVERITY_CHOICES:
+        count = logs.filter(severity=severity_code).count()
+        severity_stats[severity_code] = count
+    
+    # آمار 24 ساعت گذشته
+    yesterday = timezone.now() - timedelta(days=1)
+    last_24h_count = logs.filter(created_at__gte=yesterday).count()
+    
+    # آمار کلی
+    total_count = logs.count()
+    
     logs_stats = {
-        'total_count': logs.count(),
+        'total_count': total_count,
+        'last_24h_count': last_24h_count,
+        'severity_stats': severity_stats,
         'action_stats': logs.values('action').annotate(count=Count('id')),
-        'severity_stats': logs.values('severity').annotate(count=Count('id')),
         'daily_stats': logs.extra(
             select={'day': 'date(created_at)'}
         ).values('day').annotate(count=Count('id'))[:7]
@@ -820,6 +845,12 @@ def activity_logs_view(request):
     page = request.GET.get('page')
     logs = paginator.get_page(page)
     
+    # دریافت لیست کاربران برای فیلتر
+    from accounts.models import User
+    users_list = User.objects.filter(
+        activitylog__isnull=False
+    ).distinct().order_by('username')
+    
     context = {
         'title': '📜 لاگ‌های فعالیت سیستم',
         'logs': logs,
@@ -827,6 +858,9 @@ def activity_logs_view(request):
         'action_filter': action_filter,
         'severity_filter': severity_filter,
         'user_filter': user_filter,
+        'date_from': date_from,
+        'date_to': date_to,
+        'users_list': users_list,
         'action_choices': ActivityLog.ACTION_CHOICES,
         'severity_choices': ActivityLog.SEVERITY_CHOICES,
     }
@@ -1245,25 +1279,107 @@ def index_view(request):
         }
     }
     
-    # 🔄 Get unpaid orders for authenticated customers
+    # 🔄 Get incomplete orders for authenticated customers with detailed classification
     unpaid_orders = []
     if request.user.is_authenticated and request.user.role == User.UserRole.CUSTOMER:
         from payments.models import Payment
         user_name = (request.user.get_full_name() or request.user.username).strip().lower()
         user_phone = request.user.phone
+        
+        # Get all customer orders (excluding cancelled and delivered)
         customer_orders = Order.objects.filter(
             Q(customer__phone=user_phone) |
             Q(customer__customer_name__icontains=user_name)
-        ).exclude(status='Cancelled').distinct()
+        ).exclude(
+            status__in=['Cancelled', 'Delivered', 'Returned']
+        ).distinct().order_by('-created_at')
+        
         for order in customer_orders:
-            has_any_payments = Payment.objects.filter(order=order).exists()
-            print(f"[DEBUG] Checking order {order.order_number}: payment_method={order.payment_method}, status={order.status}, has_any_payments={has_any_payments}")
-            if order.payment_method == 'Cash' and not has_any_payments:
+            # Get payment information
+            payments = Payment.objects.filter(order=order)
+            has_successful_payment = payments.filter(status='SUCCESS').exists()
+            has_pending_payment = payments.filter(status__in=['PENDING', 'PROCESSING', 'INITIATED']).exists()
+            has_failed_payment = payments.filter(status='FAILED').exists()
+            
+            print(f"[DEBUG] Order {order.order_number}: method={order.payment_method}, status={order.status}")
+            print(f"[DEBUG] Payments: success={has_successful_payment}, pending={has_pending_payment}, failed={has_failed_payment}")
+            
+            # CASE 1: Cash Orders - Show if no successful payment exists
+            if order.payment_method == 'Cash':
+                if not has_successful_payment:
+                    # Determine the specific case for cash orders
+                    if not payments.exists():
+                        order.incomplete_reason = 'no_payment_initiated'
+                        order.customer_message = 'پرداخت آغاز نشده است'
+                        order.action_text = 'پرداخت کنید'
+                        order.action_class = 'btn-success'
+                        order.can_pay = True
+                    elif has_pending_payment:
+                        order.incomplete_reason = 'payment_pending'
+                        order.customer_message = 'پرداخت در حال پردازش است'
+                        order.action_text = 'بررسی وضعیت'
+                        order.action_class = 'btn-info'
+                        order.can_pay = False
+                    elif has_failed_payment and not has_pending_payment:
+                        order.incomplete_reason = 'payment_failed'
+                        order.customer_message = 'پرداخت ناموفق - نیاز به تلاش مجدد'
+                        order.action_text = 'پرداخت مجدد'
+                        order.action_class = 'btn-warning'
+                        order.can_pay = True
+                    
                 unpaid_orders.append(order)
-                print(f"[DEBUG] Added CASH order {order.order_number} to unpaid_orders")
-            elif order.payment_method == 'Terms' and order.status == 'Pending':
+                print(f"[DEBUG] Added CASH order {order.order_number} - reason: {order.incomplete_reason}")
+            
+            # CASE 2: Terms Orders - Show if pending admin approval
+            elif order.payment_method == 'Terms':
+                if order.status == 'Pending':
+                    order.incomplete_reason = 'awaiting_admin_approval'
+                    order.customer_message = 'در انتظار تایید مدیریت برای خرید اقساطی'
+                    order.action_text = 'پیگیری وضعیت'
+                    order.action_class = 'btn-secondary'
+                    order.can_pay = False
+                    
                 unpaid_orders.append(order)
-                print(f"[DEBUG] Added TERMS order {order.order_number} to unpaid_orders")
+                print(f"[DEBUG] Added TERMS order {order.order_number} - awaiting approval")
+            
+            # CASE 3: Mixed Orders - Check individual items
+            elif order.payment_method == 'Mixed':
+                # Check if any cash items exist without successful payment
+                cash_items = order.order_items.filter(payment_method='Cash')
+                if cash_items.exists() and not has_successful_payment:
+                    order.incomplete_reason = 'mixed_cash_unpaid'
+                    order.customer_message = 'برخی اقلام نقدی هنوز پرداخت نشده‌اند'
+                    order.action_text = 'تکمیل پرداخت'
+                    order.action_class = 'btn-success'
+                    order.can_pay = True
+                    
+                    unpaid_orders.append(order)
+                    print(f"[DEBUG] Added MIXED order {order.order_number} - cash items unpaid")
+            
+            # CASE 4: Processing Orders - Show if they have items but weren't finalized
+            elif order.status == 'Processing':
+                # Check if order has items
+                if order.order_items.exists():
+                    # Ensure order total is calculated properly for display
+                    if order.total_amount == 0:
+                        from django.db.models import Sum as ModelSum
+                        order.total_amount = order.order_items.aggregate(
+                            total=ModelSum('total_price')
+                        )['total'] or 0
+                        order.calculate_final_amount()
+                        order.save()
+                    
+                    order.incomplete_reason = 'processing_unfinalized'
+                    order.customer_message = 'سفارش ناتمام - نیاز به تکمیل فرآیند خرید'
+                    order.action_text = 'تکمیل خرید'
+                    order.action_class = 'btn-primary'
+                    order.can_pay = True
+                    order.is_processing = True  # Special flag for processing orders
+                    
+                    unpaid_orders.append(order)
+                    print(f"[DEBUG] Added PROCESSING order {order.order_number} - needs finalization - amount: {order.final_amount}")
+                else:
+                    print(f"[DEBUG] Skipping empty PROCESSING order {order.order_number}")
     
     context = {
         'title': 'کارخانه کاغذ و مقوای همایون',
@@ -2490,7 +2606,7 @@ def customer_orders_view(request):
     # فقط کاربران با نقش مشتری می‌توانند دسترسی داشته باشند
     if request.user.role != User.UserRole.CUSTOMER:
         messages.error(request, '❌ دسترسی مجاز نیست')
-        return redirect('accounts:dashboard')
+        return redirect('core:admin_dashboard')
 
     # 📜 ثبت لاگ مشاهده سفارشات
     ActivityLog.log_activity(
@@ -2656,6 +2772,74 @@ def product_delete_api(request):
     except Exception as e:
         return JsonResponse({'success': False, 'message': f'Error: {str(e)}'}, status=500)
 
+@login_required
+@super_admin_permission_required('manage_inventory')
+@require_POST
+def bulk_delete_products_api(request):
+    """🗑️ حذف گروهی محصولات - فقط Super Admin"""
+    try:
+        data = json.loads(request.body)
+        product_ids = data.get('product_ids', [])
+        
+        if not product_ids:
+            return JsonResponse({
+                'success': False, 
+                'message': '❌ هیچ محصولی برای حذف انتخاب نشده است'
+            }, status=400)
+        
+        # بررسی وجود محصولات
+        products = Product.objects.filter(id__in=product_ids)
+        if not products.exists():
+            return JsonResponse({
+                'success': False, 
+                'message': '❌ هیچ محصول معتبری یافت نشد'
+            }, status=404)
+        
+        # ذخیره اطلاعات برای لاگ
+        deleted_products = []
+        for product in products:
+            deleted_products.append({
+                'id': product.id,
+                'reel_number': product.reel_number,
+                'location': product.get_location_display(),
+                'status': product.get_status_display()
+            })
+        
+        # حذف محصولات
+        deleted_count = products.count()
+        products.delete()
+        
+        # ثبت لاگ حذف گروهی
+        ActivityLog.log_activity(
+            user=request.user,
+            action='DELETE',
+            description=f'حذف گروهی {deleted_count} محصول',
+            severity='HIGH',
+            ip_address=get_client_ip(request),
+            user_agent=request.META.get('HTTP_USER_AGENT', ''),
+            extra_data={
+                'deleted_count': deleted_count,
+                'deleted_products': deleted_products
+            }
+        )
+        
+        return JsonResponse({
+            'success': True, 
+            'message': f'✅ {deleted_count} محصول با موفقیت حذف شد',
+            'deleted_count': deleted_count
+        })
+        
+    except json.JSONDecodeError:
+        return JsonResponse({
+            'success': False, 
+            'message': '❌ فرمت JSON نامعتبر است'
+        }, status=400)
+    except Exception as e:
+        return JsonResponse({
+            'success': False, 
+            'message': f'❌ خطا در حذف محصولات: {str(e)}'
+        }, status=500)
+
 @require_http_methods(["GET"])
 def get_working_hours_config_api(request):
     """
@@ -2803,6 +2987,122 @@ def set_working_hours_view(request):
             'success': False,
             'error': f'❌ خطا در تنظیم ساعات کاری: {str(e)}'
         }, status=500)
+
+
+@check_working_hours_middleware
+@login_required
+@require_http_methods(["POST"])
+def complete_processing_order_view(request, order_id):
+    """🛒 تکمیل سفارش در حال پردازش - تبدیل به آماده پرداخت"""
+    print(f"[DEBUG] complete_processing_order_view called with order_id: {order_id}")
+    print(f"[DEBUG] User: {request.user.username}")
+    print(f"[DEBUG] User customer: {getattr(request.user, 'customer', None)}")
+    
+    try:
+        # Get customer
+        customer = request.user.customer
+        if not customer:
+            print(f"[DEBUG] No customer found for user {request.user.username}")
+            return JsonResponse({
+                'success': False,
+                'error': '❌ اطلاعات مشتری یافت نشد. لطفاً با پشتیبانی تماس بگیرید.'
+            })
+        
+        print(f"[DEBUG] Customer found: {customer.customer_name}")
+        
+        # Check customer status
+        if customer.status not in ['Active', 'Inactive']:
+            print(f"[DEBUG] Customer status invalid: {customer.status}")
+            return JsonResponse({
+                'success': False,
+                'error': '❌ حساب کاربری شما فعال نیست. لطفاً با پشتیبانی تماس بگیرید.'
+            })
+        
+        # Get the processing order
+        try:
+            processing_order = Order.objects.get(
+                id=order_id,
+                customer=customer,
+                status='Processing'
+            )
+            print(f"[DEBUG] Processing order found: {processing_order.order_number}")
+        except Order.DoesNotExist:
+            print(f"[DEBUG] Processing order not found for id: {order_id}")
+            return JsonResponse({
+                'success': False,
+                'error': '❌ سفارش در حال پردازش یافت نشد.'
+            })
+        
+        # Check if order has items
+        items_count = processing_order.order_items.count()
+        print(f"[DEBUG] Order has {items_count} items")
+        
+        if not processing_order.order_items.exists():
+            print(f"[DEBUG] Order has no items")
+            return JsonResponse({
+                'success': False,
+                'error': '❌ این سفارش هیچ آیتمی ندارد.'
+            })
+        
+        # Finalize the processing order for payment
+        from django.db import transaction
+        with transaction.atomic():
+            print(f"[DEBUG] Starting transaction")
+            
+            # Update all existing OrderItems to have payment_method='Cash'
+            # This is crucial for payment summary to find cash items
+            updated_items = processing_order.order_items.update(payment_method='Cash')
+            print(f"[DEBUG] Updated {updated_items} items to Cash payment method")
+            
+            # Recalculate totals from OrderItems (trigger the automatic calculation)
+            # This will update total_amount and final_amount properly
+            for item in processing_order.order_items.all():
+                item.save()  # This triggers the total recalculation in OrderItem.save()
+            
+            # Update the processing order to be ready for payment
+            processing_order.payment_method = 'Cash'
+            processing_order.status = 'Pending'  # Ready for payment
+            processing_order.notes = f'سفارش تکمیل شده - مجموع: {processing_order.final_amount:,.0f} تومان - آماده برای پرداخت'
+            processing_order.save()
+            
+            print(f"[DEBUG] Order updated - Status: {processing_order.status}, Payment: {processing_order.payment_method}")
+            print(f"[DEBUG] Order final amount: {processing_order.final_amount}")
+            
+            # Log activity for completed order
+            ActivityLog.log_activity(
+                user=request.user,
+                action='ORDER',
+                description=f'تکمیل سفارش {processing_order.order_number} - مبلغ: {processing_order.final_amount:,.0f} تومان',
+                content_object=processing_order,
+                ip_address=get_client_ip(request),
+                user_agent=request.META.get('HTTP_USER_AGENT', ''),
+                severity='MEDIUM',
+                extra_data={
+                    'order_number': processing_order.order_number,
+                    'completion_type': 'processing_to_pending',
+                    'amount': str(processing_order.final_amount),
+                    'items_count': processing_order.order_items.count()
+                }
+            )
+            
+            print(f"[DEBUG] Activity logged successfully")
+        
+        print(f"[DEBUG] Transaction completed successfully")
+        
+        return JsonResponse({
+            'success': True,
+            'message': f'✅ سفارش {processing_order.order_number} آماده پرداخت شد!\n💰 مبلغ: {processing_order.final_amount:,.0f} تومان\n\nبرای تکمیل خرید، به بخش پرداخت هدایت خواهید شد.',
+            'redirect_url': f'/payments/summary/{processing_order.id}/'
+        })
+        
+    except Exception as e:
+        print(f"[DEBUG] Exception occurred: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return JsonResponse({
+            'success': False,
+            'error': f'خطا در تکمیل سفارش: {str(e)}'
+        })
 
 
 

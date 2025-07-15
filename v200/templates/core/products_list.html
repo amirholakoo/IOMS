@@ -138,8 +138,8 @@
                 <p class="lead mb-0">مشاهده، جستجو و مدیریت تمام محصولات انبار</p>
             </div>
             <div class="col-md-4 text-end">
-                <a href="{% url 'core:admin_dashboard' %}" class="btn btn-light me-2">
-                    ↩️ بازگشت به داشبورد
+                <a href="{% url 'core:admin_dashboard' %}" class="btn btn-light me-2" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 15px; padding: 12px 25px; font-weight: 600; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3); transition: all 0.3s ease;">
+                    ↩️ بازگشت به داشبورد مدیریت
                 </a>
             </div>
         </div>
@@ -155,7 +155,7 @@
                 <input type="text" 
                        name="search" 
                        class="form-control search-input" 
-                       placeholder="شماره ریل، درجه کیفیت، عرض..."
+                       placeholder="شماره رول، درجه کیفیت، عرض..."
                        value="{{ search_query }}">
             </div>
             <div class="col-md-3">
@@ -216,7 +216,7 @@
                     <th width="5%">
                         <input type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAll()">
                     </th>
-                    <th width="15%">🏷️ شماره ریل</th>
+                    <th width="15%">🏷️ شماره رول</th>
                     <th width="15%">📍 مکان</th>
                     <th width="15%">📏 مشخصات</th>
                     <th width="10%">📊 وضعیت</th>
@@ -410,7 +410,7 @@ function editProduct(productId) {
 
 // Delete single product
 function deleteProduct(productId) {
-    if (confirm('Are you sure you want to delete this product?')) {
+    if (confirm('آیا از حذف این محصول اطمینان دارید؟')) {
         fetch(`/core/api/delete-product/`, {
             method: 'POST',
             headers: {
@@ -422,28 +422,33 @@ function deleteProduct(productId) {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                if (typeof showNotification === 'function') {
-                    showNotification(data.message, 'success');
-                } else {
-                    alert(data.message);
-                }
-                // Remove the row from the table
+                showNotification(data.message, 'success');
+                
+                // حذف ردیف از جدول با انیمیشن
                 const row = document.querySelector(`button[onclick="deleteProduct(${productId})"]`).closest('tr');
-                if (row) row.remove();
-            } else {
-                if (typeof showNotification === 'function') {
-                    showNotification(data.message, 'error');
-                } else {
-                    alert(data.message);
+                if (row) {
+                    row.style.backgroundColor = '#f8d7da';
+                    row.style.transition = 'background-color 0.5s ease';
+                    setTimeout(() => {
+                        row.remove();
+                        
+                        // بروزرسانی تعداد نتایج
+                        const resultsElement = document.querySelector('h5');
+                        if (resultsElement) {
+                            const currentText = resultsElement.textContent;
+                            const currentCount = parseInt(currentText.match(/\d+/)[0]);
+                            const newCount = currentCount - 1;
+                            resultsElement.textContent = `📊 نتایج: ${newCount} محصول یافت شد`;
+                        }
+                    }, 500);
                 }
+            } else {
+                showNotification(data.message, 'error');
             }
         })
-        .catch(() => {
-            if (typeof showNotification === 'function') {
-                showNotification('Server error. Please try again.', 'error');
-            } else {
-                alert('Server error. Please try again.');
-            }
+        .catch(error => {
+            console.error('Error:', error);
+            showNotification('❌ خطا در ارتباط با سرور. لطفاً دوباره تلاش کنید.', 'error');
         });
     }
 }
@@ -476,14 +481,59 @@ function deleteSelected() {
     }
     
     if (confirm(`آیا از حذف ${selectedProducts.length} محصول انتخاب شده اطمینان دارید؟`)) {
-        // Implement bulk delete functionality
-        showNotification('⚠️ قابلیت حذف گروهی در حال توسعه است', 'warning');
+        // جمع‌آوری ID محصولات انتخاب شده
+        const productIds = Array.from(selectedProducts).map(checkbox => parseInt(checkbox.value));
+        
+        // ارسال درخواست حذف گروهی
+        fetch('/core/api/bulk-delete-products/', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCSRFToken(),
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ product_ids: productIds })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showNotification(data.message, 'success');
+                
+                // حذف ردیف‌های مربوطه از جدول
+                selectedProducts.forEach(checkbox => {
+                    const row = checkbox.closest('tr');
+                    if (row) {
+                        row.style.backgroundColor = '#f8d7da';
+                        row.style.transition = 'background-color 0.5s ease';
+                        setTimeout(() => {
+                            row.remove();
+                        }, 500);
+                    }
+                });
+                
+                // بروزرسانی تعداد نتایج
+                const resultsElement = document.querySelector('h5');
+                if (resultsElement) {
+                    const currentText = resultsElement.textContent;
+                    const currentCount = parseInt(currentText.match(/\d+/)[0]);
+                    const newCount = currentCount - data.deleted_count;
+                    resultsElement.textContent = `📊 نتایج: ${newCount} محصول یافت شد`;
+                }
+                
+                // ریست کردن checkbox انتخاب همه
+                const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+                if (selectAllCheckbox) {
+                    selectAllCheckbox.checked = false;
+                }
+                
+            } else {
+                showNotification(data.message, 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotification('❌ خطا در ارتباط با سرور. لطفاً دوباره تلاش کنید.', 'error');
+        });
     }
-}
-
-// Export products to Excel
-function exportProducts() {
-    showNotification('⚠️ قابلیت خروجی Excel در حال توسعه است', 'info');
 }
 
 // Show notification
