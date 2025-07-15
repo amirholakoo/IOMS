@@ -21,6 +21,8 @@ import random
 from datetime import timedelta
 from django.db.models import Q
 from django.db import IntegrityError, transaction
+from HomayOMS.utils import normalize_phone_input, validate_phone_input, normalize_number_input, validate_number_input
+from HomayOMS.utils import NumberValidationError
 
 
 def login_view(request):
@@ -101,10 +103,42 @@ def customer_registration_view(request):
         
         # اعتبارسنجی فیلدهای اجباری
         errors = []
-        if not phone:
-            errors.append('📱 شماره تلفن الزامی است')
-        elif not phone.startswith('09') or len(phone) != 11:
-            errors.append('📱 شماره تلفن باید با 09 شروع شده و 11 رقم باشد')
+        
+        # اعتبارسنجی شماره تلفن با تبدیل خودکار اعداد فارسی
+        try:
+            if not phone:
+                errors.append('📱 شماره تلفن الزامی است')
+            else:
+                normalized_phone = normalize_phone_input(phone)
+                if not validate_phone_input(normalized_phone):
+                    errors.append('📱 شماره تلفن باید با 09 شروع شده و 11 رقم باشد')
+                else:
+                    phone = normalized_phone  # استفاده از شماره نرمال شده
+        except NumberValidationError as e:
+            errors.append(f'📱 خطا در شماره تلفن: {str(e)}')
+        
+        # اعتبارسنجی کد اقتصادی با تبدیل خودکار اعداد فارسی
+        if economic_code:
+            try:
+                economic_code = normalize_number_input(economic_code)
+            except NumberValidationError:
+                errors.append('💼 کد اقتصادی باید فقط شامل اعداد باشد')
+        
+        # اعتبارسنجی شناسه ملی با تبدیل خودکار اعداد فارسی
+        if national_id:
+            try:
+                national_id = normalize_number_input(national_id)
+            except NumberValidationError:
+                errors.append('🆔 شناسه ملی باید فقط شامل اعداد باشد')
+        
+        # اعتبارسنجی کد پستی با تبدیل خودکار اعداد فارسی
+        if postcode:
+            try:
+                postcode = normalize_number_input(postcode)
+                if len(postcode) != 10:
+                    errors.append('📮 کد پستی باید دقیقاً 10 رقم باشد')
+            except NumberValidationError:
+                errors.append('📮 کد پستی باید فقط شامل اعداد باشد')
         
         if not first_name:
             errors.append('👤 نام الزامی است')
@@ -801,16 +835,23 @@ def customer_sms_login_view(request):
         phone = request.POST.get('phone', '').strip()
         print(f"🚨 DEBUG: Phone from POST: '{phone}'")
         
-        # اعتبارسنجی شماره تلفن
+        # اعتبارسنجی شماره تلفن با تبدیل خودکار اعداد فارسی
         if not phone:
             print("❌ DEBUG: No phone provided")
             messages.error(request, '📱 لطفاً شماره تلفن خود را وارد کنید')
             return render(request, 'accounts/customer_sms_login.html')
         
-        # بررسی فرمت شماره تلفن ایرانی
-        if not phone.startswith('09') or len(phone) != 11:
-            print(f"❌ DEBUG: Invalid phone format: {phone}")
-            messages.error(request, '📱 شماره تلفن باید با 09 شروع شده و 11 رقم باشد')
+        try:
+            # تبدیل اعداد فارسی به انگلیسی
+            normalized_phone = normalize_phone_input(phone)
+            if not validate_phone_input(normalized_phone):
+                print(f"❌ DEBUG: Invalid phone format after normalization: {normalized_phone}")
+                messages.error(request, '📱 شماره تلفن باید با 09 شروع شده و 11 رقم باشد')
+                return render(request, 'accounts/customer_sms_login.html')
+            phone = normalized_phone  # استفاده از شماره نرمال شده
+        except NumberValidationError as e:
+            print(f"❌ DEBUG: Number validation error: {e}")
+            messages.error(request, f'📱 خطا در شماره تلفن: {str(e)}')
             return render(request, 'accounts/customer_sms_login.html')
         
         print(f"✅ DEBUG: Phone format is valid: {phone}")
@@ -1098,10 +1139,42 @@ def register_requested_customer_view(request):
         
         # اعتبارسنجی فیلدهای اجباری
         errors = []
-        if not phone:
-            errors.append('📱 شماره تلفن الزامی است')
-        elif not phone.startswith('09') or len(phone) != 11:
-            errors.append('📱 شماره تلفن باید با 09 شروع شده و 11 رقم باشد')
+        
+        # اعتبارسنجی شماره تلفن با تبدیل خودکار اعداد فارسی
+        try:
+            if not phone:
+                errors.append('📱 شماره تلفن الزامی است')
+            else:
+                normalized_phone = normalize_phone_input(phone)
+                if not validate_phone_input(normalized_phone):
+                    errors.append('📱 شماره تلفن باید با 09 شروع شده و 11 رقم باشد')
+                else:
+                    phone = normalized_phone  # استفاده از شماره نرمال شده
+        except NumberValidationError as e:
+            errors.append(f'📱 خطا در شماره تلفن: {str(e)}')
+        
+        # اعتبارسنجی کد اقتصادی با تبدیل خودکار اعداد فارسی
+        if economic_code:
+            try:
+                economic_code = normalize_number_input(economic_code)
+            except NumberValidationError:
+                errors.append('💼 کد اقتصادی باید فقط شامل اعداد باشد')
+        
+        # اعتبارسنجی شناسه ملی با تبدیل خودکار اعداد فارسی
+        if national_id:
+            try:
+                national_id = normalize_number_input(national_id)
+            except NumberValidationError:
+                errors.append('🆔 شناسه ملی باید فقط شامل اعداد باشد')
+        
+        # اعتبارسنجی کد پستی با تبدیل خودکار اعداد فارسی
+        if postcode:
+            try:
+                postcode = normalize_number_input(postcode)
+                if len(postcode) != 10:
+                    errors.append('📮 کد پستی باید دقیقاً 10 رقم باشد')
+            except NumberValidationError:
+                errors.append('📮 کد پستی باید فقط شامل اعداد باشد')
         
         if not first_name:
             errors.append('👤 نام الزامی است')

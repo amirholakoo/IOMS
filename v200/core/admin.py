@@ -11,8 +11,62 @@ from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.shortcuts import render, redirect
 from django.urls import reverse
 from django.utils.html import format_html
+from django import forms
 from .models import Customer, Product, ActivityLog, Order, OrderItem, WorkingHours
+from HomayOMS.utils import normalize_phone_input, validate_phone_input, normalize_number_input, validate_number_input
+from HomayOMS.utils import NumberValidationError
 
+
+class CustomerAdminForm(forms.ModelForm):
+    """
+    📝 فرم مدیریت مشتریان با اعتبارسنجی اعداد فارسی
+    """
+    
+    def clean_phone(self):
+        """اعتبارسنجی شماره تلفن با تبدیل خودکار اعداد فارسی"""
+        phone = self.cleaned_data.get('phone')
+        if phone:
+            try:
+                normalized_phone = normalize_phone_input(phone)
+                if not validate_phone_input(normalized_phone):
+                    raise forms.ValidationError('شماره تلفن باید با 09 شروع شده و 11 رقم باشد')
+                return normalized_phone
+            except NumberValidationError as e:
+                raise forms.ValidationError(f'خطا در شماره تلفن: {str(e)}')
+        return phone
+    
+    def clean_national_id(self):
+        """اعتبارسنجی شناسه ملی با تبدیل خودکار اعداد فارسی"""
+        national_id = self.cleaned_data.get('national_id')
+        if national_id:
+            try:
+                return normalize_number_input(national_id)
+            except NumberValidationError:
+                raise forms.ValidationError('شناسه ملی باید فقط شامل اعداد باشد')
+        return national_id
+    
+    def clean_economic_code(self):
+        """اعتبارسنجی کد اقتصادی با تبدیل خودکار اعداد فارسی"""
+        economic_code = self.cleaned_data.get('economic_code')
+        if economic_code:
+            try:
+                return normalize_number_input(economic_code)
+            except NumberValidationError:
+                raise forms.ValidationError('کد اقتصادی باید فقط شامل اعداد باشد')
+        return economic_code
+    
+    def clean_postcode(self):
+        """اعتبارسنجی کد پستی با تبدیل خودکار اعداد فارسی"""
+        postcode = self.cleaned_data.get('postcode')
+        if postcode:
+            try:
+                normalized_postcode = normalize_number_input(postcode)
+                if len(normalized_postcode) != 10:
+                    raise forms.ValidationError('کد پستی باید دقیقاً 10 رقم باشد')
+                return normalized_postcode
+            except NumberValidationError:
+                raise forms.ValidationError('کد پستی باید فقط شامل اعداد باشد')
+        return postcode
 
 @admin.register(Customer)
 class CustomerAdmin(admin.ModelAdmin):
@@ -20,6 +74,8 @@ class CustomerAdmin(admin.ModelAdmin):
     🎛️ پنل مدیریت مشتریان
     📊 رابط کاربری کامل برای مدیریت اطلاعات مشتریان
     """
+    
+    form = CustomerAdminForm
     
     # 📋 فیلدهای نمایش داده شده در لیست مشتریان
     list_display = [
@@ -125,12 +181,69 @@ class CustomerAdmin(admin.ModelAdmin):
         return request.user.is_superuser or (hasattr(request.user, 'is_super_admin') and request.user.is_super_admin()) or request.user.has_perm('core.view_customer')
 
 
+class ProductAdminForm(forms.ModelForm):
+    """
+    📝 فرم مدیریت محصولات با اعتبارسنجی اعداد فارسی
+    """
+    
+    def clean_width(self):
+        """اعتبارسنجی عرض با تبدیل خودکار اعداد فارسی"""
+        width = self.cleaned_data.get('width')
+        if width:
+            try:
+                return normalize_number_input(str(width))
+            except NumberValidationError:
+                raise forms.ValidationError('عرض باید فقط شامل اعداد باشد')
+        return width
+    
+    def clean_length(self):
+        """اعتبارسنجی طول با تبدیل خودکار اعداد فارسی"""
+        length = self.cleaned_data.get('length')
+        if length:
+            try:
+                return normalize_number_input(str(length))
+            except NumberValidationError:
+                raise forms.ValidationError('طول باید فقط شامل اعداد باشد')
+        return length
+    
+    def clean_gsm(self):
+        """اعتبارسنجی GSM با تبدیل خودکار اعداد فارسی"""
+        gsm = self.cleaned_data.get('gsm')
+        if gsm:
+            try:
+                return normalize_number_input(str(gsm))
+            except NumberValidationError:
+                raise forms.ValidationError('GSM باید فقط شامل اعداد باشد')
+        return gsm
+    
+    def clean_breaks(self):
+        """اعتبارسنجی شکستگی با تبدیل خودکار اعداد فارسی"""
+        breaks = self.cleaned_data.get('breaks')
+        if breaks:
+            try:
+                return normalize_number_input(str(breaks))
+            except NumberValidationError:
+                raise forms.ValidationError('شکستگی باید فقط شامل اعداد باشد')
+        return breaks
+    
+    def clean_price(self):
+        """اعتبارسنجی قیمت با تبدیل خودکار اعداد فارسی"""
+        price = self.cleaned_data.get('price')
+        if price:
+            try:
+                return normalize_number_input(str(price))
+            except NumberValidationError:
+                raise forms.ValidationError('قیمت باید فقط شامل اعداد باشد')
+        return price
+
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
     """
     📦 پنل مدیریت محصولات
     🎛️ رابط کاربری کامل برای مدیریت محصولات انبار
     """
+    
+    form = ProductAdminForm
     
     # 📋 فیلدهای نمایش داده شده در لیست محصولات
     list_display = [
@@ -390,11 +503,37 @@ class ProductAdmin(admin.ModelAdmin):
         return request.user.is_superuser or (hasattr(request.user, 'is_super_admin') and request.user.is_super_admin()) or request.user.has_perm('core.view_product')
 
 
+class OrderItemAdminForm(forms.ModelForm):
+    """
+    📝 فرم مدیریت آیتم‌های سفارش با اعتبارسنجی اعداد فارسی
+    """
+    
+    def clean_quantity(self):
+        """اعتبارسنجی تعداد با تبدیل خودکار اعداد فارسی"""
+        quantity = self.cleaned_data.get('quantity')
+        if quantity:
+            try:
+                return normalize_number_input(str(quantity))
+            except NumberValidationError:
+                raise forms.ValidationError('تعداد باید فقط شامل اعداد باشد')
+        return quantity
+    
+    def clean_unit_price(self):
+        """اعتبارسنجی قیمت واحد با تبدیل خودکار اعداد فارسی"""
+        unit_price = self.cleaned_data.get('unit_price')
+        if unit_price:
+            try:
+                return normalize_number_input(str(unit_price))
+            except NumberValidationError:
+                raise forms.ValidationError('قیمت واحد باید فقط شامل اعداد باشد')
+        return unit_price
+
 class OrderItemInline(admin.TabularInline):
     """
     📦 Inline برای آیتم‌های سفارش
     """
     model = OrderItem
+    form = OrderItemAdminForm
     extra = 0
     readonly_fields = ['total_price']
     fields = ['product', 'quantity', 'unit_price', 'payment_method', 'total_price', 'notes']
@@ -556,6 +695,8 @@ class OrderItemAdmin(admin.ModelAdmin):
     """
     📦 مدیریت آیتم‌های سفارش در پنل ادمین
     """
+    
+    form = OrderItemAdminForm
     
     list_display = [
         'order_number',

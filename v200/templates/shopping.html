@@ -59,7 +59,8 @@
                                 {% if product.stock > 0 %}
                                 <div class="quantity-controls">
                                     <button class="qty-btn minus-btn">-</button>
-                                    <input type="number" class="qty-input" value="0" min="0" max="{{ product.stock }}">
+                                    <input type="number" class="qty-input" value="0" min="0" max="{{ product.stock }}" 
+                                           placeholder="تعداد" title="💡 می‌توانید از اعداد فارسی یا انگلیسی استفاده کنید">
                                     <button class="qty-btn plus-btn">+</button>
                                 </div>
                                 {% else %}
@@ -110,7 +111,8 @@
                                 {% if product.stock > 0 %}
                                 <div class="quantity-controls">
                                     <button class="qty-btn minus-btn">-</button>
-                                    <input type="number" class="qty-input" value="0" min="0" max="{{ product.stock }}">
+                                    <input type="number" class="qty-input" value="0" min="0" max="{{ product.stock }}" 
+                                           placeholder="تعداد" title="💡 می‌توانید از اعداد فارسی یا انگلیسی استفاده کنید">
                                     <button class="qty-btn plus-btn">+</button>
                                 </div>
                                 {% else %}

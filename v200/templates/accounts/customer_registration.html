@@ -20,8 +20,13 @@
             </div>
             <div class="form-group">
                 <label for="phone">شماره موبایل</label>
-                <input type="tel" id="phone" name="phone" class="form-control" required pattern="09[0-9]{9}" maxlength="11" placeholder="مثال: 09123456789" value="{{ phone|default:'' }}">
-                <small class="form-text text-muted">کد تایید به این شماره ارسال می‌شود.</small>
+                <input type="tel" id="phone" name="phone" class="form-control" required pattern="09[0-9]{9}" maxlength="11" placeholder="مثال: ۰۹۱۲۳۴۵۶۷۸۹ یا 09123456789" value="{{ phone|default:'' }}">
+                <small class="form-text text-muted">
+                    <i class="fas fa-info-circle"></i> 
+                    کد تایید به این شماره ارسال می‌شود. 
+                    <br>
+                    <span class="text-info">💡 می‌توانید از اعداد فارسی یا انگلیسی استفاده کنید</span>
+                </small>
             </div>
             <button type="submit" class="btn btn-primary w-100 mt-3">📝 ثبت‌نام</button>
         </form>

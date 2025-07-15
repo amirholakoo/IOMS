@@ -10,8 +10,29 @@ from django.contrib.auth.models import Group, Permission
 from django.utils.html import format_html
 from django.urls import reverse
 from django.utils.safestring import mark_safe
+from django import forms
 from .models import User, UserSession
+from HomayOMS.utils import normalize_phone_input, validate_phone_input, normalize_number_input, validate_number_input
+from HomayOMS.utils import NumberValidationError
 
+
+class UserAdminForm(forms.ModelForm):
+    """
+    📝 فرم مدیریت کاربران با اعتبارسنجی اعداد فارسی
+    """
+    
+    def clean_phone(self):
+        """اعتبارسنجی شماره تلفن با تبدیل خودکار اعداد فارسی"""
+        phone = self.cleaned_data.get('phone')
+        if phone:
+            try:
+                normalized_phone = normalize_phone_input(phone)
+                if not validate_phone_input(normalized_phone):
+                    raise forms.ValidationError('شماره تلفن باید با 09 شروع شده و 11 رقم باشد')
+                return normalized_phone
+            except NumberValidationError as e:
+                raise forms.ValidationError(f'خطا در شماره تلفن: {str(e)}')
+        return phone
 
 @admin.register(User)
 class UserAdmin(BaseUserAdmin):
@@ -19,6 +40,8 @@ class UserAdmin(BaseUserAdmin):
     🎛️ پنل مدیریت کاربران با قابلیت‌های پیشرفته
     🔐 مدیریت نقش‌ها، مجوزها و وضعیت کاربران
     """
+    
+    form = UserAdminForm
     
     # 📋 فیلدهای نمایش در لیست کاربران
     list_display = [

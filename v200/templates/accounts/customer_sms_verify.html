@@ -215,14 +215,15 @@
                     id="verification_code" 
                     name="verification_code" 
                     class="code-input"
-                    placeholder="123456"
+                    placeholder="۱۲۳۴۵۶ یا 123456"
                     maxlength="6"
                     pattern="[0-9]{6}"
                     required
                     autocomplete="one-time-code"
                 >
                 <div class="code-hint">
-                    💡 کد تایید در ترمینال نمایش داده شده است (تست)
+                    💡 کد تایید در ترمینال نمایش داده شده است (تست)<br>
+                    <span class="text-info">✨ می‌توانید از اعداد فارسی یا انگلیسی استفاده کنید</span>
                 </div>
             </div>
             
@@ -271,12 +272,29 @@ const timer = setInterval(function() {
     }
 }, 1000);
 
-// فرمت خودکار کد تایید
+// فرمت خودکار کد تایید با پشتیبانی از اعداد فارسی
 document.getElementById('verification_code').addEventListener('input', function(e) {
-    let value = e.target.value.replace(/\D/g, ''); // حذف کاراکترهای غیر عددی
+    let value = e.target.value;
+    
+    // تبدیل اعداد فارسی به انگلیسی
+    const persianToEnglish = {
+        '۰': '0', '۱': '1', '۲': '2', '۳': '3', '۴': '4',
+        '۵': '5', '۶': '6', '۷': '7', '۸': '8', '۹': '9'
+    };
+    
+    // تبدیل اعداد فارسی
+    value = value.replace(/[۰-۹]/g, function(digit) {
+        return persianToEnglish[digit] || digit;
+    });
+    
+    // حذف کاراکترهای غیر عددی
+    value = value.replace(/\D/g, '');
+    
+    // محدود کردن طول
     if (value.length > 6) {
         value = value.substring(0, 6);
     }
+    
     e.target.value = value;
     
     // ارسال خودکار فرم پس از وارد کردن 6 رقم
@@ -292,10 +310,22 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('verification_code').focus();
 });
 
-// جلوگیری از paste کاراکترهای غیر عددی
+// جلوگیری از paste کاراکترهای غیر عددی با پشتیبانی از اعداد فارسی
 document.getElementById('verification_code').addEventListener('paste', function(e) {
     e.preventDefault();
     let paste = (e.clipboardData || window.clipboardData).getData('text');
+    
+    // تبدیل اعداد فارسی به انگلیسی
+    const persianToEnglish = {
+        '۰': '0', '۱': '1', '۲': '2', '۳': '3', '۴': '4',
+        '۵': '5', '۶': '6', '۷': '7', '۸': '8', '۹': '9'
+    };
+    
+    // تبدیل اعداد فارسی
+    paste = paste.replace(/[۰-۹]/g, function(digit) {
+        return persianToEnglish[digit] || digit;
+    });
+    
     let numbers = paste.replace(/\D/g, '').substring(0, 6);
     this.value = numbers;
     

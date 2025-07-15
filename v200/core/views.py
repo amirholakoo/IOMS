@@ -34,11 +34,18 @@ from django.template.loader import render_to_string
 from django.core.exceptions import PermissionDenied
 from django.http import HttpResponseForbidden
 from django.core.exceptions import ValidationError
+from django.core.management import call_command
+from django.db import transaction
+from decimal import Decimal
+import re
+
+from HomayOMS.form_mixins import NumberValidationMixin
+from HomayOMS.utils import normalize_number_input, validate_number_input, NumberValidationError
 
 logger = logging.getLogger(__name__)
 
 
-class CustomerForm(ModelForm):
+class CustomerForm(ModelForm, NumberValidationMixin):
     """📝 فرم مدیریت مشتریان با اعتبارسنجی کامل"""
     class Meta:
         model = Customer
@@ -64,17 +71,20 @@ class CustomerForm(ModelForm):
         return customer_name
     
     def clean_phone(self):
-        """📞 اعتبارسنجی شماره تلفن"""
-        phone = self.cleaned_data.get('phone')
-        if phone:
-            # بررسی یکتا بودن شماره تلفن
-            if self.instance.pk:
-                if Customer.objects.filter(phone=phone).exclude(pk=self.instance.pk).exists():
-                    raise ValidationError('این شماره تلفن قبلاً ثبت شده است')
-            else:
-                if Customer.objects.filter(phone=phone).exists():
-                    raise ValidationError('این شماره تلفن قبلاً ثبت شده است')
-        return phone
+        """📞 اعتبارسنجی شماره تلفن با تبدیل خودکار اعداد فارسی"""
+        return self.clean_phone_field('phone', allow_empty=True)
+    
+    def clean_national_id(self):
+        """🆔 اعتبارسنجی شناسه ملی با تبدیل خودکار اعداد فارسی"""
+        return self.clean_number_field('national_id', allow_empty=True)
+    
+    def clean_economic_code(self):
+        """💼 اعتبارسنجی کد اقتصادی با تبدیل خودکار اعداد فارسی"""
+        return self.clean_number_field('economic_code', allow_empty=True)
+    
+    def clean_postcode(self):
+        """📮 اعتبارسنجی کد پستی با تبدیل خودکار اعداد فارسی"""
+        return self.clean_number_field('postcode', allow_empty=True)
 
 
 def get_client_ip(request):
@@ -2119,8 +2129,24 @@ def create_order_for_customer_view(request, customer_id):
         
         try:
             product = Product.objects.get(id=product_id, status='In-stock')
-            quantity = int(quantity)
-            
+            # Validate and normalize quantity
+            try:
+                quantity = normalize_number_input(quantity)
+                if not validate_number_input(quantity):
+                    messages.error(request, '❌ تعداد وارد شده نامعتبر است')
+                    return render(request, 'core/create_order_for_customer.html', {
+                        'customer': customer,
+                        'available_products': available_products,
+                        'title': f'🛒 ایجاد سفارش برای {customer.customer_name}'
+                    })
+                quantity = int(quantity)
+            except Exception:
+                messages.error(request, '❌ تعداد وارد شده نامعتبر است')
+                return render(request, 'core/create_order_for_customer.html', {
+                    'customer': customer,
+                    'available_products': available_products,
+                    'title': f'🛒 ایجاد سفارش برای {customer.customer_name}'
+                })
             if quantity <= 0:
                 messages.error(request, '❌ تعداد باید بیشتر از صفر باشد')
                 return render(request, 'core/create_order_for_customer.html', {
@@ -2203,10 +2229,30 @@ def create_order_for_customer_view(request, customer_id):
     })
 
 
-class ProductForm(ModelForm):
+class ProductForm(ModelForm, NumberValidationMixin):
     class Meta:
         model = Product
         fields = ['reel_number', 'location', 'width', 'gsm', 'length', 'grade', 'breaks', 'qr_code', 'price']
+    
+    def clean_width(self):
+        """📏 اعتبارسنجی عرض با تبدیل خودکار اعداد فارسی"""
+        return self.clean_number_field('width', allow_empty=False, min_value=1)
+    
+    def clean_gsm(self):
+        """⚖️ اعتبارسنجی GSM با تبدیل خودکار اعداد فارسی"""
+        return self.clean_number_field('gsm', allow_empty=False, min_value=1)
+    
+    def clean_length(self):
+        """📐 اعتبارسنجی طول با تبدیل خودکار اعداد فارسی"""
+        return self.clean_number_field('length', allow_empty=False, min_value=1)
+    
+    def clean_breaks(self):
+        """💔 اعتبارسنجی تعداد شکستگی با تبدیل خودکار اعداد فارسی"""
+        return self.clean_number_field('breaks', allow_empty=True, min_value=0)
+    
+    def clean_price(self):
+        """💰 اعتبارسنجی قیمت با تبدیل خودکار اعداد فارسی"""
+        return self.clean_price_field('price', allow_empty=False, min_value=0)
 
 @login_required
 @super_admin_permission_required('manage_inventory')
@@ -2433,7 +2479,14 @@ def process_order_view(request):
         for key, value in request.POST.items():
             if key.startswith('product_id_'):
                 product_id = key.replace('product_id_', '')
-                quantity = int(request.POST.get(f'quantity_{product_id}', 0))
+                quantity_raw = request.POST.get(f'quantity_{product_id}', 0)
+                try:
+                    quantity = normalize_number_input(quantity_raw)
+                    if not validate_number_input(quantity):
+                        continue
+                    quantity = int(quantity)
+                except Exception:
+                    continue
                 payment_method = request.POST.get(f'payment_method_{product_id}', 'Cash')
                 
                 if quantity > 0:

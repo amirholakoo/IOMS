@@ -3,14 +3,34 @@ from django.utils.html import format_html
 from django.utils import timezone
 from django.urls import reverse
 from django.http import HttpResponseRedirect
+from django import forms
 from .models import Payment, PaymentCallback, PaymentRefund
+from HomayOMS.utils import normalize_number_input, validate_number_input
+from HomayOMS.utils import NumberValidationError
 
+
+class PaymentAdminForm(forms.ModelForm):
+    """
+    📝 فرم مدیریت پرداخت‌ها با اعتبارسنجی اعداد فارسی
+    """
+    
+    def clean_amount(self):
+        """اعتبارسنجی مبلغ با تبدیل خودکار اعداد فارسی"""
+        amount = self.cleaned_data.get('amount')
+        if amount:
+            try:
+                return normalize_number_input(str(amount))
+            except NumberValidationError:
+                raise forms.ValidationError('مبلغ باید فقط شامل اعداد باشد')
+        return amount
 
 @admin.register(Payment)
 class PaymentAdmin(admin.ModelAdmin):
     """
     💳 مدیریت پرداخت‌ها در پنل ادمین
     """
+    
+    form = PaymentAdminForm
     
     list_display = [
         'tracking_code', 'status_badge', 'gateway_badge', 'amount_display', 

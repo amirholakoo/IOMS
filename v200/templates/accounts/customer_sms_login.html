@@ -177,7 +177,7 @@
                     id="phone" 
                     name="phone" 
                     class="phone-input"
-                    placeholder="09123456789"
+                    placeholder="۰۹۱۲۳۴۵۶۷۸۹ یا 09123456789"
                     maxlength="11"
                     pattern="09[0-9]{9}"
                     required
@@ -185,7 +185,8 @@
                 >
                 <div class="phone-format">
                     💡 شماره موبایل باید با 09 شروع شده و 11 رقم باشد<br>
-                    مثال: 09123456789
+                    مثال: ۰۹۱۲۳۴۵۶۷۸۹ یا 09123456789<br>
+                    <span class="text-info">✨ می‌توانید از اعداد فارسی یا انگلیسی استفاده کنید</span>
                 </div>
             </div>
             
@@ -214,13 +215,65 @@
 </div>
 
 <script>
-// فرمت خودکار شماره تلفن
+// فرمت خودکار شماره تلفن با پشتیبانی از اعداد فارسی
 document.getElementById('phone').addEventListener('input', function(e) {
-    let value = e.target.value.replace(/\D/g, ''); // حذف کاراکترهای غیر عددی
+    let value = e.target.value;
+    
+    // تبدیل اعداد فارسی به انگلیسی
+    const persianToEnglish = {
+        '۰': '0', '۱': '1', '۲': '2', '۳': '3', '۴': '4',
+        '۵': '5', '۶': '6', '۷': '7', '۸': '8', '۹': '9'
+    };
+    
+    // تبدیل اعداد فارسی
+    value = value.replace(/[۰-۹]/g, function(digit) {
+        return persianToEnglish[digit] || digit;
+    });
+    
+    // حذف کاراکترهای غیر عددی
+    value = value.replace(/\D/g, '');
+    
+    // محدود کردن طول
     if (value.length > 11) {
         value = value.substring(0, 11);
     }
+    
     e.target.value = value;
+});
+
+// اعتبارسنجی در هنگام blur
+document.getElementById('phone').addEventListener('blur', function(e) {
+    const value = e.target.value;
+    const phoneRegex = /^09\d{9}$/;
+    
+    if (value && !phoneRegex.test(value)) {
+        // نمایش خطا
+        let errorDiv = this.parentNode.querySelector('.phone-error');
+        if (!errorDiv) {
+            errorDiv = document.createElement('div');
+            errorDiv.className = 'phone-error text-danger small mt-1';
+            this.parentNode.appendChild(errorDiv);
+        }
+        errorDiv.textContent = '📱 شماره تلفن باید با 09 شروع شده و 11 رقم باشد';
+        this.classList.add('is-invalid');
+    } else {
+        // حذف خطا
+        const errorDiv = this.parentNode.querySelector('.phone-error');
+        if (errorDiv) {
+            errorDiv.remove();
+        }
+        this.classList.remove('is-invalid');
+        this.classList.add('is-valid');
+    }
+});
+
+// حذف خطا در هنگام focus
+document.getElementById('phone').addEventListener('focus', function(e) {
+    const errorDiv = this.parentNode.querySelector('.phone-error');
+    if (errorDiv) {
+        errorDiv.remove();
+    }
+    this.classList.remove('is-invalid', 'is-valid');
 });
 
 // Focus خودکار روی فیلد شماره تلفن
