@@ -26,124 +26,6 @@
 
     <!-- Main Content - Shown during working hours -->
     <main class="main-content" id="mainContent">
-        <!-- 🔄 Unpaid Orders Section -->
-        {% if user.is_authenticated and unpaid_orders %}
-        <section id="unpaidOrdersSection" class="section unpaid-orders-section">
-            <div class="section-header">
-                <h2 class="section-title">
-                    <span class="section-icon">🔄</span>
-                    سفارشات ناتمام
-                </h2>
-                <p class="section-subtitle">سفارشات شما که نیاز به تکمیل دارند</p>
-            </div>
-            
-            <!-- Individual Orders Display -->
-            <div class="unpaid-orders-list">
-                {% for order in unpaid_orders %}
-                <div class="order-card" data-order-id="{{ order.id }}">
-                    <div class="order-header">
-                        <div class="order-info">
-                            <h4 class="order-number">🏷️ سفارش #{{ order.order_number }}</h4>
-                            <div class="order-meta">
-                                <span class="order-date">{{ order.created_at|date:"Y/m/d H:i" }}</span>
-                                <span class="order-amount">💰 {{ order.final_amount|floatformat:0 }} تومان</span>
-                            </div>
-                        </div>
-                        <div class="order-status">
-                            {% if order.incomplete_reason == 'no_payment_initiated' %}
-                                <span class="status-badge warning">💳 آماده پرداخت</span>
-                            {% elif order.incomplete_reason == 'payment_pending' %}
-                                <span class="status-badge info">🔄 در حال پردازش</span>
-                            {% elif order.incomplete_reason == 'payment_failed' %}
-                                <span class="status-badge danger">❌ پرداخت ناموفق</span>
-                            {% elif order.incomplete_reason == 'processing_unfinalized' %}
-                                <span class="status-badge info">🔄 نیاز به تکمیل</span>
-                            {% elif order.incomplete_reason == 'awaiting_admin_approval' %}
-                                <span class="status-badge secondary">⏳ در انتظار تایید</span>
-                            {% else %}
-                                <span class="status-badge pending">⏳ در انتظار</span>
-                            {% endif %}
-                        </div>
-                    </div>
-                    
-                    <div class="order-details">
-                        <div class="order-message">
-                            <p>{{ order.customer_message|default:"سفارش شما نیاز به تکمیل دارد" }}</p>
-                        </div>
-                        
-                        <div class="order-items">
-                            <h6>📦 محصولات سفارش:</h6>
-                            <div class="items-list">
-                                {% for item in order.order_items.all %}
-                                <div class="item">
-                                    <span class="item-name">{{ item.product.reel_number }}</span>
-                                    <span class="item-quantity">{{ item.quantity }} عدد</span>
-                                    <span class="item-price">{{ item.total_price|floatformat:0 }} تومان</span>
-                                </div>
-                                {% endfor %}
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="order-actions">
-                        {% if order.can_pay %}
-                            {% if order.incomplete_reason == 'processing_unfinalized' %}
-                                <button class="btn btn-primary complete-processing-btn" 
-                                        data-order-id="{{ order.id }}" 
-                                        data-order-number="{{ order.order_number }}">
-                                    <span class="btn-icon">✅</span>
-                                    <span class="btn-text">تکمیل خرید</span>
-                                </button>
-                            {% else %}
-                                <button class="btn btn-success continue-payment-btn" 
-                                        data-order-id="{{ order.id }}" 
-                                        data-order-number="{{ order.order_number }}">
-                                    <span class="btn-icon">💳</span>
-                                    <span class="btn-text">{{ order.action_text|default:"ادامه پرداخت" }}</span>
-                                </button>
-                            {% endif %}
-                        {% else %}
-                            <button class="btn btn-secondary" disabled>
-                                <span class="btn-icon">⏳</span>
-                                <span class="btn-text">{{ order.action_text|default:"در انتظار" }}</span>
-                            </button>
-                        {% endif %}
-                        
-                        <a href="{% url 'core:order_detail' order.id %}" class="btn btn-outline-info">
-                            <span class="btn-icon">👁️</span>
-                            <span class="btn-text">مشاهده جزئیات</span>
-                        </a>
-                    </div>
-                </div>
-                {% endfor %}
-            </div>
-            
-            <!-- Order Summary -->
-            <div class="bulk-action-section">
-                <div class="bulk-action-card">
-                    <div class="bulk-action-header">
-                        <h4>📊 خلاصه سفارشات</h4>
-                        <p>وضعیت کلی سفارشات ناتمام شما</p>
-                    </div>
-                    <div class="bulk-action-content">
-                        <div class="bulk-stats">
-                            <div class="stat-item">
-                                <span class="stat-label">تعداد سفارشات:</span>
-                                <span class="stat-value">{{ unpaid_orders|length }}</span>
-                            </div>
-                            <div class="stat-item">
-                                <span class="stat-label">مجموع مبلغ:</span>
-                                <span class="stat-value">{{ unpaid_orders_total|floatformat:0 }} تومان</span>
-                            </div>
-                        </div>
-                        <div class="summary-note">
-                            <p>💡 برای تکمیل هر سفارش، روی دکمه "تکمیل خرید" در کارت سفارش مربوطه کلیک کنید.</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-        {% endif %}
         
         <section id="cashSection" class="section cash-section">
             <div class="info-grid">
@@ -379,10 +261,8 @@
 {% endblock %}
 
 <style>
-/* Incomplete Orders Summary Styles */
-.unpaid-orders-summary {
-    margin: 2rem 0;
-}
+
+
 
 .summary-card {
     background: linear-gradient(135deg, #fff5f5, #fef7ff);
@@ -527,10 +407,7 @@
     font-size: 1.2rem;
 }
 
-/* Individual Order Cards Styles */
-.unpaid-orders-list {
-    margin: 2rem 0;
-}
+
 
 .order-card {
     background: white;
@@ -824,63 +701,7 @@
 <script>
 
 
-    // Handle continue payment button for individual orders
-    $(document).on('click', '.continue-payment-btn', function(e) {
-        e.preventDefault();
-        
-        console.log('[DEBUG] Continue payment button clicked');
-        
-        const button = $(this);
-        const orderId = button.data('order-id');
-        const orderNumber = button.data('order-number');
-        
-        console.log('[DEBUG] Order ID:', orderId);
-        console.log('[DEBUG] Order Number:', orderNumber);
-        
-        // Disable button and show loading
-        button.prop('disabled', true);
-        const originalText = button.find('.btn-text').text();
-        button.find('.btn-text').text('در حال هدایت...');
-        
-        // Redirect to selected_products page to restore order context
-        const selectedProductsUrl = `/core/selected-products/?order_id=${orderId}`;
-        console.log('[DEBUG] Redirecting to selected_products:', selectedProductsUrl);
-        
-        setTimeout(() => {
-            window.location.href = selectedProductsUrl;
-        }, 500);
-    });
 
-    // Handle complete processing order button
-    $(document).on('click', '.complete-processing-btn', function(e) {
-        e.preventDefault();
-        
-        console.log('[DEBUG] Complete processing button clicked');
-        console.log('[DEBUG] Event target:', e.target);
-        console.log('[DEBUG] Current target:', e.currentTarget);
-        
-        const button = $(this);
-        const orderId = button.data('order-id');
-        const orderNumber = button.data('order-number');
-        
-        console.log('[DEBUG] Order ID:', orderId);
-        console.log('[DEBUG] Order Number:', orderNumber);
-        console.log('[DEBUG] Button text before:', button.find('.btn-text').text());
-        
-        // Disable button and show loading
-        button.prop('disabled', true);
-        const originalText = button.find('.btn-text').text();
-        button.find('.btn-text').text('در حال هدایت...');
-        
-        console.log('[DEBUG] Button text after:', button.find('.btn-text').text());
-        
-        // Redirect directly to selected_products page to restore order context
-        const selectedProductsUrl = `/core/selected-products/?order_id=${orderId}`;
-        console.log('[DEBUG] Redirecting to selected_products:', selectedProductsUrl);
-        
-        // Immediate redirect for testing
-        window.location.href = selectedProductsUrl;
-    });
 </script>
 
 <script src="{% static 'js/index.js' %}"></script>

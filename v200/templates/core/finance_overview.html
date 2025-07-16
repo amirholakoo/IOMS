@@ -339,7 +339,7 @@
                                 <tbody>
                                     {% for transaction in recent_transactions %}
                                     <tr>
-                                        <td>{{ transaction.created_at|date:"Y/m/d H:i" }}</td>
+                                        <td><span class="jalali-date" data-date="{{ transaction.created_at|date:'Y-m-d H:i:s' }}">{{ transaction.created_at|date:"Y/m/d H:i" }}</span></td>
                                         <td>{{ transaction.order_number }}</td>
                                         <td class="text-success">+{{ transaction.final_amount|floatformat:0 }} ت</td>
                                         <td>

@@ -275,13 +275,13 @@
                         {% if product.price_updated_at %}
                         <br>
                         <small class="text-muted">
-                            📅 {{ product.price_updated_at|date:"Y/m/d" }}
+                            📅 <span class="jalali-date" data-date="{{ product.price_updated_at|date:'Y-m-d H:i:s' }}">{{ product.price_updated_at|date:"Y/m/d" }}</span>
                         </small>
                         {% endif %}
                     </td>
                     <td>
                         <small class="text-muted">
-                            {{ product.created_at|date:"Y/m/d H:i" }}
+                            <span class="jalali-date" data-date="{{ product.created_at|date:'Y-m-d H:i:s' }}">{{ product.created_at|date:"Y/m/d H:i" }}</span>
                         </small>
                     </td>
                     <td>

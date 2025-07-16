@@ -404,7 +404,7 @@
                 </div>
                 <div class="col-md-6">
                     <p><strong>📅 تاریخ تنظیم:</strong> 
-                        {{ current_working_hours.created_at|date:"Y/m/d H:i" }}
+                        <span class="jalali-date" data-date="{{ current_working_hours.created_at|date:'Y-m-d H:i:s' }}">{{ current_working_hours.created_at|date:"Y/m/d H:i" }}</span>
                     </p>
                     <p><strong>🔄 وضعیت:</strong> 
                         {% if current_working_hours.is_currently_open %}
@@ -478,7 +478,7 @@
                                     سیستم
                                 {% endif %}
                             </td>
-                            <td>{{ hours.created_at|date:"Y/m/d H:i" }}</td>
+                            <td><span class="jalali-date" data-date="{{ hours.created_at|date:'Y-m-d H:i:s' }}">{{ hours.created_at|date:"Y/m/d H:i" }}</span></td>
                         </tr>
                         {% endfor %}
                     </tbody>

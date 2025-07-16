@@ -346,7 +346,7 @@
                         </td>
                         <td>
                                 <div class="small">
-                                    {{ user.date_joined|date:"Y/m/d" }}
+                                    <span class="jalali-date" data-date="{{ user.date_joined|date:'Y-m-d H:i:s' }}">{{ user.date_joined|date:"Y/m/d" }}</span>
                                 </div>
                             </td>
                             <td>

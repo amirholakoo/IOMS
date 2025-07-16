@@ -268,7 +268,7 @@
                         </div>
                         
                         <div class="card-footer text-center text-muted">
-                            <small>📅 {{ product.created_at|date:"Y/m/d" }}</small>
+                            <small>📅 <span class="jalali-date" data-date="{{ product.created_at|date:'Y-m-d H:i:s' }}">{{ product.created_at|date:"Y/m/d" }}</span></small>
                         </div>
                     </div>
                 </div>

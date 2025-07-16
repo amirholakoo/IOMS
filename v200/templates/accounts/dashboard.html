@@ -156,8 +156,8 @@
                     <div class="mt-3">
                         <h6>📊 آمار کاربر</h6>
                         <ul class="list-unstyled small">
-                            <li>📅 عضو از: {{ user.date_joined|date:"Y/m/d" }}</li>
-                            <li>⏰ آخرین ورود: {{ user.last_login|date:"Y/m/d H:i"|default:"هرگز" }}</li>
+                            <li>📅 عضو از: <span class="jalali-date" data-date="{{ user.date_joined|date:'Y-m-d H:i:s' }}">{{ user.date_joined|date:"Y/m/d" }}</span></li>
+                            <li>⏰ آخرین ورود: <span class="jalali-date" data-date="{{ user.last_login|date:'Y-m-d H:i:s' }}">{{ user.last_login|date:"Y/m/d H:i"|default:"هرگز" }}</span></li>
                             <li>📊 وضعیت: {{ user.get_status_display }}</li>
                         </ul>
                     </div>

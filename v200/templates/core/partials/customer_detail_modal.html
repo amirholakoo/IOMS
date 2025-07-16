@@ -54,12 +54,12 @@
                 
                 <div class="info-item">
                     <div class="info-label">📅 تاریخ ایجاد:</div>
-                    <div class="info-value">{{ customer.created_at|date:"Y/m/d H:i" }}</div>
+                    <div class="info-value"><span class="jalali-date" data-date="{{ customer.created_at|date:'Y-m-d H:i:s' }}">{{ customer.created_at|date:"Y/m/d H:i" }}</span></div>
                 </div>
                 
                 <div class="info-item">
                     <div class="info-label">🔄 آخرین بروزرسانی:</div>
-                    <div class="info-value">{{ customer.updated_at|date:"Y/m/d H:i" }}</div>
+                    <div class="info-value"><span class="jalali-date" data-date="{{ customer.updated_at|date:'Y-m-d H:i:s' }}">{{ customer.updated_at|date:"Y/m/d H:i" }}</span></div>
                 </div>
             </div>
         </div>

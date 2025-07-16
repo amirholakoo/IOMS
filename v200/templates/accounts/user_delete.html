@@ -314,7 +314,7 @@
                 
                 <div class="info-item">
                     <span class="info-label">⏰ تاریخ عضویت:</span>
-                    <span class="info-value">{{ user_obj.date_joined|date:"Y/m/d H:i" }}</span>
+                    <span class="info-value"><span class="jalali-date" data-date="{{ user_obj.date_joined|date:'Y-m-d H:i:s' }}">{{ user_obj.date_joined|date:"Y/m/d H:i" }}</span></span>
                 </div>
                 
                 {% if user_obj.notes %}

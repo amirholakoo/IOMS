@@ -91,7 +91,7 @@
                 {% for order in page_obj %}
                 <tr>
                     <td>{{ order.order_number }}</td>
-                    <td>{{ order.created_at|date:"Y/m/d H:i" }}</td>
+                    <td><span class="jalali-date" data-date="{{ order.created_at|date:'Y-m-d H:i:s' }}">{{ order.created_at|date:"Y/m/d H:i" }}</span></td>
                     <td>{{ order.get_status_display }}</td>
                     <td>{{ order.final_amount|default:order.total_amount|floatformat:0 }} تومان</td>
                     <td>

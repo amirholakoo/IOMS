@@ -109,7 +109,7 @@
 
                 <!-- Action Buttons -->
                 <div class="action-buttons mt-4 text-center">
-                    <button type="button" class="btn btn-secondary btn-lg me-3" onclick="window.history.back()">
+                    <button type="button" class="btn btn-secondary btn-lg me-3" onclick="confirmLeavePage()">
                         🔙 بازگشت
                     </button>
                     <button type="submit" class="btn btn-success btn-lg" id="proceed-btn">
@@ -160,6 +160,37 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">بستن</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Page Leave Warning Modal -->
+<div class="modal fade" id="leaveWarningModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title">⚠️ هشدار خروج از صفحه</h5>
+            </div>
+            <div class="modal-body text-center">
+                <div class="mb-3">
+                    <i class="fas fa-exclamation-triangle text-warning" style="font-size: 3rem;"></i>
+                </div>
+                <h6 class="text-danger mb-3">آیا مطمئن هستید که می‌خواهید از این صفحه خارج شوید؟</h6>
+                <p class="text-muted">
+                    در صورت خروج از این صفحه، سفارش شما لغو خواهد شد و محصولات به انبار بازگردانده می‌شوند.
+                </p>
+                <div class="alert alert-info">
+                    <strong>توجه:</strong> این عمل قابل بازگشت نیست و محصولات برای سایر مشتریان قابل انتخاب خواهند بود.
+                </div>
+            </div>
+            <div class="modal-footer justify-content-center">
+                <button type="button" class="btn btn-secondary" onclick="cancelLeave()">
+                    🔄 ماندن در صفحه
+                </button>
+                <button type="button" class="btn btn-danger" onclick="confirmLeave()">
+                    ❌ خروج و لغو سفارش
+                </button>
             </div>
         </div>
     </div>
@@ -353,6 +384,10 @@
 </style>
 
 <script>
+// Page Exit Protection Variables
+let isLeavingPage = false;
+let hasShownWarning = false;
+
 let totalItems = 0;
 let maxItems = {{ max_selection_limit }}; // Initial value from server, will be updated from API
 
@@ -650,5 +685,115 @@ function showError(message) {
     const modal = new bootstrap.Modal(document.getElementById('errorModal'));
     modal.show();
 }
+
+// ===== PAGE EXIT PROTECTION FUNCTIONS =====
+
+// Show leave warning modal
+function showLeaveWarning() {
+    if (!hasShownWarning) {
+        hasShownWarning = true;
+        const modal = new bootstrap.Modal(document.getElementById('leaveWarningModal'));
+        modal.show();
+    }
+}
+
+// Confirm leave page (user clicked "خروج و لغو سفارش")
+function confirmLeave() {
+    isLeavingPage = true;
+    
+    // Cancel the order via AJAX
+    cancelOrderOnLeave()
+        .then(() => {
+            // Close modal and redirect
+            const modal = bootstrap.Modal.getInstance(document.getElementById('leaveWarningModal'));
+            modal.hide();
+            
+            // Redirect to products landing page
+            window.location.href = '{% url "core:products_landing" %}';
+        })
+        .catch(error => {
+            console.error('Error cancelling order:', error);
+            // Still redirect even if cancellation fails
+            window.location.href = '{% url "core:products_landing" %}';
+        });
+}
+
+// Cancel leave (user clicked "ماندن در صفحه")
+function cancelLeave() {
+    hasShownWarning = false;
+    const modal = bootstrap.Modal.getInstance(document.getElementById('leaveWarningModal'));
+    modal.hide();
+}
+
+// Confirm leave page when back button is clicked
+function confirmLeavePage() {
+    showLeaveWarning();
+}
+
+// Cancel order via AJAX when user leaves
+async function cancelOrderOnLeave() {
+    try {
+        const response = await fetch('{% url "core:cancel_draft_order" %}', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        const data = await response.json();
+        if (!data.success) {
+            console.warn('Order cancellation warning:', data.error);
+        }
+        return data;
+    } catch (error) {
+        console.error('Error cancelling order:', error);
+        throw error;
+    }
+}
+
+// ===== PAGE EXIT EVENT LISTENERS =====
+
+// Before unload event (browser close, refresh, navigation)
+window.addEventListener('beforeunload', function(e) {
+    if (!isLeavingPage) {
+        e.preventDefault();
+        e.returnValue = 'اگر از این صفحه خارج شوید، سفارش شما لغو خواهد شد.';
+        return 'اگر از این صفحه خارج شوید، سفارش شما لغو خواهد شد.';
+    }
+});
+
+// Page visibility change (tab switching, minimizing)
+document.addEventListener('visibilitychange', function() {
+    if (document.visibilityState === 'hidden' && !isLeavingPage) {
+        // User switched tabs or minimized - show warning when they return
+        setTimeout(() => {
+            if (document.visibilityState === 'visible' && !isLeavingPage) {
+                showLeaveWarning();
+            }
+        }, 1000);
+    }
+});
+
+// Popstate event (back/forward button)
+window.addEventListener('popstate', function(e) {
+    if (!isLeavingPage) {
+        e.preventDefault();
+        showLeaveWarning();
+        // Push the current state back to prevent navigation
+        history.pushState(null, null, window.location.href);
+    }
+});
+
+// Initialize page exit protection
+document.addEventListener('DOMContentLoaded', function() {
+    // Push initial state to enable popstate detection
+    history.pushState(null, null, window.location.href);
+    
+    // Add event listener for form submission to prevent exit protection
+    document.getElementById('order-form').addEventListener('submit', function() {
+        isLeavingPage = true; // Allow normal form submission
+    });
+});
 </script>
 {% endblock %} 

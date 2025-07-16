@@ -115,7 +115,7 @@
                             </span>
                         </p>
                         <p><strong>📍 آدرس:</strong> {{ customer.address|default:"ثبت نشده"|truncatechars:50 }}</p>
-                        <p><strong>📅 تاریخ ثبت:</strong> {{ customer.created_at|date:"Y/m/d" }}</p>
+                        <p><strong>📅 تاریخ ثبت:</strong> <span class="jalali-date" data-date="{{ customer.created_at|date:'Y-m-d H:i:s' }}">{{ customer.created_at|date:"Y/m/d" }}</span></p>
                     </div>
                 </div>
             </div>

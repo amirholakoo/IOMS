@@ -581,7 +581,7 @@
                                     
                                     <div class="d-flex justify-content-between align-items-center">
                                         <small class="text-muted">
-                                            📅 {{ customer.created_at|date:"Y/m/d" }}
+                                            📅 <span class="jalali-date" data-date="{{ customer.created_at|date:'Y-m-d H:i:s' }}">{{ customer.created_at|date:"Y/m/d" }}</span>
                                         </small>
                                         {% if customer.status != 'Requested' %}
                                             <a href="{% url 'core:create_order_for_customer' customer.id %}" class="btn btn-modern btn-primary-modern btn-sm">

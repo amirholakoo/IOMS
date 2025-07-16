@@ -20,8 +20,8 @@
             <strong>GSM:</strong> {{ product.gsm }} g/m²<br>
             <strong>Length:</strong> {{ product.length }} m<br>
             <strong>Price:</strong> {{ product.price|floatformat:0 }} تومان<br>
-            <strong>Created:</strong> {{ product.created_at|date:'Y/m/d H:i' }}<br>
-            <strong>Updated:</strong> {{ product.updated_at|date:'Y/m/d H:i' }}<br>
+            <strong>Created:</strong> <span class="jalali-date" data-date="{{ product.created_at|date:'Y-m-d H:i:s' }}">{{ product.created_at|date:'Y/m/d H:i' }}</span><br>
+            <strong>Updated:</strong> <span class="jalali-date" data-date="{{ product.updated_at|date:'Y-m-d H:i:s' }}">{{ product.updated_at|date:'Y/m/d H:i' }}</span><br>
           </div>
         </div>
         <hr>
@@ -29,7 +29,7 @@
         <ul class="list-group">
           {% for log in product_logs %}
             <li class="list-group-item small">
-              <span class="text-muted">{{ log.created_at|date:'Y/m/d H:i' }}</span> -
+              <span class="text-muted"><span class="jalali-date" data-date="{{ log.created_at|date:'Y-m-d H:i:s' }}">{{ log.created_at|date:'Y/m/d H:i' }}</span></span> -
               <strong>{{ log.get_action_display|default:log.action }}</strong>:
               {{ log.description|default:'-' }}
               {% if log.user %}<span class="text-info">({{ log.user.username }})</span>{% endif %}

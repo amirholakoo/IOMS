@@ -2450,53 +2450,7 @@ html {
     }
 }
 
-/* 🔄 Unpaid Orders Section Styles */
-.unpaid-orders-section {
-    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-    border-radius: var(--border-radius-lg);
-    padding: 2rem;
-    margin-bottom: 2rem;
-    box-shadow: var(--box-shadow);
-    border: 2px solid #e2e8f0;
-}
 
-.unpaid-orders-section .section-header {
-    text-align: center;
-    margin-bottom: 2rem;
-}
-
-.unpaid-orders-section .section-title {
-    color: #1e293b;
-    font-size: 1.8rem;
-    font-weight: bold;
-    margin-bottom: 0.5rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-}
-
-.section-icon {
-    font-size: 2rem;
-    animation: pulse 2s infinite;
-}
-
-@keyframes pulse {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.1); }
-}
-
-.section-subtitle {
-    color: #64748b;
-    font-size: 1rem;
-    margin: 0;
-}
-
-.unpaid-orders-container {
-    display: grid;
-    gap: 1.5rem;
-    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-}
 
 /* Customer Message Styles */
 .customer-message {
@@ -2564,31 +2518,7 @@ html {
     pointer-events: none;
 }
 
-.unpaid-order-card {
-    background: white;
-    border-radius: var(--border-radius);
-    padding: 1.5rem;
-    box-shadow: var(--box-shadow);
-    border: 1px solid #e2e8f0;
-    transition: all 0.3s ease;
-    position: relative;
-    overflow: hidden;
-}
 
-.unpaid-order-card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 4px;
-    background: linear-gradient(90deg, #f59e0b, #f97316);
-}
-
-.unpaid-order-card:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--box-shadow-lg);
-}
 
 .order-header {
     display: flex;
@@ -2757,49 +2687,3 @@ html {
     transform: translateY(-1px);
 }
 
-/* Responsive Design for Unpaid Orders */
-@media (max-width: 768px) {
-    .unpaid-orders-container {
-        grid-template-columns: 1fr;
-    }
-    
-    .order-header {
-        flex-direction: column;
-        gap: 1rem;
-        align-items: flex-start;
-    }
-    
-    .items-list .item {
-        flex-direction: column;
-        gap: 0.5rem;
-        text-align: center;
-    }
-    
-    .item-details {
-        margin: 0;
-    }
-    
-    .order-actions {
-        flex-direction: column;
-    }
-    
-    .complete-order-btn,
-    .view-order-btn {
-        width: 100%;
-        justify-content: center;
-    }
-}
-
-@media (max-width: 480px) {
-    .unpaid-orders-section {
-        padding: 1rem;
-    }
-    
-    .unpaid-order-card {
-        padding: 1rem;
-    }
-    
-    .order-summary {
-        padding: 0.75rem;
-    }
-}
