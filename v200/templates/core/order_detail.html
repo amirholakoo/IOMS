@@ -253,8 +253,8 @@ document.addEventListener('DOMContentLoaded', function() {
         const dateString = element.getAttribute('data-date');
         if (dateString) {
             try {
-                const jalaliDate = JalaliDateConverter.format(dateString, 'DD Month YYYY، HH:mm');
-                element.textContent = jalaliDate;
+                const persianDate = convertToPersianDate(dateString);
+                element.textContent = persianDate;
             } catch (error) {
                 console.error('Error converting date:', error);
                 // Keep original date if conversion fails
