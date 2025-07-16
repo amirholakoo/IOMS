@@ -1403,7 +1403,49 @@ def index_view(request):
         }
     }
     
-
+    # 🔄 Check for unfinished payment orders (new policy)
+    unfinished_payment_orders = []
+    if request.user.is_authenticated:
+        try:
+            # Get customer for the current user
+            customer = request.user.customer
+            if customer:
+                # Find orders that are in 'Pending' or 'Processing' status with cash items but no successful payments
+                unfinished_orders = Order.objects.filter(
+                    customer=customer,
+                    status__in=['Pending', 'Processing'],
+                    payment_method='Cash'
+                ).prefetch_related('order_items', 'order_items__product')
+                
+                for order in unfinished_orders:
+                    # Check if order has cash items
+                    cash_items = order.order_items.filter(payment_method='Cash')
+                    if cash_items.exists():
+                        # Calculate total cash amount
+                        total_cash_amount = sum(item.total_price for item in cash_items)
+                        
+                        # Check if there are no successful payments for this order
+                        from payments.models import Payment
+                        successful_payments = Payment.objects.filter(
+                            order=order,
+                            status='SUCCESS'
+                        ).exists()
+                        
+                        if not successful_payments and total_cash_amount > 0:
+                            unfinished_payment_orders.append({
+                                'order': order,
+                                'total_cash_amount': total_cash_amount,
+                                'cash_items_count': cash_items.count(),
+                                'order_date': order.created_at,
+                                'order_number': order.order_number
+                            })
+                
+                # Sort by most recent first
+                unfinished_payment_orders.sort(key=lambda x: x['order_date'], reverse=True)
+                
+        except Exception as e:
+            logger.error(f"Error checking unfinished payment orders: {e}")
+            # Continue without unfinished orders if there's an error
     
     context = {
         'title': 'کارخانه کاغذ و مقوای همایون',
@@ -1411,6 +1453,7 @@ def index_view(request):
         'products': products,
         'credit_products': credit_products,
         'user': request.user,
+        'unfinished_payment_orders': unfinished_payment_orders,
     }
     return render(request, 'index.html', context)
 

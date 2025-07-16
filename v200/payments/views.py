@@ -98,6 +98,9 @@ def payment_summary(request, order_id):
                 messages.info(request, "هیچ آیتم نقدی در این سفارش وجود ندارد")
             else:
                 messages.warning(request, "مبلغ اقلام نقدی صفر است - لطفاً با پشتیبانی تماس بگیرید")
+        else:
+            # Welcome message for returning customers
+            messages.success(request, f"🎉 خوش آمدید! شما برای تکمیل پرداخت سفارش {order.order_number} بازگشته‌اید.")
         
         context = {
             'payment_details': payment_details,

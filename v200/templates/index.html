@@ -155,6 +155,58 @@
                 </button>
             </div>
         </section>
+
+        <!-- 🔄 Unfinished Payment Orders Section -->
+        {% if user.is_authenticated and unfinished_payment_orders %}
+        <section id="unfinishedOrdersSection" class="section unfinished-orders-section">
+            <div class="section-header">
+                <h2 class="section-title">🔄 سفارشات پرداخت نشده</h2>
+                <p class="section-subtitle">سفارشاتی که پرداخت آن‌ها تکمیل نشده است</p>
+            </div>
+
+            <div class="unfinished-orders-container">
+                {% for order_data in unfinished_payment_orders %}
+                <div class="unfinished-order-card">
+                    <div class="order-header">
+                        <div class="order-info">
+                            <h4 class="order-number">{{ order_data.order_number }}</h4>
+                            <p class="order-date">
+                                <span class="jalali-date" data-date="{{ order_data.order_date|date:'Y-m-d H:i:s' }}">
+                                    {{ order_data.order_date|date:"Y/m/d H:i" }}
+                                </span>
+                            </p>
+                        </div>
+                        <div class="order-status">
+                            <span class="status-badge pending">در انتظار پرداخت</span>
+                        </div>
+                    </div>
+
+                    <div class="order-details">
+                        <div class="order-summary">
+                            <div class="summary-item">
+                                <span class="label">تعداد اقلام:</span>
+                                <span class="value">{{ order_data.cash_items_count }} محصول</span>
+                            </div>
+                            <div class="summary-item">
+                                <span class="label">مبلغ قابل پرداخت:</span>
+                                <span class="value amount">{{ order_data.total_cash_amount|floatformat:0 }} تومان</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="order-actions">
+                        <button class="continue-payment-btn" type="button" 
+                                onclick="continuePayment('{{ order_data.order.id }}')"
+                                data-order-id="{{ order_data.order.id }}">
+                            <span class="btn-icon">💳</span>
+                            <span class="btn-text">ادامه پرداخت</span>
+                        </button>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+        {% endif %}
     </main>
 
     <!-- Closed Content - Shown outside working hours -->
@@ -394,6 +446,185 @@
     border-radius: 12px;
     transition: all 0.3s ease;
     box-shadow: 0 4px 6px rgba(16, 185, 129, 0.2);
+}
+
+.summary-actions .btn:hover {
+    background: linear-gradient(135deg, #059669, #047857);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(16, 185, 129, 0.3);
+}
+
+/* 🔄 Unfinished Payment Orders Styles */
+.unfinished-orders-section {
+    margin-top: 3rem;
+    padding: 2rem;
+    background: linear-gradient(135deg, #fef7ff, #fdf2f8);
+    border-radius: 20px;
+    border: 2px solid #e5e7eb;
+}
+
+.unfinished-orders-section .section-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.unfinished-orders-section .section-title {
+    color: #7c3aed;
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.unfinished-orders-section .section-subtitle {
+    color: #6b7280;
+    font-size: 1rem;
+    margin: 0;
+}
+
+.unfinished-orders-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.unfinished-order-card {
+    background: white;
+    border-radius: 15px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    border: 2px solid #e5e7eb;
+    transition: all 0.3s ease;
+}
+
+.unfinished-order-card:hover {
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+    border-color: #d1d5db;
+}
+
+.order-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.order-info h4 {
+    color: #374151;
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin: 0 0 0.5rem 0;
+}
+
+.order-info p {
+    color: #6b7280;
+    font-size: 0.9rem;
+    margin: 0;
+}
+
+.order-status .status-badge {
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-align: center;
+    min-width: 120px;
+}
+
+.order-details {
+    margin-bottom: 1.5rem;
+}
+
+.order-summary {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+}
+
+.summary-item {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.summary-item .label {
+    color: #6b7280;
+    font-size: 0.8rem;
+    margin-bottom: 0.25rem;
+}
+
+.summary-item .value {
+    color: #374151;
+    font-weight: 600;
+    font-size: 1rem;
+}
+
+.summary-item .value.amount {
+    color: #059669;
+    font-size: 1.1rem;
+}
+
+.order-actions {
+    text-align: center;
+}
+
+.continue-payment-btn {
+    background: linear-gradient(135deg, #7c3aed, #6d28d9);
+    color: white !important;
+    border: none;
+    padding: 1rem 2rem;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 6px rgba(124, 58, 237, 0.2);
+    text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.continue-payment-btn:hover {
+    background: linear-gradient(135deg, #6d28d9, #5b21b6);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(124, 58, 237, 0.3);
+}
+
+.continue-payment-btn .btn-icon {
+    font-size: 1.2rem;
+}
+
+.continue-payment-btn .btn-text {
+    font-weight: 600;
+}
+
+/* Responsive Design for Unfinished Orders */
+@media (max-width: 768px) {
+    .unfinished-orders-section {
+        padding: 1rem;
+        margin-top: 2rem;
+    }
+    
+    .order-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+    
+    .order-summary {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+    
+    .continue-payment-btn {
+        width: 100%;
+        justify-content: center;
+    }
 }
 
 .summary-actions .btn:hover {
@@ -699,9 +930,32 @@
 
 {% block extra_js %}
 <script>
+// 🔄 Continue Payment Function
+function continuePayment(orderId) {
+    // Show loading state
+    const button = event.target.closest('.continue-payment-btn');
+    const originalText = button.innerHTML;
+    button.innerHTML = '<span class="btn-icon">⏳</span><span class="btn-text">در حال انتقال...</span>';
+    button.disabled = true;
+    
+    // Redirect to payment summary page
+    const paymentUrl = `/payments/summary/${orderId}/`;
+    window.location.href = paymentUrl;
+}
 
-
-
+// Convert Jalali dates on page load
+document.addEventListener('DOMContentLoaded', function() {
+    // Convert all jalali-date elements
+    const jalaliElements = document.querySelectorAll('.jalali-date');
+    jalaliElements.forEach(function(element) {
+        const dateString = element.getAttribute('data-date');
+        if (dateString) {
+            // For now, just show the original date
+            // In a real implementation, you would convert to Jalali here
+            element.textContent = new Date(dateString).toLocaleDateString('fa-IR');
+        }
+    });
+});
 </script>
 
 <script src="{% static 'js/index.js' %}"></script>
