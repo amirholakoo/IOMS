@@ -34,110 +34,113 @@
                     <span class="section-icon">🔄</span>
                     سفارشات ناتمام
                 </h2>
-                <p class="section-subtitle">سفارشات نقدی که هنوز به مرحله پرداخت نرسیده‌اند</p>
+                <p class="section-subtitle">سفارشات شما که نیاز به تکمیل دارند</p>
             </div>
             
-            <div class="unpaid-orders-container">
+            <!-- Individual Orders Display -->
+            <div class="unpaid-orders-list">
                 {% for order in unpaid_orders %}
-                <div class="unpaid-order-card">
+                <div class="order-card" data-order-id="{{ order.id }}">
                     <div class="order-header">
                         <div class="order-info">
-                            <h4 class="order-number">سفارش #{{ order.order_number }}</h4>
-                            <p class="order-date">{{ order.created_at|date:"Y/m/d H:i" }}</p>
+                            <h4 class="order-number">🏷️ سفارش #{{ order.order_number }}</h4>
+                            <div class="order-meta">
+                                <span class="order-date">{{ order.created_at|date:"Y/m/d H:i" }}</span>
+                                <span class="order-amount">💰 {{ order.final_amount|floatformat:0 }} تومان</span>
+                            </div>
                         </div>
                         <div class="order-status">
                             {% if order.incomplete_reason == 'no_payment_initiated' %}
                                 <span class="status-badge warning">💳 آماده پرداخت</span>
                             {% elif order.incomplete_reason == 'payment_pending' %}
-                                <span class="status-badge info">🔄 در حال پردازش پرداخت</span>
+                                <span class="status-badge info">🔄 در حال پردازش</span>
                             {% elif order.incomplete_reason == 'payment_failed' %}
                                 <span class="status-badge danger">❌ پرداخت ناموفق</span>
-                            {% elif order.incomplete_reason == 'awaiting_admin_approval' %}
-                                <span class="status-badge pending">⏳ در انتظار تایید ادمین</span>
-                            {% elif order.incomplete_reason == 'mixed_cash_unpaid' %}
-                                <span class="status-badge warning">💳 نیاز به تکمیل پرداخت</span>
                             {% elif order.incomplete_reason == 'processing_unfinalized' %}
-                                <span class="status-badge info">🔄 نیاز به تکمیل خرید</span>
+                                <span class="status-badge info">🔄 نیاز به تکمیل</span>
+                            {% elif order.incomplete_reason == 'awaiting_admin_approval' %}
+                                <span class="status-badge secondary">⏳ در انتظار تایید</span>
                             {% else %}
-                                <span class="status-badge pending">⏳ در انتظار بررسی</span>
+                                <span class="status-badge pending">⏳ در انتظار</span>
                             {% endif %}
                         </div>
                     </div>
                     
                     <div class="order-details">
-                        <div class="order-items">
-                            <h5>محصولات انتخاب شده:</h5>
-                            <ul class="items-list">
-                                {% for item in order.order_items.all %}
-                                <li class="item">
-                                    <span class="item-name">{{ item.product.reel_number }}</span>
-                                    <span class="item-details">
-                                        {{ item.product.width }}mm × {{ item.product.gsm }}g/m² × {{ item.product.length }}m
-                                    </span>
-                                    <span class="item-price">{{ item.total_price|floatformat:0 }} تومان</span>
-                                </li>
-                                {% endfor %}
-                            </ul>
+                        <div class="order-message">
+                            <p>{{ order.customer_message|default:"سفارش شما نیاز به تکمیل دارد" }}</p>
                         </div>
                         
-                        <div class="order-summary">
-                            <div class="summary-row">
-                                <span class="summary-label">تعداد محصولات:</span>
-                                <span class="summary-value">{{ order.order_items.count }} عدد</span>
-                            </div>
-                            <div class="summary-row">
-                                <span class="summary-label">مبلغ کل:</span>
-                                <span class="summary-value total-amount">{{ order.final_amount|floatformat:0 }} تومان</span>
+                        <div class="order-items">
+                            <h6>📦 محصولات سفارش:</h6>
+                            <div class="items-list">
+                                {% for item in order.order_items.all %}
+                                <div class="item">
+                                    <span class="item-name">{{ item.product.reel_number }}</span>
+                                    <span class="item-quantity">{{ item.quantity }} عدد</span>
+                                    <span class="item-price">{{ item.total_price|floatformat:0 }} تومان</span>
+                                </div>
+                                {% endfor %}
                             </div>
                         </div>
                     </div>
                     
                     <div class="order-actions">
-                        <!-- Customer Action Message -->
-                        <div class="customer-message">
-                            <p class="message-text">{{ order.customer_message }}</p>
-                        </div>
-                        
-                        <!-- Primary Action Button -->
                         {% if order.can_pay %}
-                            {% if order.incomplete_reason == 'no_payment_initiated' or order.incomplete_reason == 'mixed_cash_unpaid' %}
-                                <a href="{% url 'payments:payment_summary' order.id %}" class="btn {{ order.action_class }} complete-order-btn">
-                            <span class="btn-icon">💳</span>
-                                    <span class="btn-text">{{ order.action_text }}</span>
-                        </a>
-                            {% elif order.incomplete_reason == 'payment_failed' %}
-                                <a href="{% url 'payments:payment_summary' order.id %}" class="btn {{ order.action_class }} retry-payment-btn">
-                                    <span class="btn-icon">🔄</span>
-                                    <span class="btn-text">{{ order.action_text }}</span>
-                                </a>
-                            {% elif order.incomplete_reason == 'processing_unfinalized' %}
-                                <button class="btn {{ order.action_class }} complete-processing-btn" data-order-id="{{ order.id }}" data-order-number="{{ order.order_number }}">
-                                    <span class="btn-icon">🚀</span>
-                                    <span class="btn-text">{{ order.action_text }}</span>
+                            {% if order.incomplete_reason == 'processing_unfinalized' %}
+                                <button class="btn btn-primary complete-processing-btn" 
+                                        data-order-id="{{ order.id }}" 
+                                        data-order-number="{{ order.order_number }}">
+                                    <span class="btn-icon">✅</span>
+                                    <span class="btn-text">تکمیل خرید</span>
+                                </button>
+                            {% else %}
+                                <button class="btn btn-success continue-payment-btn" 
+                                        data-order-id="{{ order.id }}" 
+                                        data-order-number="{{ order.order_number }}">
+                                    <span class="btn-icon">💳</span>
+                                    <span class="btn-text">{{ order.action_text|default:"ادامه پرداخت" }}</span>
                                 </button>
                             {% endif %}
                         {% else %}
-                            {% if order.incomplete_reason == 'payment_pending' %}
-                                <a href="{% url 'core:order_detail' order.id %}" class="btn {{ order.action_class }} check-status-btn">
-                                    <span class="btn-icon">🔍</span>
-                                    <span class="btn-text">{{ order.action_text }}</span>
-                                </a>
-                            {% elif order.incomplete_reason == 'awaiting_admin_approval' %}
-                                <button class="btn {{ order.action_class }} disabled" disabled>
-                                    <span class="btn-icon">⏳</span>
-                                    <span class="btn-text">{{ order.action_text }}</span>
-                                </button>
-                            {% endif %}
+                            <button class="btn btn-secondary" disabled>
+                                <span class="btn-icon">⏳</span>
+                                <span class="btn-text">{{ order.action_text|default:"در انتظار" }}</span>
+                            </button>
                         {% endif %}
                         
-                        <!-- Secondary Action - View Details -->
-                        <a href="{% url 'core:order_detail' order.id %}" class="btn btn-outline-secondary view-order-btn">
+                        <a href="{% url 'core:order_detail' order.id %}" class="btn btn-outline-info">
                             <span class="btn-icon">👁️</span>
                             <span class="btn-text">مشاهده جزئیات</span>
                         </a>
                     </div>
                 </div>
                 {% endfor %}
+            </div>
+            
+            <!-- Order Summary -->
+            <div class="bulk-action-section">
+                <div class="bulk-action-card">
+                    <div class="bulk-action-header">
+                        <h4>📊 خلاصه سفارشات</h4>
+                        <p>وضعیت کلی سفارشات ناتمام شما</p>
+                    </div>
+                    <div class="bulk-action-content">
+                        <div class="bulk-stats">
+                            <div class="stat-item">
+                                <span class="stat-label">تعداد سفارشات:</span>
+                                <span class="stat-value">{{ unpaid_orders|length }}</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">مجموع مبلغ:</span>
+                                <span class="stat-value">{{ unpaid_orders_total|floatformat:0 }} تومان</span>
+                            </div>
+                        </div>
+                        <div class="summary-note">
+                            <p>💡 برای تکمیل هر سفارش، روی دکمه "تکمیل خرید" در کارت سفارش مربوطه کلیک کنید.</p>
+                        </div>
+                    </div>
+                </div>
             </div>
         </section>
         {% endif %}
@@ -375,13 +378,457 @@
 </div>
 {% endblock %}
 
+<style>
+/* Incomplete Orders Summary Styles */
+.unpaid-orders-summary {
+    margin: 2rem 0;
+}
+
+.summary-card {
+    background: linear-gradient(135deg, #fff5f5, #fef7ff);
+    border: 2px solid #e5e7eb;
+    border-radius: 15px;
+    padding: 2rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+}
+
+.summary-card:hover {
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+}
+
+.summary-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #e5e7eb;
+}
+
+.summary-header h4 {
+    margin: 0;
+    color: #374151;
+    font-weight: 600;
+}
+
+.orders-count {
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.summary-stats {
+    margin-bottom: 1.5rem;
+}
+
+.order-preview {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    background: white;
+    border-radius: 10px;
+    margin-bottom: 0.75rem;
+    border: 1px solid #e5e7eb;
+    transition: all 0.3s ease;
+}
+
+.order-preview:hover {
+    background: #f9fafb;
+    border-color: #d1d5db;
+}
+
+.order-info strong {
+    color: #374151;
+    font-size: 0.95rem;
+}
+
+.order-info small {
+    color: #6b7280;
+    font-size: 0.8rem;
+}
+
+.status-badge {
+    padding: 0.4rem 0.8rem;
+    border-radius: 15px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-align: center;
+    min-width: 100px;
+}
+
+.status-badge.warning {
+    background: #fef3c7;
+    color: #92400e;
+    border: 1px solid #f59e0b;
+}
+
+.status-badge.info {
+    background: #dbeafe;
+    color: #1e40af;
+    border: 1px solid #3b82f6;
+}
+
+.status-badge.danger {
+    background: #fee2e2;
+    color: #991b1b;
+    border: 1px solid #ef4444;
+}
+
+.status-badge.secondary {
+    background: #f3f4f6;
+    color: #374151;
+    border: 1px solid #9ca3af;
+}
+
+.status-badge.pending {
+    background: #fef3c7;
+    color: #92400e;
+    border: 1px solid #f59e0b;
+}
+
+.more-orders {
+    text-align: center;
+    padding: 1rem;
+    color: #6b7280;
+    font-style: italic;
+}
+
+.summary-actions {
+    text-align: center;
+    padding-top: 1.5rem;
+    border-top: 2px solid #e5e7eb;
+}
+
+.summary-actions .btn {
+    background: linear-gradient(135deg, #10b981, #059669);
+    border: none;
+    padding: 1rem 2rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 6px rgba(16, 185, 129, 0.2);
+}
+
+.summary-actions .btn:hover {
+    background: linear-gradient(135deg, #059669, #047857);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(16, 185, 129, 0.3);
+}
+
+.summary-actions .btn-icon {
+    margin-left: 0.5rem;
+    font-size: 1.2rem;
+}
+
+/* Individual Order Cards Styles */
+.unpaid-orders-list {
+    margin: 2rem 0;
+}
+
+.order-card {
+    background: white;
+    border: 2px solid #e5e7eb;
+    border-radius: 15px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+}
+
+.order-card:hover {
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+    border-color: #d1d5db;
+}
+
+.order-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.order-number {
+    margin: 0 0 0.5rem 0;
+    color: #374151;
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.order-meta {
+    display: flex;
+    gap: 1rem;
+    font-size: 0.9rem;
+    color: #6b7280;
+}
+
+.order-meta span {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.order-details {
+    margin-bottom: 1.5rem;
+}
+
+.order-message {
+    background: #f9fafb;
+    padding: 1rem;
+    border-radius: 10px;
+    margin-bottom: 1rem;
+    border-left: 4px solid #3b82f6;
+}
+
+.order-message p {
+    margin: 0;
+    color: #374151;
+    font-weight: 500;
+}
+
+.order-items h6 {
+    color: #374151;
+    margin-bottom: 0.75rem;
+    font-weight: 600;
+}
+
+.items-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem;
+    background: #f9fafb;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+}
+
+.item-name {
+    font-weight: 600;
+    color: #374151;
+}
+
+.item-quantity {
+    color: #6b7280;
+    font-size: 0.9rem;
+}
+
+.item-price {
+    font-weight: 600;
+    color: #059669;
+}
+
+.order-actions {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    align-items: center;
+    padding-top: 1rem;
+    border-top: 1px solid #e5e7eb;
+}
+
+.order-actions .btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    border-radius: 10px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    color: white !important;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+}
+
+.order-actions .btn.btn-success {
+    background: linear-gradient(135deg, #10b981, #059669) !important;
+    border: none !important;
+}
+
+.order-actions .btn.btn-primary {
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8) !important;
+    border: none !important;
+}
+
+.order-actions .btn.btn-secondary {
+    background: linear-gradient(135deg, #6b7280, #4b5563) !important;
+    border: none !important;
+}
+
+.order-actions .btn.btn-outline-info {
+    background: transparent !important;
+    border: 2px solid #3b82f6 !important;
+    color: #3b82f6 !important;
+    text-shadow: none !important;
+}
+
+.order-actions .btn.btn-outline-info:hover {
+    background: #3b82f6 !important;
+    color: white !important;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.2) !important;
+}
+
+.order-actions .btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.order-actions .btn-icon {
+    font-size: 1.1rem;
+}
+
+/* Bulk Action Section */
+.bulk-action-section {
+    margin-top: 2rem;
+}
+
+.bulk-action-card {
+    background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+    border: 2px solid #0ea5e9;
+    border-radius: 15px;
+    padding: 2rem;
+    text-align: center;
+}
+
+.bulk-action-header h4 {
+    color: #0c4a6e;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+}
+
+.bulk-action-header p {
+    color: #0369a1;
+    margin-bottom: 1.5rem;
+}
+
+.bulk-action-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.bulk-stats {
+    display: flex;
+    gap: 2rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.stat-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.stat-label {
+    font-size: 0.9rem;
+    color: #0369a1;
+    font-weight: 500;
+}
+
+.stat-value {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #0c4a6e;
+}
+
+.bulk-process-btn {
+    background: linear-gradient(135deg, #0ea5e9, #0284c7);
+    border: none;
+    padding: 1rem 2rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 6px rgba(14, 165, 233, 0.2);
+}
+
+.bulk-process-btn:hover {
+    background: linear-gradient(135deg, #0284c7, #0369a1);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(14, 165, 233, 0.3);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .summary-header {
+        flex-direction: column;
+        gap: 1rem;
+        text-align: center;
+    }
+    
+    .order-preview {
+        flex-direction: column;
+        gap: 0.75rem;
+        text-align: center;
+    }
+    
+    .order-status {
+        text-align: center;
+    }
+    
+    .summary-actions .btn {
+        width: 100%;
+        padding: 1.25rem 2rem;
+    }
+    
+    .order-header {
+        flex-direction: column;
+        gap: 1rem;
+        align-items: flex-start;
+    }
+    
+    .order-meta {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .order-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .order-actions .btn {
+        justify-content: center;
+    }
+    
+    .bulk-stats {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .bulk-process-btn {
+        width: 100%;
+        padding: 1.25rem 2rem;
+    }
+}
+</style>
+
 {% block extra_js %}
 <script>
-    // Handle complete processing order button
-    $(document).on('click', '.complete-processing-btn', function(e) {
+
+
+    // Handle continue payment button for individual orders
+    $(document).on('click', '.continue-payment-btn', function(e) {
         e.preventDefault();
         
-        console.log('[DEBUG] Complete processing button clicked');
+        console.log('[DEBUG] Continue payment button clicked');
         
         const button = $(this);
         const orderId = button.data('order-id');
@@ -393,53 +840,46 @@
         // Disable button and show loading
         button.prop('disabled', true);
         const originalText = button.find('.btn-text').text();
-        button.find('.btn-text').text('در حال پردازش...');
+        button.find('.btn-text').text('در حال هدایت...');
         
-        // Get CSRF token
-        const csrfToken = $('[name=csrfmiddlewaretoken]').val();
-        console.log('[DEBUG] CSRF Token:', csrfToken ? 'Found' : 'Not found');
+        // Redirect to selected_products page to restore order context
+        const selectedProductsUrl = `/core/selected-products/?order_id=${orderId}`;
+        console.log('[DEBUG] Redirecting to selected_products:', selectedProductsUrl);
         
-        // Make AJAX call to complete the processing order
-        $.ajax({
-            url: `/core/complete-processing-order/${orderId}/`,
-            type: 'POST',
-            headers: {
-                'X-CSRFToken': csrfToken,
-                'Content-Type': 'application/json'
-            },
-            success: function(response) {
-                console.log('[DEBUG] AJAX Success:', response);
-                if (response.success) {
-                    // Show success message
-                    alert(response.message);
-                    
-                    // Redirect to payment summary
-                    if (response.redirect_url) {
-                        console.log('[DEBUG] Redirecting to:', response.redirect_url);
-                        window.location.href = response.redirect_url;
-                    } else {
-                        // Reload page to update order status
-                        console.log('[DEBUG] Reloading page');
-                        window.location.reload();
-                    }
-                } else {
-                    console.log('[DEBUG] Error in response:', response.error);
-                    alert('خطا: ' + response.error);
-                    // Re-enable button
-                    button.prop('disabled', false);
-                    button.find('.btn-text').text(originalText);
-                }
-            },
-            error: function(xhr, status, error) {
-                console.error('[DEBUG] AJAX Error:', error);
-                console.error('[DEBUG] Status:', status);
-                console.error('[DEBUG] Response:', xhr.responseText);
-                alert('خطا در ارتباط با سرور. لطفاً مجدداً تلاش کنید.');
-                // Re-enable button
-                button.prop('disabled', false);
-                button.find('.btn-text').text(originalText);
-            }
-        });
+        setTimeout(() => {
+            window.location.href = selectedProductsUrl;
+        }, 500);
+    });
+
+    // Handle complete processing order button
+    $(document).on('click', '.complete-processing-btn', function(e) {
+        e.preventDefault();
+        
+        console.log('[DEBUG] Complete processing button clicked');
+        console.log('[DEBUG] Event target:', e.target);
+        console.log('[DEBUG] Current target:', e.currentTarget);
+        
+        const button = $(this);
+        const orderId = button.data('order-id');
+        const orderNumber = button.data('order-number');
+        
+        console.log('[DEBUG] Order ID:', orderId);
+        console.log('[DEBUG] Order Number:', orderNumber);
+        console.log('[DEBUG] Button text before:', button.find('.btn-text').text());
+        
+        // Disable button and show loading
+        button.prop('disabled', true);
+        const originalText = button.find('.btn-text').text();
+        button.find('.btn-text').text('در حال هدایت...');
+        
+        console.log('[DEBUG] Button text after:', button.find('.btn-text').text());
+        
+        // Redirect directly to selected_products page to restore order context
+        const selectedProductsUrl = `/core/selected-products/?order_id=${orderId}`;
+        console.log('[DEBUG] Redirecting to selected_products:', selectedProductsUrl);
+        
+        // Immediate redirect for testing
+        window.location.href = selectedProductsUrl;
     });
 </script>
 

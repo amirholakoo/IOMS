@@ -280,13 +280,13 @@
                     <h3 class="section-title">📅 اطلاعات فعالیت</h3>
                     <div class="detail-item">
                         <span class="detail-label">📅 تاریخ عضویت:</span>
-                        <span class="detail-value">{{ user_obj.date_joined|date:"Y/m/d H:i" }}</span>
+                        <span class="detail-value"><span class="jalali-date" data-date="{{ user_obj.date_joined|date:'Y-m-d H:i:s' }}">{{ user_obj.date_joined|date:"Y/m/d H:i" }}</span></span>
                     </div>
                     <div class="detail-item">
                         <span class="detail-label">🕐 آخرین ورود:</span>
                         <span class="detail-value">
                             {% if user_obj.last_login %}
-                                {{ user_obj.last_login|date:"Y/m/d H:i" }}
+                                <span class="jalali-date" data-date="{{ user_obj.last_login|date:'Y-m-d H:i:s' }}">{{ user_obj.last_login|date:"Y/m/d H:i" }}</span>
                             {% else %}
                                 هرگز وارد نشده
                             {% endif %}
@@ -296,7 +296,7 @@
                         <span class="detail-label">🏃 آخرین فعالیت:</span>
                         <span class="detail-value">
                             {% if user_obj.last_activity %}
-                                {{ user_obj.last_activity|date:"Y/m/d H:i" }}
+                                <span class="jalali-date" data-date="{{ user_obj.last_activity|date:'Y-m-d H:i:s' }}">{{ user_obj.last_activity|date:"Y/m/d H:i" }}</span>
                             {% else %}
                                 ندارد
                             {% endif %}
@@ -306,7 +306,7 @@
                         <span class="detail-label">🔐 انقضای رمز عبور:</span>
                         <span class="detail-value">
                             {% if user_obj.password_expires_at %}
-                                {{ user_obj.password_expires_at|date:"Y/m/d" }}
+                                <span class="jalali-date" data-date="{{ user_obj.password_expires_at|date:'Y-m-d H:i:s' }}">{{ user_obj.password_expires_at|date:"Y/m/d" }}</span>
                             {% else %}
                                 نامحدود
                             {% endif %}
@@ -333,15 +333,34 @@
                     </div>
                     <div class="detail-item">
                         <span class="detail-label">🔄 آخرین بروزرسانی:</span>
-                        <span class="detail-value">{{ user_obj.updated_at|date:"Y/m/d H:i" }}</span>
+                        <span class="detail-value"><span class="jalali-date" data-date="{{ user_obj.updated_at|date:'Y-m-d H:i:s' }}">{{ user_obj.updated_at|date:"Y/m/d H:i" }}</span></span>
                     </div>
                     <div class="detail-item">
                         <span class="detail-label">🏗️ تاریخ ایجاد:</span>
-                        <span class="detail-value">{{ user_obj.created_at|date:"Y/m/d H:i" }}</span>
+                        <span class="detail-value"><span class="jalali-date" data-date="{{ user_obj.created_at|date:'Y-m-d H:i:s' }}">{{ user_obj.created_at|date:"Y/m/d H:i" }}</span></span>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<script>
+// Convert all Jalali dates on page load
+document.addEventListener('DOMContentLoaded', function() {
+    const jalaliDateElements = document.querySelectorAll('.jalali-date');
+    jalaliDateElements.forEach(element => {
+        const dateString = element.getAttribute('data-date');
+        if (dateString) {
+            try {
+                const jalaliDate = JalaliDateConverter.format(dateString, 'DD Month YYYY، HH:mm');
+                element.textContent = jalaliDate;
+            } catch (error) {
+                console.error('Error converting date:', error);
+                // Keep original date if conversion fails
+            }
+        }
+    });
+});
+</script>
 {% endblock %} 

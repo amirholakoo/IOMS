@@ -8,16 +8,24 @@
     .inventory-header {
         background: linear-gradient(135deg, #6f42c1, #e83e8c);
         color: white;
-        padding: 2rem 0;
-        margin-bottom: 2rem;
+        padding: 0.5rem 0;
+        margin-bottom: 0.5rem;
         border-radius: 15px;
+    }
+    
+    .inventory-header .row:first-child { margin-top: 0 !important; padding-top: 0 !important; }
+    
+    /* Eliminate spacing between header and stats */
+    .inventory-header + .inventory-stats {
+        margin-top: 0;
+        padding-top: 0;
     }
     
     .inventory-stats {
         background: white;
         border-radius: 15px;
         padding: 1.5rem;
-        margin-bottom: 2rem;
+        margin-bottom: 0.5rem;
         box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
     }
     
@@ -194,9 +202,9 @@
 {% endblock %}
 
 {% block content %}
-<!-- Inventory Header -->
-<div class="inventory-header">
-    <div class="container">
+<div class="container">
+    <!-- Inventory Header -->
+    <div class="inventory-header">
         <div class="row align-items-center">
             <div class="col-md-8">
                 <h1 class="display-5 mb-3">📦 مدیریت موجودی انبار</h1>
@@ -209,12 +217,10 @@
             </div>
         </div>
     </div>
-</div>
 
-<div class="container">
     <!-- Overall Statistics -->
     <div class="inventory-stats">
-        <h4 class="mb-4">📊 آمار کلی موجودی</h4>
+        <h4 class="mb-2">📊 آمار کلی موجودی</h4>
         <div class="row">
             <div class="col-md-2">
                 <div class="stat-box stat-primary">

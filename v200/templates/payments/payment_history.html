@@ -220,7 +220,7 @@
                                         </td>
                                         <td>
                                             <small class="text-muted">
-                                                {{ payment.created_at|date:"Y/m/d H:i" }}
+                                                <span class="jalali-date" data-date="{{ payment.created_at|date:'Y-m-d H:i:s' }}">{{ payment.created_at|date:"Y/m/d H:i" }}</span>
                                             </small>
                                         </td>
                                         <td>
@@ -351,4 +351,23 @@
     border-color: #007bff;
 }
 </style>
+
+<script>
+// Convert all Jalali dates on page load
+document.addEventListener('DOMContentLoaded', function() {
+    const jalaliDateElements = document.querySelectorAll('.jalali-date');
+    jalaliDateElements.forEach(element => {
+        const dateString = element.getAttribute('data-date');
+        if (dateString) {
+            try {
+                const jalaliDate = JalaliDateConverter.format(dateString, 'DD Month YYYY، HH:mm');
+                element.textContent = jalaliDate;
+            } catch (error) {
+                console.error('Error converting date:', error);
+                // Keep original date if conversion fails
+            }
+        }
+    });
+});
+</script>
 {% endblock %} 

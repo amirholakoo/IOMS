@@ -8,9 +8,17 @@
     .logs-header {
         background: linear-gradient(135deg, #343a40, #6c757d);
         color: white;
-        padding: 1rem 0;
-        margin-bottom: 1rem;
+        padding: 0.5rem 0;
+        margin-bottom: 0.5rem;
         border-radius: 15px;
+    }
+    
+    .logs-header .row:first-child { margin-top: 0 !important; padding-top: 0 !important; }
+    
+    /* Eliminate spacing between header and stats */
+    .logs-header + .stats-section {
+        margin-top: 0;
+        padding-top: 0;
     }
     
     .log-entry {
@@ -126,7 +134,7 @@
         background: white;
         border-radius: 15px;
         padding: 1.5rem;
-        margin-bottom: 2rem;
+        margin-bottom: 0.5rem;
         box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
     }
     
@@ -179,9 +187,9 @@
 {% endblock %}
 
 {% block content %}
-<!-- Logs Header -->
-<div class="logs-header">
-    <div class="container">
+<div class="container">
+    <!-- Logs Header -->
+    <div class="logs-header">
         <div class="row align-items-center">
             <div class="col-md-8">
                 <h1 class="display-5 mb-3">📜 لاگ فعالیت‌های سیستم</h1>
@@ -191,20 +199,13 @@
                 <a href="{% url 'core:admin_dashboard' %}" class="btn btn-light me-2" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 15px; padding: 12px 25px; font-weight: 600; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3); transition: all 0.3s ease;">
                     ↩️ بازگشت به داشبورد مدیریت
                 </a>
-                <div class="btn-group">
-                    <button class="btn btn-outline-light" onclick="clearOldLogs()">
-                        🗑️ پاکسازی
-                    </button>
-                </div>
             </div>
         </div>
     </div>
-</div>
 
-<div class="container">
     <!-- Statistics Section -->
     <div class="stats-section">
-        <h4 class="mb-4">📊 آمار فعالیت‌ها</h4>
+        <h4 class="mb-2">📊 آمار فعالیت‌ها</h4>
         <div class="row">
             <div class="col-md-2">
                 <div class="stat-card" style="background: linear-gradient(45deg, #28a745, #20c997); color: white;">
@@ -331,7 +332,7 @@
                 <div class="log-meta">
                     <div class="meta-item">
                         <span>🕐</span>
-                        <span>{{ log.created_at|date:'Y/m/d H:i:s' }}</span>
+                        <span><span class="jalali-date" data-date="{{ log.created_at|date:'Y-m-d H:i:s' }}">{{ log.created_at|date:'Y/m/d H:i:s' }}</span></span>
                     </div>
                     {% if log.ip_address %}
                     <div class="meta-item">
@@ -437,6 +438,23 @@ function clearOldLogs() {
         }, 2000);
     }
 }
+
+// Convert all Jalali dates on page load
+document.addEventListener('DOMContentLoaded', function() {
+    const jalaliDateElements = document.querySelectorAll('.jalali-date');
+    jalaliDateElements.forEach(element => {
+        const dateString = element.getAttribute('data-date');
+        if (dateString) {
+            try {
+                const jalaliDate = JalaliDateConverter.format(dateString, 'DD Month YYYY، HH:mm:ss');
+                element.textContent = jalaliDate;
+            } catch (error) {
+                console.error('Error converting date:', error);
+                // Keep original date if conversion fails
+            }
+        }
+    });
+});
 
 // Toggle view mode
 document.addEventListener('DOMContentLoaded', function() {

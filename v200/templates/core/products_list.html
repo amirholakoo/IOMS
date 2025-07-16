@@ -8,12 +8,18 @@
     .products-header {
         background: linear-gradient(135deg, #28a745, #20c997);
         color: white;
-        padding: 1rem 0;
-        margin-bottom: 1rem;
+        padding: 0.5rem 0;
+        margin-bottom: 0.5rem;
         border-radius: 15px;
     }
     
-    .products-header > .container, .products-header .row:first-child { margin-top: 0 !important; padding-top: 0 !important; }
+    .products-header .row:first-child { margin-top: 0 !important; padding-top: 0 !important; }
+    
+    /* Eliminate spacing between header and filters */
+    .products-header + .filter-card {
+        margin-top: 0;
+        padding-top: 0;
+    }
     
     .filter-card {
         background: white;
@@ -129,9 +135,9 @@
 {% endblock %}
 
 {% block content %}
-<!-- Products Header -->
-<div class="products-header">
-    <div class="container">
+<div class="container">
+    <!-- Products Header -->
+    <div class="products-header">
         <div class="row align-items-center">
             <div class="col-md-8">
                 <h1 class="display-5 mb-3">📦 مدیریت محصولات</h1>
@@ -144,9 +150,7 @@
             </div>
         </div>
     </div>
-</div>
 
-<div class="container">
     <!-- Filters Section -->
     <div class="filter-card">
         <form method="GET" class="row g-3">

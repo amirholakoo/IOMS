@@ -72,6 +72,8 @@ urlpatterns = [
     path('api/working-hours-config/', views.get_working_hours_config_api, name='get_working_hours_config'),
     
     path('save-selected-products/', views.save_selected_products_view, name='save_selected_products'),
+    path('save-incomplete-orders/', views.save_incomplete_orders_view, name='save_incomplete_orders'),
+    path('process-incomplete-orders/', views.process_incomplete_orders_view, name='process_incomplete_orders'),
     path('selected-products/', views.selected_products_view, name='selected_products'),
     path('process-order/', views.process_order_view, name='process_order'),
     path('complete-processing-order/<int:order_id>/', views.complete_processing_order_view, name='complete_processing_order'),

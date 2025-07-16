@@ -9,7 +9,6 @@ __pycache__/
 # Distribution / packaging
 token_git.txt
 .Python
-*.md
 build/
 develop-eggs/
 dist/

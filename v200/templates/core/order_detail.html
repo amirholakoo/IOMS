@@ -134,7 +134,7 @@
                         
                         <div class="info-item">
                             <div class="info-label">📅 تاریخ ثبت:</div>
-                            <div>{{ order.created_at|date:"Y/m/d H:i" }}</div>
+                            <div><span class="jalali-date" data-date="{{ order.created_at|date:'Y-m-d H:i:s' }}">{{ order.created_at|date:"Y/m/d H:i" }}</span></div>
                         </div>
                         
                         <div class="info-item">
@@ -246,6 +246,23 @@
 
 {% block extra_js %}
 <script>
+// Convert all Jalali dates on page load
+document.addEventListener('DOMContentLoaded', function() {
+    const jalaliDateElements = document.querySelectorAll('.jalali-date');
+    jalaliDateElements.forEach(element => {
+        const dateString = element.getAttribute('data-date');
+        if (dateString) {
+            try {
+                const jalaliDate = JalaliDateConverter.format(dateString, 'DD Month YYYY، HH:mm');
+                element.textContent = jalaliDate;
+            } catch (error) {
+                console.error('Error converting date:', error);
+                // Keep original date if conversion fails
+            }
+        }
+    });
+});
+
 function getCSRFToken() {
     // Try to get CSRF token from cookie or hidden input
     let csrfToken = null;

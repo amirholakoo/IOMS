@@ -91,7 +91,7 @@
                 <div class="row align-items-center">
                     <div class="col-md-3">
                         <h6 class="mb-0">🏷️ {{ order.order_number }}</h6>
-                        <small class="text-muted">{{ order.created_at|date:"Y/m/d H:i" }}</small>
+                        <small class="text-muted"><span class="jalali-date" data-date="{{ order.created_at|date:'Y-m-d H:i:s' }}">{{ order.created_at|date:"Y/m/d H:i" }}</span></small>
                     </div>
                     <div class="col-md-3">
                         <h6 class="mb-0">👤 {{ order.customer.customer_name }}</h6>
@@ -226,6 +226,21 @@
 {% block extra_js %}
 <script>
 $(document).ready(function() {
+    // Convert all Jalali dates on page load
+    const jalaliDateElements = document.querySelectorAll('.jalali-date');
+    jalaliDateElements.forEach(element => {
+        const dateString = element.getAttribute('data-date');
+        if (dateString) {
+            try {
+                const jalaliDate = JalaliDateConverter.format(dateString, 'DD Month YYYY، HH:mm');
+                element.textContent = jalaliDate;
+            } catch (error) {
+                console.error('Error converting date:', error);
+                // Keep original date if conversion fails
+            }
+        }
+    });
+
     // تایید سفارش
     $('.confirm-order-btn').click(function() {
         const orderId = $(this).data('order-id');

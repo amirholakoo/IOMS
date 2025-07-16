@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jalali Date Integration Example</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1, h2 {
+            color: #333;
+        }
+        .example-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #fafafa;
+        }
+        .date-display {
+            background-color: #e3f2fd;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+            border-left: 4px solid #2196F3;
+        }
+        .code-block {
+            background-color: #f5f5f5;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+        }
+        .jalali-date {
+            font-weight: bold;
+            color: #1976d2;
+        }
+        .georgian-date {
+            color: #666;
+            font-size: 0.9em;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white !important;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .order-item {
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            background-color: white;
+        }
+        .order-date {
+            font-weight: bold;
+            color: #1976d2;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Jalali Date Integration Examples</h1>
+        
+        <div class="example-section">
+            <h2>1. Django Template Integration</h2>
+            <p>Here's how to integrate Jalali dates in your Django templates:</p>
+            
+            <div class="code-block">
+&lt;!-- In your Django template --&gt;
+&lt;script src="{% static 'js/jalali-date-converter.js' %}"&gt;&lt;/script&gt;
+
+&lt;!-- Display current date --&gt;
+&lt;div class="date-display"&gt;
+    &lt;span class="jalali-date" id="current-jalali"&gt;&lt;/span&gt;
+    &lt;br&gt;
+    &lt;span class="georgian-date"&gt;{{ current_date|date:"Y-m-d" }}&lt;/span&gt;
+&lt;/div&gt;
+
+&lt;script&gt;
+    // Convert and display current date
+    document.getElementById('current-jalali').textContent = 
+        JalaliDateConverter.formatNow('DD Month YYYY، Weekday');
+&lt;/script&gt;</div>
+        </div>
+
+        <div class="example-section">
+            <h2>2. Order List with Jalali Dates</h2>
+            <p>Example of displaying order dates in Jalali format:</p>
+            
+            <div id="orders-list">
+                <!-- This would be populated by Django -->
+                <div class="order-item" data-order-date="2024-01-15T10:30:00">
+                    <strong>Order #12345</strong><br>
+                    <span class="order-date" data-date="2024-01-15T10:30:00"></span>
+                    <br>Status: Delivered
+                </div>
+                <div class="order-item" data-order-date="2024-01-10T14:20:00">
+                    <strong>Order #12344</strong><br>
+                    <span class="order-date" data-date="2024-01-10T14:20:00"></span>
+                    <br>Status: Processing
+                </div>
+                <div class="order-item" data-order-date="2024-01-05T09:15:00">
+                    <strong>Order #12343</strong><br>
+                    <span class="order-date" data-date="2024-01-05T09:15:00"></span>
+                    <br>Status: Shipped
+                </div>
+            </div>
+            
+            <button onclick="convertOrderDates()">Convert Order Dates to Jalali</button>
+        </div>
+
+        <div class="example-section">
+            <h2>3. Form Date Input with Jalali Display</h2>
+            <p>Example of a form with Georgian date input but Jalali display:</p>
+            
+            <div class="date-display">
+                <label for="order-date">Order Date (Georgian):</label>
+                <input type="date" id="order-date" value="2024-01-15">
+                <br><br>
+                <strong>Jalali Date:</strong> <span id="jalali-display"></span>
+            </div>
+            
+            <button onclick="updateJalaliDisplay()">Update Jalali Display</button>
+        </div>
+
+        <div class="example-section">
+            <h2>4. Real-time Date Conversion</h2>
+            <p>Example of real-time date conversion as user types:</p>
+            
+            <div class="date-display">
+                <label for="custom-date-input">Enter Date (YYYY-MM-DD):</label>
+                <input type="text" id="custom-date-input" placeholder="2024-01-15" style="padding: 8px; margin: 5px;">
+                <br><br>
+                <strong>Jalali Date:</strong> <span id="realtime-jalali"></span>
+            </div>
+        </div>
+
+        <div class="example-section">
+            <h2>5. Date Range Picker with Jalali</h2>
+            <p>Example of date range selection with Jalali display:</p>
+            
+            <div class="date-display">
+                <label for="start-date">Start Date:</label>
+                <input type="date" id="start-date" value="2024-01-01">
+                <span id="start-jalali"></span>
+                <br><br>
+                <label for="end-date">End Date:</label>
+                <input type="date" id="end-date" value="2024-01-31">
+                <span id="end-jalali"></span>
+                <br><br>
+                <button onclick="updateDateRange()">Update Date Range</button>
+            </div>
+        </div>
+
+        <div class="example-section">
+            <h2>6. JavaScript Functions for Common Use Cases</h2>
+            <div class="code-block">
+// Function to convert all dates in a table or list
+function convertAllDatesToJalali() {
+    const dateElements = document.querySelectorAll('[data-date]');
+    dateElements.forEach(element => {
+        const dateString = element.getAttribute('data-date');
+        try {
+            const jalaliDate = JalaliDateConverter.format(dateString, 'DD Month YYYY');
+            element.textContent = jalaliDate;
+        } catch (error) {
+            console.error('Error converting date:', error);
+            element.textContent = 'Invalid Date';
+        }
+    });
+}
+
+// Function to format date for display
+function formatDateForDisplay(dateString, format = 'DD Month YYYY') {
+    try {
+        return JalaliDateConverter.format(dateString, format);
+    } catch (error) {
+        console.error('Error formatting date:', error);
+        return 'Invalid Date';
+    }
+}
+
+// Function to get current Jalali date
+function getCurrentJalaliDate(format = 'YYYY/MM/DD') {
+    return JalaliDateConverter.formatNow(format);
+}
+
+// Function to validate Jalali date input
+function validateJalaliDateInput(year, month, day) {
+    return JalaliDateConverter.isValidJalaliDate(year, month, day);}</div>
+        </div>
+    </div>
+
+    <script src="jalali-date-converter.js"></script>
+    <script>
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            convertOrderDates();
+            updateJalaliDisplay();
+            updateDateRange();
+            
+            // Set up real-time conversion
+            document.getElementById('custom-date-input').addEventListener('input', function() {
+                const dateString = this.value;
+                if (dateString && dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
+                    try {
+                        const jalaliDate = JalaliDateConverter.format(dateString, 'DD Month YYYY');
+                        document.getElementById('realtime-jalali').textContent = jalaliDate;
+                    } catch (error) {
+                        document.getElementById('realtime-jalali').textContent = 'Invalid Date';
+                    }
+                } else {
+                    document.getElementById('realtime-jalali').textContent = '';
+                }
+            });
+        });
+
+        function convertOrderDates() {
+            const orderDates = document.querySelectorAll('[data-date]');
+            orderDates.forEach(element => {
+                const dateString = element.getAttribute('data-date');
+                try {
+                    const jalaliDate = JalaliDateConverter.format(dateString, 'DD Month YYYY');
+                    element.textContent = jalaliDate;
+                } catch (error) {
+                    console.error('Error converting date:', error);
+                    element.textContent = 'Invalid Date';
+                }
+            });
+        }
+
+        function updateJalaliDisplay() {
+            const dateInput = document.getElementById('order-date');
+            const jalaliDisplay = document.getElementById('jalali-display');
+            
+            try {
+                const jalaliDate = JalaliDateConverter.format(dateInput.value, 'DD Month YYYY');
+                jalaliDisplay.textContent = jalaliDate;
+            } catch (error) {
+                jalaliDisplay.textContent = 'Invalid Date';
+            }
+        }
+
+        function updateDateRange() {
+            const startDate = document.getElementById('start-date').value;
+            const endDate = document.getElementById('end-date').value;
+            
+            try {
+                const startJalali = JalaliDateConverter.format(startDate, 'DD Month YYYY');
+                const endJalali = JalaliDateConverter.format(endDate, 'DD Month YYYY');
+                
+                document.getElementById('start-jalali').textContent = ` (${startJalali})`;
+                document.getElementById('end-jalali').textContent = ` (${endJalali})`;
+            } catch (error) {
+                console.error('Error updating date range:', error);
+            }
+        }
+
+        // Example of how to use in your Django views
+        function exampleDjangoIntegration() {
+            // In your Django view, you would pass dates like this:
+            const orderDates = [
+                '2024-01-15T10:30:00',
+                '2024-01-10T14:20:00',
+                '2024-01-05T09:15:00'
+            ];
+            
+            // Convert all dates to Jalali for display
+            orderDates.forEach(dateString => {
+                const jalaliDate = JalaliDateConverter.format(dateString, 'DD Month YYYY');
+                console.log(`${dateString} → ${jalaliDate}`);
+            });
+        }
+    </script>
+</body>
+</html> 

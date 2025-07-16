@@ -8,12 +8,18 @@
     .admin-hero {
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         color: white;
-        padding: 1.5rem 0;
-        margin-bottom: 1rem;
+        padding: 0.1rem 0;
+        margin-bottom: 0;
         border-radius: 15px;
     }
     
-    .admin-hero > .container, .admin-hero .row:first-child { margin-top: 0 !important; padding-top: 0 !important; }
+    .admin-hero .row:first-child { margin-top: 0 !important; padding-top: 0 !important; }
+    
+    /* Eliminate any remaining spacing issues */
+    .admin-hero + .row {
+        margin-top: 0;
+        padding-top: 0;
+    }
     
     .stats-card {
         border: none;
@@ -155,6 +161,37 @@
         min-width: 300px;
     }
     
+    /* Enhanced Admin User Button Styling */
+    .admin-user-btn {
+        background: linear-gradient(135deg, #495057 0%, #343a40 100%) !important;
+        color: white !important;
+        border: 2px solid #495057 !important;
+        border-radius: 12px;
+        padding: 0.75rem 1.5rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(73, 80, 87, 0.3);
+    }
+    
+    .admin-user-btn:hover {
+        background: linear-gradient(135deg, #343a40 0%, #212529 100%) !important;
+        color: white !important;
+        border-color: #343a40 !important;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(73, 80, 87, 0.4);
+    }
+    
+    .admin-role-badge {
+        background: linear-gradient(135deg, #dc3545 0%, #c82333 100%) !important;
+        color: white !important;
+        border: none;
+        border-radius: 8px;
+        padding: 0.4rem 0.8rem;
+        font-weight: 600;
+        font-size: 0.85rem;
+        box-shadow: 0 2px 8px rgba(220, 53, 69, 0.3);
+    }
+    
 
 </style>
 {% endblock %}
@@ -264,22 +301,22 @@ function getCookie(name) {
 {% endblock %}
 
 {% block content %}
-<!-- Admin Hero Section -->
-<div class="admin-hero">
-    <div class="container">
+<div class="container">
+    <!-- Admin Hero Section -->
+    <div class="admin-hero">
         <div class="row align-items-center">
             <div class="col-md-8">
-                <h1 class="display-4 mb-3">🎛️ داشبورد مدیریت</h1>
-                <p class="lead mb-4">مدیریت کامل سیستم HomayOMS</p>
+                <h1 class="display-6 mb-1">🎛️ داشبورد مدیریت</h1>
+                <p class="lead mb-1">مدیریت کامل سیستم HomayOMS</p>
                 <p class="mb-0">👋 خوش آمدید {{ user.get_full_name|default:user.username }}</p>
                 <small class="opacity-75">نقش: {{ user.get_role_display|default:"مدیر" }}</small>
             </div>
             <div class="col-md-4 text-end">
                 <div class="d-flex align-items-center gap-3">
                     <div class="dropdown">
-                        <button class="btn btn-light dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <button class="btn btn-light dropdown-toggle admin-user-btn" type="button" data-bs-toggle="dropdown" aria-expanded="false">
                             👤 {{ user.get_full_name|default:user.username }}
-                            <span class="badge bg-danger ms-2">{{ user.get_role_display }}</span>
+                            <span class="badge admin-role-badge ms-2">{{ user.get_role_display }}</span>
                         </button>
                         <ul class="dropdown-menu dropdown-menu-end">
                             <li><a class="dropdown-item" href="{% url 'accounts:profile' %}">📄 پروفایل</a></li>
@@ -294,16 +331,11 @@ function getCookie(name) {
             </div>
         </div>
     </div>
-</div>
-
-<div class="container">
-        </div>
-    </div>
 
     <!-- Quick Actions -->
-    <div class="row mb-4">
+    <div class="row mb-2">
         <div class="col-12">
-            <h3 class="mb-3">⚡ عملیات سریع</h3>
+            <h3 class="mb-2">⚡ عملیات سریع</h3>
         </div>
         <div class="col-md-3 mb-3">
             <div class="card quick-action-card text-center">
@@ -401,6 +433,7 @@ function getCookie(name) {
         </div>
         {% endif %}
     </div>
+</div>
 
     <!-- Super Admin Price Management Section -->
     {% if user.role == 'super_admin' %}
@@ -450,7 +483,7 @@ function getCookie(name) {
                                 {% if product.price_updated_at %}
                                 <br>
                                 <small class="text-muted">
-                                    📅 {{ product.price_updated_at|date:"Y/m/d H:i" }}
+                                    📅 <span class="jalali-date" data-date="{{ product.price_updated_at|date:'Y-m-d H:i:s' }}">{{ product.price_updated_at|date:"Y/m/d H:i" }}</span>
                                     {% if product.price_updated_by %}
                                     <br>👤 {{ product.price_updated_by.get_full_name|default:product.price_updated_by.username }}
                                     {% endif %}
@@ -505,7 +538,7 @@ function getCookie(name) {
                             <strong>{% if activity.user %}{{ activity.user.get_full_name|default:activity.user.username }}{% else %}سیستم{% endif %}</strong>
                             <span class="text-muted">{{ activity.description }}</span>
                         </div>
-                        <small class="text-muted">{{ activity.timestamp|date:"Y/m/d H:i" }}</small>
+                        <small class="text-muted"><span class="jalali-date" data-date="{{ activity.timestamp|date:'Y-m-d H:i:s' }}">{{ activity.timestamp|date:"Y/m/d H:i" }}</span></small>
                     </div>
                 </div>
                 {% empty %}
@@ -551,4 +584,23 @@ function getCookie(name) {
 
 <!-- Notification Area -->
 <div id="notification" class="notification"></div>
+
+<script>
+// Convert all Jalali dates on page load
+document.addEventListener('DOMContentLoaded', function() {
+    const jalaliDateElements = document.querySelectorAll('.jalali-date');
+    jalaliDateElements.forEach(element => {
+        const dateString = element.getAttribute('data-date');
+        if (dateString) {
+            try {
+                const jalaliDate = JalaliDateConverter.format(dateString, 'DD Month YYYY، HH:mm');
+                element.textContent = jalaliDate;
+            } catch (error) {
+                console.error('Error converting date:', error);
+                // Keep original date if conversion fails
+            }
+        }
+    });
+});
+</script>
 {% endblock %} 

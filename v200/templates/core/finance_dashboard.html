@@ -6,26 +6,27 @@
 {% endblock %}
 
 {% block content %}
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-        <div class="container">
-            <a class="navbar-brand" href="{% url 'core:admin_dashboard' %}">🏢 HomayOMS</a>
-            <div class="navbar-nav ms-auto">
-                <a class="nav-link" href="{% url 'core:admin_dashboard' %}">🏠 داشبورد اصلی</a>
-                <a class="nav-link" href="{% url 'accounts:logout' %}">🚪 خروج</a>
+<div class="container">
+    <!-- Finance Header -->
+    <div class="finance-header" style="background: linear-gradient(135deg, #007bff, #0056b3); color: white; padding: 0.5rem 0; margin-bottom: 0.5rem; border-radius: 15px;">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 class="display-6 mb-1">💰 داشبورد مالی</h1>
+                <p class="lead mb-0">مدیریت امور مالی و گزارش‌گیری</p>
+            </div>
+            <div class="col-md-4 text-end">
+                <a href="{% url 'core:admin_dashboard' %}" class="btn btn-light me-2" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 15px; padding: 12px 25px; font-weight: 600; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3); transition: all 0.3s ease;">
+                    🏠 داشبورد اصلی
+                </a>
+                <a href="{% url 'accounts:logout' %}" class="btn btn-outline-light">
+                    🚪 خروج
+                </a>
             </div>
         </div>
-    </nav>
-
-    <div class="container mt-4">
-        <div class="row mb-4">
-            <div class="col-12">
-                <h2 class="mb-2">💰 داشبورد مالی</h2>
-                <p class="text-muted">مدیریت امور مالی و گزارش‌گیری</p>
-            </div>
-        </div>
+    </div>
 
         <!-- آمار کلی -->
-        <div class="row mb-4">
+        <div class="row mb-2">
             <div class="col-md-3 mb-3">
                 <div class="card stat-card bg-success text-white">
                     <div class="card-body text-center">

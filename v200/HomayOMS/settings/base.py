@@ -148,6 +148,10 @@ X_FRAME_OPTIONS = 'DENY'              # 🚫 جلوگیری از iframe
 # 👤 مدل کاربر سفارشی
 AUTH_USER_MODEL = 'accounts.User' 
 
+# 🔐 تنظیمات احراز هویت
+LOGIN_URL = '/accounts/customer/sms-login/'
+LOGIN_REDIRECT_URL = '/accounts/customer/dashboard/'
+
 # 🚨 تنظیمات مدیریت خطاها
 HANDLER_404 = 'HomayOMS.views.handler404'
 HANDLER_500 = 'HomayOMS.views.handler500' 
