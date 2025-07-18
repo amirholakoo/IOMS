@@ -154,4 +154,7 @@ LOGIN_REDIRECT_URL = '/accounts/customer/dashboard/'
 
 # 🚨 تنظیمات مدیریت خطاها
 HANDLER_404 = 'HomayOMS.views.handler404'
-HANDLER_500 = 'HomayOMS.views.handler500' 
+HANDLER_500 = 'HomayOMS.views.handler500'
+
+# ⏰ تنظیمات لغو خودکار سفارشات
+ORDER_CANCELLATION_TIMEOUT = 1  # زمان به دقیقه برای لغو خودکار سفارشات Processing (1 دقیقه برای تست) 

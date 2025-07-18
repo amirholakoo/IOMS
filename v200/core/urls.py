@@ -77,5 +77,11 @@ urlpatterns = [
     path('selected-products/', views.selected_products_view, name='selected_products'),
     path('process-order/', views.process_order_view, name='process_order'),
     path('cancel-draft-order/', views.cancel_draft_order_view, name='cancel_draft_order'),
+    
+    # 🚫 لغو خودکار سفارشات منقضی شده - فقط Super Admin
+    path('api/cancel-expired-orders/', views.manual_cancel_expired_orders_view, name='manual_cancel_expired_orders'),
+    
+    # 🤖 کنترل سیستم خودکار - فقط Super Admin
+    path('api/automation-control/', views.automation_control_view, name='automation_control'),
 
 ] 

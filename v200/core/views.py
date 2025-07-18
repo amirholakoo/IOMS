@@ -3185,6 +3185,271 @@ def cancel_draft_order_view(request):
         })
 
 
+@login_required
+@check_user_permission('is_super_admin')
+@require_http_methods(["POST"])
+def manual_cancel_expired_orders_view(request):
+    """
+    🚫 لغو دستی سفارشات Processing منقضی شده - فقط Super Admin
+    
+    🎯 این API برای اجرای دستی تابع لغو خودکار سفارشات استفاده می‌شود
+    ✅ فقط Super Admin می‌تواند این عملیات را انجام دهد
+    📊 نتیجه عملیات را برمی‌گرداند
+    """
+    
+    try:
+        # 📥 دریافت پارامترهای اختیاری
+        data = json.loads(request.body) if request.body else {}
+        timeout_minutes = data.get('timeout_minutes')
+        dry_run = data.get('dry_run', False)
+        
+        # 🔍 بررسی دسترسی
+        if not request.user.is_super_admin():
+            return JsonResponse({
+                'success': False,
+                'error': '🚫 فقط Super Admin می‌تواند این عملیات را انجام دهد'
+            }, status=403)
+        
+        # 📜 ثبت لاگ شروع عملیات
+        ActivityLog.log_activity(
+            user=request.user,
+            action='INFO',
+            description=f'شروع لغو دستی سفارشات منقضی شده - حالت تست: {dry_run}',
+            ip_address=get_client_ip(request),
+            user_agent=request.META.get('HTTP_USER_AGENT', ''),
+            severity='MEDIUM',
+            extra_data={
+                'operation': 'manual_cancel_expired_orders',
+                'dry_run': dry_run,
+                'timeout_minutes': timeout_minutes
+            }
+        )
+        
+        if dry_run:
+            # 🔍 حالت تست - فقط نمایش سفارشات
+            from datetime import timedelta
+            
+            current_timeout = timeout_minutes or getattr(settings, 'ORDER_CANCELLATION_TIMEOUT', 5)
+            expiration_time = timezone.now() - timedelta(minutes=current_timeout)
+            
+            expired_orders = Order.objects.filter(
+                status='Processing',
+                updated_at__lt=expiration_time
+            ).select_related('customer')
+            
+            orders_info = []
+            for order in expired_orders:
+                time_in_processing = timezone.now() - order.updated_at
+                minutes_in_processing = int(time_in_processing.total_seconds() / 60)
+                
+                orders_info.append({
+                    'order_number': order.order_number,
+                    'customer_name': order.customer.customer_name,
+                    'minutes_in_processing': minutes_in_processing,
+                    'last_updated': order.updated_at.strftime('%Y-%m-%d %H:%M:%S'),
+                    'final_amount': str(order.final_amount),
+                    'items_count': order.order_items.count()
+                })
+            
+            return JsonResponse({
+                'success': True,
+                'message': f'🔍 {len(orders_info)} سفارش Processing منقضی شده یافت شد',
+                'dry_run': True,
+                'timeout_minutes': current_timeout,
+                'expired_orders': orders_info
+            })
+        
+        else:
+            # 🚫 اجرای واقعی لغو خودکار
+            from core.signals import schedule_order_cancellation_check
+            
+            cancelled_count = schedule_order_cancellation_check()
+            
+            # 📜 ثبت لاگ نتیجه
+            ActivityLog.log_activity(
+                user=request.user,
+                action='CANCEL',
+                description=f'لغو دستی سفارشات منقضی شده - {cancelled_count} سفارش لغو شد',
+                ip_address=get_client_ip(request),
+                user_agent=request.META.get('HTTP_USER_AGENT', ''),
+                severity='HIGH',
+                extra_data={
+                    'operation': 'manual_cancel_expired_orders',
+                    'cancelled_count': cancelled_count,
+                    'timeout_minutes': timeout_minutes
+                }
+            )
+            
+            if cancelled_count > 0:
+                return JsonResponse({
+                    'success': True,
+                    'message': f'✅ {cancelled_count} سفارش Processing به صورت خودکار لغو شد',
+                    'cancelled_count': cancelled_count
+                })
+            else:
+                return JsonResponse({
+                    'success': True,
+                    'message': '✅ هیچ سفارشی برای لغو یافت نشد',
+                    'cancelled_count': 0
+                })
+        
+    except json.JSONDecodeError:
+        return JsonResponse({
+            'success': False,
+            'error': '📄 فرمت JSON نامعتبر است'
+        }, status=400)
+    
+    except Exception as e:
+        # 📜 ثبت خطا
+        ActivityLog.log_activity(
+            user=request.user,
+            action='ERROR',
+            description=f'خطا در لغو دستی سفارشات منقضی شده: {str(e)}',
+            ip_address=get_client_ip(request),
+            user_agent=request.META.get('HTTP_USER_AGENT', ''),
+            severity='HIGH'
+        )
+        
+        return JsonResponse({
+            'success': False,
+            'error': f'❌ خطا در لغو دستی سفارشات: {str(e)}'
+        }, status=500)
+
+
+@login_required
+@check_user_permission('is_super_admin')
+@require_http_methods(["GET", "POST"])
+def automation_control_view(request):
+    """
+    🤖 کنترل سیستم خودکار لغو سفارشات - فقط Super Admin
+    
+    🎯 این API برای کنترل سیستم خودکار استفاده می‌شود
+    ✅ فقط Super Admin می‌تواند این عملیات را انجام دهد
+    📊 وضعیت سیستم را نمایش می‌دهد
+    """
+    
+    try:
+        from core.signals import (
+            start_automated_cancellation, 
+            stop_automated_cancellation, 
+            is_automation_running,
+            set_automation_interval
+        )
+        
+        if request.method == "GET":
+            # 📊 نمایش وضعیت سیستم
+            automation_status = is_automation_running()
+            
+            # 📈 آمار سفارشات
+            processing_count = Order.objects.filter(status='Processing').count()
+            cancelled_count = Order.objects.filter(status='Cancelled').count()
+            
+            # 📝 لاگ‌های اخیر
+            recent_logs = ActivityLog.objects.filter(
+                action__in=['CANCEL', 'UPDATE'],
+                extra_data__automated=True
+            ).order_by('-created_at')[:5]
+            
+            return JsonResponse({
+                'success': True,
+                'automation_running': automation_status,
+                'processing_orders': processing_count,
+                'cancelled_orders': cancelled_count,
+                'recent_automated_actions': [
+                    {
+                        'time': log.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+                        'action': log.action,
+                        'description': log.description
+                    } for log in recent_logs
+                ]
+            })
+        
+        elif request.method == "POST":
+            # 🔧 کنترل سیستم
+            data = json.loads(request.body) if request.body else {}
+            action = data.get('action')
+            
+            if action == 'start':
+                # 🚀 شروع سیستم خودکار
+                thread = start_automated_cancellation()
+                
+                ActivityLog.log_activity(
+                    user=request.user,
+                    action='INFO',
+                    description='سیستم خودکار لغو سفارشات شروع شد',
+                    ip_address=get_client_ip(request),
+                    user_agent=request.META.get('HTTP_USER_AGENT', ''),
+                    severity='HIGH'
+                )
+                
+                return JsonResponse({
+                    'success': True,
+                    'message': '🤖 سیستم خودکار شروع شد',
+                    'thread_id': thread.ident if thread else None
+                })
+            
+            elif action == 'stop':
+                # 🛑 توقف سیستم خودکار
+                stopped = stop_automated_cancellation()
+                
+                ActivityLog.log_activity(
+                    user=request.user,
+                    action='INFO',
+                    description='سیستم خودکار لغو سفارشات متوقف شد',
+                    ip_address=get_client_ip(request),
+                    user_agent=request.META.get('HTTP_USER_AGENT', ''),
+                    severity='HIGH'
+                )
+                
+                return JsonResponse({
+                    'success': True,
+                    'message': '🛑 سیستم خودکار متوقف شد',
+                    'stopped': stopped
+                })
+            
+            elif action == 'set_interval':
+                # ⏰ تنظیم فاصله زمانی
+                interval = data.get('interval', 60)
+                new_interval = set_automation_interval(interval)
+                
+                ActivityLog.log_activity(
+                    user=request.user,
+                    action='UPDATE',
+                    description=f'فاصله بررسی خودکار به {new_interval} ثانیه تغییر کرد',
+                    ip_address=get_client_ip(request),
+                    user_agent=request.META.get('HTTP_USER_AGENT', ''),
+                    severity='MEDIUM'
+                )
+                
+                return JsonResponse({
+                    'success': True,
+                    'message': f'⏰ فاصله بررسی به {new_interval} ثانیه تنظیم شد',
+                    'interval': new_interval
+                })
+            
+            else:
+                return JsonResponse({
+                    'success': False,
+                    'error': '❌ عملیات نامعتبر'
+                }, status=400)
+        
+    except Exception as e:
+        # 📜 ثبت خطا
+        ActivityLog.log_activity(
+            user=request.user,
+            action='ERROR',
+            description=f'خطا در کنترل سیستم خودکار: {str(e)}',
+            ip_address=get_client_ip(request),
+            user_agent=request.META.get('HTTP_USER_AGENT', ''),
+            severity='HIGH'
+        )
+        
+        return JsonResponse({
+            'success': False,
+            'error': f'❌ خطا در کنترل سیستم خودکار: {str(e)}'
+        }, status=500)
+
+
 
 
 
