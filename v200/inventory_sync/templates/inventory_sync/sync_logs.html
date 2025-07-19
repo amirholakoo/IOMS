@@ -1,0 +1,182 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}گزارش‌های همگام‌سازی - همگام‌سازی موجودی{% endblock %}
+
+{% block extra_css %}
+<style>
+    .log-card {
+        background: white;
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 15px;
+        box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        border-left: 4px solid #667eea;
+    }
+    
+    .log-success { border-left-color: #28a745; }
+    .log-error { border-left-color: #dc3545; }
+    .log-warning { border-left-color: #ffc107; }
+    
+    .filter-section {
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h3 mb-0">
+                    <i class="fas fa-history me-2"></i>
+                    گزارش‌های همگام‌سازی
+                </h1>
+                <a href="{% url 'inventory_sync:sync_dashboard' %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-1"></i> بازگشت به داشبورد
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="filter-section">
+                <form method="get" class="row g-3">
+                    <div class="col-md-4">
+                        <label for="sync_type" class="form-label">نوع همگام‌سازی</label>
+                        <select class="form-select" id="sync_type" name="sync_type">
+                            <option value="">همه</option>
+                            {% for value, label in sync_types %}
+                                <option value="{{ value }}" {% if value == current_sync_type %}selected{% endif %}>
+                                    {{ label }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="search" class="form-label">جستجو</label>
+                        <input type="text" class="form-control" id="search" name="search" 
+                               value="{{ search }}" placeholder="جستجو در عملیات یا خطاها...">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">&nbsp;</label>
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-search me-1"></i> جستجو
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Logs -->
+    <div class="row">
+        <div class="col-12">
+            {% if logs %}
+                {% for log in logs %}
+                    <div class="log-card {% if log.errors %}log-error{% elif log.products_imported > 0 or log.products_exported > 0 %}log-success{% else %}log-warning{% endif %}">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div class="flex-grow-1">
+                                <div class="d-flex align-items-center mb-2">
+                                    <h5 class="mb-0 me-3">{{ log.get_sync_type_display }}</h5>
+                                    <span class="badge bg-secondary">{{ log.executed_at|date:"Y/m/d H:i" }}</span>
+                                </div>
+                                <p class="mb-2">{{ log.operation }}</p>
+                                <div class="row">
+                                    {% if log.products_processed > 0 %}
+                                        <div class="col-md-2">
+                                            <small class="text-muted">پردازش شده:</small>
+                                            <br><strong>{{ log.products_processed }}</strong>
+                                        </div>
+                                    {% endif %}
+                                    {% if log.products_imported > 0 %}
+                                        <div class="col-md-2">
+                                            <small class="text-success">وارد شده:</small>
+                                            <br><strong>{{ log.products_imported }}</strong>
+                                        </div>
+                                    {% endif %}
+                                    {% if log.products_updated > 0 %}
+                                        <div class="col-md-2">
+                                            <small class="text-info">بروزرسانی شده:</small>
+                                            <br><strong>{{ log.products_updated }}</strong>
+                                        </div>
+                                    {% endif %}
+                                    {% if log.products_exported > 0 %}
+                                        <div class="col-md-2">
+                                            <small class="text-warning">صادر شده:</small>
+                                            <br><strong>{{ log.products_exported }}</strong>
+                                        </div>
+                                    {% endif %}
+                                    {% if log.duration_seconds %}
+                                        <div class="col-md-2">
+                                            <small class="text-muted">مدت زمان:</small>
+                                            <br><strong>{{ log.duration_seconds|floatformat:2 }} ثانیه</strong>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                {% if log.errors %}
+                                    <div class="mt-3">
+                                        <small class="text-danger"><strong>خطاها:</strong></small>
+                                        <div class="bg-light p-2 rounded mt-1">
+                                            <small class="text-danger">{{ log.errors }}</small>
+                                        </div>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="text-end">
+                                {% if log.executed_by %}
+                                    <small class="text-muted">توسط {{ log.executed_by.username }}</small>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+                
+                <!-- Pagination -->
+                {% if logs.has_other_pages %}
+                    <nav class="mt-4">
+                        <ul class="pagination justify-content-center">
+                            {% if logs.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ logs.previous_page_number }}{% if current_sync_type %}&sync_type={{ current_sync_type }}{% endif %}{% if search %}&search={{ search }}{% endif %}">قبلی</a>
+                                </li>
+                            {% endif %}
+                            
+                            {% for num in logs.paginator.page_range %}
+                                {% if logs.number == num %}
+                                    <li class="page-item active">
+                                        <span class="page-link">{{ num }}</span>
+                                    </li>
+                                {% elif num > logs.number|add:'-3' and num < logs.number|add:'3' %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ num }}{% if current_sync_type %}&sync_type={{ current_sync_type }}{% endif %}{% if search %}&search={{ search }}{% endif %}">{{ num }}</a>
+                                    </li>
+                                {% endif %}
+                            {% endfor %}
+                            
+                            {% if logs.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ logs.next_page_number }}{% if current_sync_type %}&sync_type={{ current_sync_type }}{% endif %}{% if search %}&search={{ search }}{% endif %}">بعدی</a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                {% endif %}
+                
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-history fa-3x text-muted mb-3"></i>
+                    <h4 class="text-muted">گزارشی یافت نشد</h4>
+                    <p class="text-muted">هیچ گزارش همگام‌سازی‌ای برای نمایش وجود ندارد.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %} 

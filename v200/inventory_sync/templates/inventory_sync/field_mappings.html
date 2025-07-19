@@ -1,0 +1,335 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}نگاشت فیلدها - همگام‌سازی موجودی{% endblock %}
+
+{% block extra_css %}
+<style>
+    .mapping-card {
+        background: white;
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 15px;
+        box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        border-left: 4px solid #667eea;
+    }
+    
+    .mapping-active { border-left-color: #28a745; }
+    .mapping-inactive { border-left-color: #6c757d; }
+    
+    .add-mapping-section {
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+    }
+    
+    .form-switch .form-check-input:checked {
+        background-color: #28a745;
+        border-color: #28a745;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h3 mb-0">
+                    <i class="fas fa-exchange-alt me-2"></i>
+                    نگاشت فیلدها
+                </h1>
+                <a href="{% url 'inventory_sync:sync_dashboard' %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-1"></i> بازگشت به داشبورد
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add New Mapping -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="add-mapping-section">
+                <h5 class="mb-3">
+                    <i class="fas fa-plus me-2"></i>
+                    افزودن نگاشت جدید
+                </h5>
+                <form id="addMappingForm" class="row g-3">
+                    {% csrf_token %}
+                    <div class="col-md-4">
+                        <label for="external_field" class="form-label">فیلد خارجی</label>
+                        <input type="text" class="form-control" id="external_field" name="external_field" 
+                               placeholder="نام فیلد در SQLite" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="django_field" class="form-label">فیلد Django</label>
+                        <input type="text" class="form-control" id="django_field" name="django_field" 
+                               placeholder="نام فیلد در Django" required>
+                    </div>
+                    <div class="col-md-2">
+                        <label for="mapping_type" class="form-label">نوع نگاشت</label>
+                        <select class="form-select" id="mapping_type" name="mapping_type">
+                            <option value="direct">کپی مستقیم</option>
+                            <option value="transform">تبدیل</option>
+                            <option value="conditional">شرطی</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">&nbsp;</label>
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-plus me-1"></i> افزودن
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Existing Mappings -->
+    <div class="row">
+        <div class="col-12">
+            <h5 class="mb-3">
+                <i class="fas fa-list me-2"></i>
+                نگاشت‌های موجود
+            </h5>
+            
+            {% if mappings %}
+                {% for mapping in mappings %}
+                    <div class="mapping-card mapping-{% if mapping.is_active %}active{% else %}inactive{% endif %}">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div class="flex-grow-1">
+                                <div class="d-flex align-items-center mb-2">
+                                    <h6 class="mb-0 me-3">{{ mapping.external_field }} → {{ mapping.django_field }}</h6>
+                                    <span class="badge {% if mapping.is_active %}bg-success{% else %}bg-secondary{% endif %}">
+                                        {% if mapping.is_active %}فعال{% else %}غیرفعال{% endif %}
+                                    </span>
+                                </div>
+                                
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <small class="text-muted">نوع نگاشت:</small>
+                                        <br><strong>{{ mapping.get_mapping_type_display }}</strong>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <small class="text-muted">تاریخ ایجاد:</small>
+                                        <br><strong>{{ mapping.created_at|date:"Y/m/d H:i" }}</strong>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <small class="text-muted">آخرین بروزرسانی:</small>
+                                        <br><strong>{{ mapping.updated_at|date:"Y/m/d H:i" }}</strong>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <small class="text-muted">وضعیت:</small>
+                                        <br>
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input mapping-toggle" type="checkbox" 
+                                                   data-mapping-id="{{ mapping.id }}"
+                                                   {% if mapping.is_active %}checked{% endif %}>
+                                            <label class="form-check-label">
+                                                {% if mapping.is_active %}فعال{% else %}غیرفعال{% endif %}
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                {% if mapping.transform_function %}
+                                    <div class="mt-3">
+                                        <small class="text-muted"><strong>تابع تبدیل:</strong></small>
+                                        <div class="bg-light p-2 rounded mt-1">
+                                            <small>{{ mapping.transform_function }}</small>
+                                        </div>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+                
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-exchange-alt fa-3x text-muted mb-3"></i>
+                    <h4 class="text-muted">نگاشتی یافت نشد</h4>
+                    <p class="text-muted">هیچ نگاشت فیلدی برای نمایش وجود ندارد.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Loading Modal -->
+<div class="modal fade" id="loadingModal" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-header border-0 pb-0">
+                <button type="button" class="btn-close" onclick="hideLoading()" title="بستن"></button>
+            </div>
+            <div class="modal-body text-center">
+                <div class="spinner-border text-primary mb-3" role="status">
+                    <span class="visually-hidden">در حال بارگذاری...</span>
+                </div>
+                <p class="mb-0" id="loadingMessage">در حال پردازش...</p>
+                <small class="text-muted mt-2 d-block">در صورت طولانی شدن عملیات، می‌توانید این پنجره را ببندید</small>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let loadingModal = null;
+
+function showLoading(message = 'در حال پردازش...') {
+    document.getElementById('loadingMessage').textContent = message;
+    
+    // Hide any existing modal first
+    if (loadingModal) {
+        try {
+            loadingModal.hide();
+        } catch (e) {
+            console.log('Error hiding existing modal:', e);
+        }
+    }
+    
+    try {
+        loadingModal = new bootstrap.Modal(document.getElementById('loadingModal'));
+        loadingModal.show();
+    } catch (e) {
+        console.log('Error showing modal:', e);
+    }
+}
+
+function hideLoading() {
+    try {
+        if (loadingModal) {
+            loadingModal.hide();
+            loadingModal = null;
+        } else {
+            // Fallback: try to hide using getInstance
+            const modal = bootstrap.Modal.getInstance(document.getElementById('loadingModal'));
+            if (modal) {
+                modal.hide();
+            }
+        }
+    } catch (e) {
+        console.log('Error hiding modal:', e);
+        // Force hide by removing modal backdrop and classes
+        const modalElement = document.getElementById('loadingModal');
+        if (modalElement) {
+            modalElement.classList.remove('show');
+            modalElement.style.display = 'none';
+            const backdrop = document.querySelector('.modal-backdrop');
+            if (backdrop) {
+                backdrop.remove();
+            }
+        }
+    }
+}
+
+function showAlert(message, type = 'success') {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    document.querySelector('.container-fluid').insertBefore(alertDiv, document.querySelector('.row'));
+    
+    // Auto-dismiss after 5 seconds
+    setTimeout(() => {
+        if (alertDiv.parentNode) {
+            alertDiv.remove();
+        }
+    }, 5000);
+}
+
+// Add new mapping
+document.getElementById('addMappingForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    const data = {
+        action: 'add_mapping',
+        external_field: formData.get('external_field'),
+        django_field: formData.get('django_field'),
+        mapping_type: formData.get('mapping_type')
+    };
+    
+    showLoading('در حال افزودن نگاشت...');
+    
+    try {
+        const response = await fetch('{% url "inventory_sync:field_mappings" %}', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data)
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showAlert('نگاشت با موفقیت افزوده شد', 'success');
+            setTimeout(() => location.reload(), 1500);
+        } else {
+            showAlert(result.message, 'danger');
+        }
+    } catch (error) {
+        showAlert('خطا در افزودن نگاشت: ' + error.message, 'danger');
+    } finally {
+        hideLoading();
+    }
+});
+
+// Toggle mapping status
+document.querySelectorAll('.mapping-toggle').forEach(toggle => {
+    toggle.addEventListener('change', async function() {
+        const mappingId = this.dataset.mappingId;
+        const isActive = this.checked;
+        
+        showLoading('در حال بروزرسانی وضعیت...');
+        
+        try {
+            const response = await fetch('{% url "inventory_sync:field_mappings" %}', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    action: 'update_mapping',
+                    mapping_id: mappingId,
+                    is_active: isActive
+                })
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                showAlert('وضعیت نگاشت بروزرسانی شد', 'success');
+                // Update the label
+                const label = this.nextElementSibling;
+                label.textContent = isActive ? 'فعال' : 'غیرفعال';
+                
+                // Update card styling
+                const card = this.closest('.mapping-card');
+                card.className = card.className.replace('mapping-active mapping-inactive', '');
+                card.classList.add(isActive ? 'mapping-active' : 'mapping-inactive');
+            } else {
+                showAlert(result.message, 'danger');
+                // Revert the toggle
+                this.checked = !isActive;
+            }
+        } catch (error) {
+            showAlert('خطا در بروزرسانی وضعیت: ' + error.message, 'danger');
+            // Revert the toggle
+            this.checked = !isActive;
+        } finally {
+            hideLoading();
+        }
+    });
+});
+</script>
+{% endblock %} 

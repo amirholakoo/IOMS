@@ -1,0 +1,603 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}وارد کردن محصولات - همگام‌سازی موجودی{% endblock %}
+
+{% block extra_css %}
+<style>
+    .product-card {
+        background: white;
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 15px;
+        box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        border: 2px solid transparent;
+        transition: all 0.3s ease;
+    }
+    
+    .product-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+    }
+    
+    .product-card.selected {
+        border-color: #667eea;
+        background: linear-gradient(135deg, #f8f9ff 0%, #e8ecff 100%);
+    }
+    
+    .product-checkbox {
+        transform: scale(1.2);
+        margin-right: 10px;
+        cursor: pointer;
+    }
+    
+    .form-check-input {
+        cursor: pointer;
+    }
+    
+    .btn-import {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white !important;
+        border: none;
+        padding: 12px 25px;
+        border-radius: 8px;
+        font-weight: 600;
+        text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+        transition: all 0.3s ease;
+    }
+    
+    .btn-import:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        color: white !important;
+    }
+    
+    .btn-import:disabled {
+        opacity: 0.6;
+        transform: none;
+        box-shadow: none;
+    }
+    
+    .product-info {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        margin-top: 15px;
+    }
+    
+    .info-item {
+        background: #f8f9fa;
+        padding: 10px;
+        border-radius: 6px;
+        border-left: 3px solid #667eea;
+    }
+    
+    .info-label {
+        font-weight: 600;
+        color: #495057;
+        font-size: 0.9em;
+        margin-bottom: 5px;
+    }
+    
+    .info-value {
+        color: #212529;
+        font-size: 1.1em;
+    }
+    
+    .select-all-container {
+        background: #e9ecef;
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+    }
+    
+    .sort-container {
+        background: #f8f9fa;
+        padding: 15px;
+        border-radius: 8px;
+        border: 1px solid #dee2e6;
+        margin-bottom: 20px;
+    }
+    
+    .sort-container .form-select {
+        min-width: 200px;
+        border-radius: 6px;
+        border: 1px solid #ced4da;
+    }
+    
+    .pagination-container {
+        display: flex;
+        justify-content: center;
+        margin-top: 30px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+{% csrf_token %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h3 mb-0">
+                    <i class="fas fa-download me-2"></i>
+                    وارد کردن محصولات از SQLite
+                </h1>
+                <div>
+                    <a href="{% url 'inventory_sync:sync_dashboard' %}" class="btn btn-outline-secondary me-2">
+                        <i class="fas fa-arrow-left me-1"></i> بازگشت به داشبورد
+                    </a>
+                    <button class="btn btn-import" id="importBtn" onclick="importSelectedProducts()" disabled>
+                        <i class="fas fa-download me-2"></i>
+                        وارد کردن انتخاب شده (<span id="selectedCount">0</span>)
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Summary -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle me-2"></i>
+                <strong>{{ total_count }}</strong> محصول برای وارد کردن از پایگاه داده SQLite موجود است.
+                فقط محصولات با وضعیت "موجود" نمایش داده می‌شوند. محصولاتی که قبلاً فروخته یا تحویل داده شده‌اند نمایش داده نمی‌شوند.
+            </div>
+        </div>
+    </div>
+
+    <!-- Width Filter -->
+    <div class="row mb-3">
+        <div class="col-12">
+            <div class="sort-container">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div class="d-flex align-items-center">
+                        <label for="widthFilter" class="form-label mb-0 me-3">
+                            <i class="fas fa-filter me-1"></i>
+                            <strong>فیلتر بر اساس عرض:</strong>
+                        </label>
+                        <select class="form-select" id="widthFilter" style="width: auto;">
+                            <option value="">همه عرض‌ها</option>
+                            <option value="200">200 میلی‌متر</option>
+                            <option value="210">210 میلی‌متر</option>
+                            <option value="220">220 میلی‌متر</option>
+                            <option value="230">230 میلی‌متر</option>
+                            <option value="240">240 میلی‌متر</option>
+                            <option value="250">250 میلی‌متر</option>
+                        </select>
+                    </div>
+                    <small class="text-muted" id="filterStatus">
+                        {% if current_width %}
+                            نمایش محصولات با عرض {{ current_width }} میلی‌متر ({{ total_count }} محصول)
+                        {% else %}
+                            نمایش همه محصولات
+                        {% endif %}
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Select All -->
+    <div class="row mb-3">
+        <div class="col-12">
+            <div class="select-all-container">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="selectAll">
+                    <label class="form-check-label" for="selectAll">
+                        <strong>انتخاب همه محصولات</strong>
+                    </label>
+                    <small class="text-muted ms-2" id="selectAllStatus">(0 انتخاب شده)</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Products List -->
+    <div class="row">
+        <div class="col-12">
+            {% if products %}
+                {% for product in products %}
+                    <div class="product-card" data-reel-number="{{ product.reel_number }}">
+                        <div class="d-flex align-items-start">
+                            <input type="checkbox" class="form-check-input product-checkbox product-select" 
+                                   value="{{ product.reel_number }}" id="product_{{ forloop.counter }}">
+                            <div class="flex-grow-1">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <h5 class="mb-2">
+                                            <label for="product_{{ forloop.counter }}" class="mb-0">
+                                                Reel #{{ product.reel_number }}
+                                            </label>
+                                        </h5>
+                                        <p class="text-muted mb-0">{{ product.external_data.grade }}</p>
+                                    </div>
+                                    <div class="text-end">
+                                        <span class="badge bg-success">موجود</span>
+                                        <br>
+                                        <small class="text-muted">{{ product.external_data.location }}</small>
+                                    </div>
+                                </div>
+                                
+                                <div class="product-info">
+                                    <div class="info-item">
+                                        <div class="info-label">عرض</div>
+                                        <div class="info-value">{{ product.external_data.width }} میلی‌متر</div>
+                                    </div>
+                                    <div class="info-item">
+                                        <div class="info-label">طول</div>
+                                        <div class="info-value">{{ product.external_data.length }} میلی‌متر</div>
+                                    </div>
+                                    <div class="info-item">
+                                        <div class="info-label">گرماژ</div>
+                                        <div class="info-value">{{ product.external_data.gsm }} گرم/متر²</div>
+                                    </div>
+                                    <div class="info-item">
+                                        <div class="info-label">شکستگی</div>
+                                        <div class="info-value">{{ product.external_data.breaks }}</div>
+                                    </div>
+                                    {% if product.external_data.comments %}
+                                        <div class="info-item" style="grid-column: 1 / -1;">
+                                            <div class="info-label">توضیحات</div>
+                                            <div class="info-value">{{ product.external_data.comments }}</div>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+                
+                <!-- Pagination -->
+                {% if page_obj.has_other_pages %}
+                    <div class="pagination-container">
+                        <nav>
+                            <ul class="pagination">
+                                {% if page_obj.has_previous %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.width %}&width={{ request.GET.width }}{% endif %}">قبلی</a>
+                                    </li>
+                                {% endif %}
+                                
+                                {% for num in page_obj.paginator.page_range %}
+                                    {% if page_obj.number == num %}
+                                        <li class="page-item active">
+                                            <span class="page-link">{{ num }}</span>
+                                        </li>
+                                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ num }}{% if request.GET.width %}&width={{ request.GET.width }}{% endif %}">{{ num }}</a>
+                                        </li>
+                                    {% endif %}
+                                {% endfor %}
+                                
+                                {% if page_obj.has_next %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.width %}&width={{ request.GET.width }}{% endif %}">بعدی</a>
+                                    </li>
+                                {% endif %}
+                            </ul>
+                        </nav>
+                    </div>
+                {% endif %}
+                
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-box-open fa-3x text-muted mb-3"></i>
+                    <h4 class="text-muted">محصولی موجود نیست</h4>
+                    <p class="text-muted">هیچ محصولی برای وارد کردن از پایگاه داده SQLite موجود نیست.</p>
+                    <a href="{% url 'inventory_sync:sync_dashboard' %}" class="btn btn-primary">
+                        <i class="fas fa-arrow-left me-1"></i> بازگشت به داشبورد
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Loading Modal -->
+<div class="modal fade" id="loadingModal" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-header border-0 pb-0">
+                <button type="button" class="btn-close" onclick="hideLoading()" title="بستن"></button>
+            </div>
+            <div class="modal-body text-center">
+                <div class="spinner-border text-primary mb-3" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mb-0" id="loadingMessage">در حال وارد کردن محصولات...</p>
+                <small class="text-muted mt-2 d-block">در صورت طولانی شدن عملیات، می‌توانید این پنجره را ببندید</small>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let selectedProducts = new Set();
+let loadingModal = null;
+
+function updateSelectedCount() {
+    const count = selectedProducts.size;
+    const selectedCountElement = document.getElementById('selectedCount');
+    const importBtn = document.getElementById('importBtn');
+    const selectAllStatus = document.getElementById('selectAllStatus');
+    
+    if (selectedCountElement) {
+        selectedCountElement.textContent = count;
+    }
+    
+    if (importBtn) {
+        importBtn.disabled = count === 0;
+    }
+    
+    if (selectAllStatus) {
+        selectAllStatus.textContent = `(${count} انتخاب شده)`;
+    }
+    
+    console.log(`Selected count updated: ${count} products`);
+}
+
+function updateSelectAll() {
+    const checkboxes = document.querySelectorAll('.product-select');
+    const selectAllCheckbox = document.getElementById('selectAll');
+    
+    if (!selectAllCheckbox) {
+        console.error('Select all checkbox not found in updateSelectAll');
+        return;
+    }
+    
+    if (checkboxes.length === 0) {
+        console.log('No product checkboxes found');
+        selectAllCheckbox.checked = false;
+        selectAllCheckbox.indeterminate = false;
+        return;
+    }
+    
+    // Only consider visible checkboxes (not filtered out)
+    const visibleCheckboxes = Array.from(checkboxes).filter(cb => {
+        const productCard = cb.closest('.product-card');
+        return productCard && productCard.style.display !== 'none';
+    });
+    
+    if (visibleCheckboxes.length === 0) {
+        selectAllCheckbox.checked = false;
+        selectAllCheckbox.indeterminate = false;
+        return;
+    }
+    
+    const allChecked = visibleCheckboxes.every(cb => cb.checked);
+    const someChecked = visibleCheckboxes.some(cb => cb.checked);
+    
+    selectAllCheckbox.checked = allChecked;
+    selectAllCheckbox.indeterminate = someChecked && !allChecked;
+    
+    console.log(`UpdateSelectAll: ${visibleCheckboxes.length} visible checkboxes, allChecked: ${allChecked}, someChecked: ${someChecked}`);
+}
+
+function filterProductsByWidth(selectedWidth) {
+    console.log(`Filtering products by width: ${selectedWidth}`);
+    
+    // Update URL and reload page with filter
+    const url = new URL(window.location);
+    if (selectedWidth) {
+        url.searchParams.set('width', selectedWidth);
+    } else {
+        url.searchParams.delete('width');
+    }
+    // Reset to page 1 when filtering
+    url.searchParams.delete('page');
+    
+    // Navigate to the filtered URL
+    window.location.href = url.toString();
+}
+
+function toggleProductSelection(reelNumber, checked) {
+    console.log(`Toggling product selection: ${reelNumber} = ${checked}`);
+    
+    if (checked) {
+        selectedProducts.add(reelNumber);
+        const productCard = document.querySelector(`[data-reel-number="${reelNumber}"]`);
+        if (productCard) {
+            productCard.classList.add('selected');
+        }
+    } else {
+        selectedProducts.delete(reelNumber);
+        const productCard = document.querySelector(`[data-reel-number="${reelNumber}"]`);
+        if (productCard) {
+            productCard.classList.remove('selected');
+        }
+    }
+    
+    updateSelectedCount();
+    updateSelectAll();
+    
+    console.log(`Selection state updated. Total selected: ${selectedProducts.size}`);
+}
+
+function showLoading(message = 'در حال پردازش...') {
+    document.getElementById('loadingMessage').textContent = message;
+    
+    // Hide any existing modal first
+    if (loadingModal) {
+        try {
+            loadingModal.hide();
+        } catch (e) {
+            console.log('Error hiding existing modal:', e);
+        }
+    }
+    
+    try {
+        loadingModal = new bootstrap.Modal(document.getElementById('loadingModal'));
+        loadingModal.show();
+    } catch (e) {
+        console.log('Error showing modal:', e);
+    }
+}
+
+function hideLoading() {
+    try {
+        if (loadingModal) {
+            loadingModal.hide();
+            loadingModal = null;
+        } else {
+            // Fallback: try to hide using getInstance
+            const modal = bootstrap.Modal.getInstance(document.getElementById('loadingModal'));
+            if (modal) {
+                modal.hide();
+            }
+        }
+    } catch (e) {
+        console.log('Error hiding modal:', e);
+        // Force hide by removing modal backdrop and classes
+        const modalElement = document.getElementById('loadingModal');
+        if (modalElement) {
+            modalElement.classList.remove('show');
+            modalElement.style.display = 'none';
+            const backdrop = document.querySelector('.modal-backdrop');
+            if (backdrop) {
+                backdrop.remove();
+            }
+        }
+    }
+}
+
+function showAlert(message, type = 'success') {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    document.querySelector('.container-fluid').insertBefore(alertDiv, document.querySelector('.row'));
+    
+    // Auto-dismiss after 5 seconds
+    setTimeout(() => {
+        if (alertDiv.parentNode) {
+            alertDiv.remove();
+        }
+    }, 5000);
+}
+
+async function importSelectedProducts() {
+    if (selectedProducts.size === 0) {
+        showAlert('لطفاً حداقل یک محصول برای وارد کردن انتخاب کنید.', 'warning');
+        return;
+    }
+    
+    if (!confirm(`${selectedProducts.size} محصول انتخاب شده وارد شود؟`)) {
+        return;
+    }
+    
+    showLoading(`در حال وارد کردن ${selectedProducts.size} محصول...`);
+    
+    // Add timeout to prevent stuck modal
+    const timeoutId = setTimeout(() => {
+        hideLoading();
+        showAlert('عملیات وارد کردن محصولات بیش از حد طول کشید. لطفاً دوباره تلاش کنید.', 'warning');
+    }, 60000); // 60 seconds timeout for import
+    
+    try {
+        const response = await fetch('{% url "inventory_sync:perform_import" %}', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                selected_reel_numbers: Array.from(selectedProducts)
+            })
+        });
+        
+        clearTimeout(timeoutId); // Clear timeout on success
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showAlert(data.message, 'success');
+            setTimeout(() => {
+                window.location.href = '{% url "inventory_sync:sync_dashboard" %}';
+            }, 2000);
+        } else {
+            showAlert(data.message, 'danger');
+        }
+    } catch (error) {
+        clearTimeout(timeoutId); // Clear timeout on error
+        showAlert('خطا در وارد کردن محصولات: ' + error.message, 'danger');
+    } finally {
+        hideLoading();
+    }
+}
+
+// Completely rewritten event handling
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM loaded, setting up event listeners...');
+    
+    // Handle individual product checkboxes
+    document.addEventListener('change', function(e) {
+        if (e.target.classList.contains('product-select')) {
+            console.log(`Product checkbox changed: ${e.target.value} = ${e.target.checked}`);
+            toggleProductSelection(e.target.value, e.target.checked);
+        }
+    });
+    
+    // Handle select all checkbox - FIXED VERSION
+    const selectAllCheckbox = document.getElementById('selectAll');
+    if (selectAllCheckbox) {
+        console.log('Select all checkbox found, adding event listener');
+        
+        selectAllCheckbox.addEventListener('change', function() {
+            const newState = this.checked;
+            console.log(`Select all changed to: ${newState}`);
+            
+            // Get all product checkboxes
+            const checkboxes = document.querySelectorAll('.product-select');
+            let processedCount = 0;
+            
+            checkboxes.forEach(cb => {
+                // Update checkbox state
+                cb.checked = newState;
+                
+                // Update selection state
+                toggleProductSelection(cb.value, newState);
+                processedCount++;
+            });
+            
+            console.log(`Select all processed ${processedCount} checkboxes`);
+        });
+    } else {
+        console.error('Select all checkbox not found!');
+    }
+    
+    // Handle width filter dropdown
+    const widthFilter = document.getElementById('widthFilter');
+    if (widthFilter) {
+        console.log('Width filter found, adding event listener');
+        
+        // Set initial value from backend context
+        const currentWidth = '{{ current_width }}';
+        if (currentWidth) {
+            widthFilter.value = currentWidth;
+            console.log(`Setting initial filter to: ${currentWidth}`);
+        }
+        
+        widthFilter.addEventListener('change', function() {
+            console.log(`Width filter changed to: ${this.value}`);
+            filterProductsByWidth(this.value);
+        });
+    } else {
+        console.error('Width filter not found!');
+    }
+    
+    // Initialize
+    updateSelectedCount();
+    updateSelectAll();
+    
+    console.log('Event listeners setup complete');
+    console.log(`Initial state: ${selectedProducts.size} products selected`);
+});
+</script>
+{% endblock %} 

@@ -432,6 +432,22 @@ function getCookie(name) {
             </div>
         </div>
         {% endif %}
+
+        <!-- Inventory Sync (فقط برای Super Admin) -->
+        {% if user.is_super_admin %}
+        <div class="col-md-3 mb-3">
+            <div class="card quick-action-card text-center" style="border: 3px solid #28a745; background: linear-gradient(135deg, #f8fff9, #e8f5e8);">
+                <div class="card-body">
+                    <span class="action-icon" style="color: #28a745;">🔄</span>
+                    <h5 style="color: #28a745;">🔄 همگام‌سازی موجودی</h5>
+                    <p class="text-muted">همگام‌سازی موجودی با پایگاه داده خارجی</p>
+                    <a href="{% url 'inventory_sync:sync_dashboard' %}" class="btn" style="background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%); color: white; border: none; border-radius: 15px; padding: 12px 25px; font-weight: 600; box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3); transition: all 0.3s ease;">
+                        🔄 مدیریت همگام‌سازی
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endif %}
     </div>
 </div>
 
