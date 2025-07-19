@@ -7,7 +7,7 @@ class Command(BaseCommand):
     help = 'Export all customer and order logs to csv_logs directory.'
 
     def handle(self, *args, **options):
-        logs_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'csv_logs')
+        logs_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))), 'csv_logs')
         os.makedirs(logs_dir, exist_ok=True)
 
         # Export customer logs

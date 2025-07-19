@@ -1081,12 +1081,50 @@ def fake_send_sms(phone, code):
     📱 ارسال SMS فیک برای تست
     🚀 TODO: جایگزینی با API واقعی SMS
     """
+    current_time = timezone.now()
+    
+    # تبدیل تاریخ به فارسی (همان منطق JavaScript)
+    persian_months = ['فروردین', 'اردیبهشت', 'خرداد', 'تیر', 'مرداد', 'شهریور',
+                     'مهر', 'آبان', 'آذر', 'دی', 'بهمن', 'اسفند']
+    
+    year = current_time.year
+    month = current_time.month
+    day = current_time.day
+    hours = current_time.hour
+    minutes = current_time.minute
+    
+    # محاسبه سال فارسی
+    persian_year = year - 621
+    
+    # نگاشت ماه‌ها
+    if month >= 3:
+        persian_month = month - 3
+        persian_day = day
+    else:
+        persian_month = month + 9
+        persian_day = day
+        persian_year -= 1
+    
+    # تنظیم روز برای دقت بیشتر
+    if month >= 3 and month <= 6:
+        persian_day += 3
+    elif month >= 7 and month <= 9:
+        persian_day += 9
+    elif month >= 10 and month <= 12:
+        persian_day += 6
+    else:
+        persian_day += 10
+    
+    # فرمت‌بندی تاریخ فارسی
+    persian_month_name = persian_months[persian_month - 1]
+    persian_date = f"{persian_day} {persian_month_name} {persian_year}"
+    
     print("\n" + "="*60)
     print("📱 SMS VERIFICATION CODE (FAKE FOR TESTING)")
     print("="*60)
     print(f"📞 Phone: {phone}")
     print(f"🔢 Code: {code}")
-    print(f"⏰ Time: {timezone.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    print(f"📅 Date: {persian_date}")
     print("="*60)
     print("💡 This is a FAKE SMS for testing purposes.")
     print("🔧 Replace with real SMS API when ready.")

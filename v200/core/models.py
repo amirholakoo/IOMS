@@ -189,22 +189,49 @@ class Customer(BaseModel):
     def save(self, *args, **kwargs):
         from django.utils import timezone
         from django.core.management import call_command
+        current_user = None
+        username = 'system'
+        try:
+            from core.middleware import get_current_user
+            current_user = get_current_user()
+            if current_user and hasattr(current_user, 'get_full_name'):
+                username = current_user.get_full_name() or current_user.username
+            elif current_user and hasattr(current_user, 'username'):
+                username = current_user.username
+        except Exception:
+            pass
         is_new = not self.pk
-        now_str = timezone.now().strftime('%Y-%m-%d %H:%M')
+        now_str = timezone.now().strftime('%Y-%m-%d %H:%M:%S')
         log_entries = []
         if self.logs:
             log_entries = [entry.strip() for entry in self.logs.split(',') if entry.strip()]
+        
         if is_new:
-            log_entries.append(f"{now_str} Created By {self.customer_name}")
+            log_entries.append(f"{now_str} Customer Created By {username}")
+            log_entries.append(f"{now_str} Customer Name: {self.customer_name} By {username}")
+            log_entries.append(f"{now_str} Phone: {self.phone} By {username}")
+            log_entries.append(f"{now_str} Status: {self.get_status_display()} By {username}")
+            if self.address:
+                log_entries.append(f"{now_str} Address: {self.address[:50]}... By {username}")
         else:
             try:
                 old = type(self).objects.get(pk=self.pk)
             except type(self).DoesNotExist:
                 old = None
-            log_entries.append(f"{now_str} Updated By {self.customer_name}")
-            if old and hasattr(old, 'status') and old.status != self.status:
-                log_entries.append(f"{now_str} Status changed to {self.status} By {self.customer_name}")
-        log_entries = sorted(log_entries, key=lambda x: x[:16])
+            log_entries.append(f"{now_str} Customer Updated By {username}")
+            if old:
+                if old.status != self.status:
+                    log_entries.append(f"{now_str} Status changed from {old.get_status_display()} to {self.get_status_display()} By {username}")
+                if old.customer_name != self.customer_name:
+                    log_entries.append(f"{now_str} Name changed from '{old.customer_name}' to '{self.customer_name}' By {username}")
+                if old.phone != self.phone:
+                    log_entries.append(f"{now_str} Phone changed from '{old.phone}' to '{self.phone}' By {username}")
+                if old.address != self.address:
+                    log_entries.append(f"{now_str} Address updated By {username}")
+                if old.comments != self.comments:
+                    log_entries.append(f"{now_str} Comments updated By {username}")
+        
+        log_entries = sorted(log_entries, key=lambda x: x[:19])  # Sort by timestamp
         self.logs = ', '.join(log_entries) + (',' if log_entries else '')
         super().save(*args, **kwargs)
         try:
@@ -877,27 +904,38 @@ class Order(BaseModel):
         except Exception:
             pass
         is_new = not self.pk
-        now_str = timezone.now().strftime('%Y-%m-%d %H:%M')
+        now_str = timezone.now().strftime('%Y-%m-%d %H:%M:%S')
         log_entries = []
         if self.logs:
             log_entries = [entry.strip() for entry in self.logs.split(',') if entry.strip()]
+        
         if is_new:
-            log_entries.append(f"{now_str} Created By {username}")
-            log_entries.append(f"{now_str} Status: {self.status} By {username}")
+            log_entries.append(f"{now_str} Order Created By {username}")
+            log_entries.append(f"{now_str} Order Number: {self.order_number} By {username}")
+            log_entries.append(f"{now_str} Customer: {self.customer.customer_name} By {username}")
+            log_entries.append(f"{now_str} Status: {self.get_status_display()} By {username}")
+            log_entries.append(f"{now_str} Payment Method: {self.get_payment_method_display()} By {username}")
+            log_entries.append(f"{now_str} Total Amount: {self.total_amount:,.0f} Toman By {username}")
+            log_entries.append(f"{now_str} Final Amount: {self.final_amount:,.0f} Toman By {username}")
         else:
             try:
                 old = type(self).objects.get(pk=self.pk)
             except type(self).DoesNotExist:
                 old = None
-            log_entries.append(f"{now_str} Updated By {username}")
+            log_entries.append(f"{now_str} Order Updated By {username}")
             if old:
-                if hasattr(old, 'status') and old.status != self.status:
-                    log_entries.append(f"{now_str} Status changed to {self.status} By {username}")
-                if hasattr(old, 'payment_method') and old.payment_method != self.payment_method:
-                    log_entries.append(f"{now_str} Payment method changed to {self.payment_method} By {username}")
-                if hasattr(old, 'final_amount') and old.final_amount != self.final_amount:
-                    log_entries.append(f"{now_str} Final amount changed to {self.final_amount} By {username}")
-        log_entries = sorted(log_entries, key=lambda x: x[:16])
+                if old.status != self.status:
+                    log_entries.append(f"{now_str} Status changed from {old.get_status_display()} to {self.get_status_display()} By {username}")
+                if old.payment_method != self.payment_method:
+                    log_entries.append(f"{now_str} Payment method changed from {old.get_payment_method_display()} to {self.get_payment_method_display()} By {username}")
+                if old.total_amount != self.total_amount:
+                    log_entries.append(f"{now_str} Total amount changed from {old.total_amount:,.0f} to {self.total_amount:,.0f} Toman By {username}")
+                if old.final_amount != self.final_amount:
+                    log_entries.append(f"{now_str} Final amount changed from {old.final_amount:,.0f} to {self.final_amount:,.0f} Toman By {username}")
+                if old.discount_percentage != self.discount_percentage:
+                    log_entries.append(f"{now_str} Discount changed from {old.discount_percentage}% to {self.discount_percentage}% By {username}")
+        
+        log_entries = sorted(log_entries, key=lambda x: x[:19])  # Sort by timestamp
         self.logs = ', '.join(log_entries) + (',' if log_entries else '')
         super().save(*args, **kwargs)
         try:

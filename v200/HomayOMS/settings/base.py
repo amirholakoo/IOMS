@@ -69,6 +69,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',  # 👤 احراز هویت
     'django.contrib.messages.middleware.MessageMiddleware',  # 💬 پیام‌ها
     'django.middleware.clickjacking.XFrameOptionsMiddleware',  # 🚫 محافظت Clickjacking
+    'core.middleware.CurrentUserMiddleware',           # 🔍 ردیابی کاربر فعلی برای لاگ‌ها
 ]
 
 # 🌐 URL اصلی پروژه

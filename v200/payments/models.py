@@ -294,6 +294,9 @@ class Payment(BaseModel):
         """
         💾 ذخیره پرداخت با تولید کد پیگیری
         """
+        from django.utils import timezone
+        from django.core.management import call_command
+        
         # تولید کد پیگیری در صورت عدم وجود
         if not self.tracking_code:
             self.tracking_code = self.generate_tracking_code()
@@ -306,12 +309,56 @@ class Payment(BaseModel):
         if not self.expires_at:
             self.expires_at = timezone.now() + timezone.timedelta(minutes=30)
         
-        # ثبت لاگ تغییرات
-        self.log_activity('SAVE', f'پرداخت {self.tracking_code} ذخیره شد - وضعیت: {self.get_status_display_persian()}')
+        # ثبت لاگ تغییرات با فرمت مشابه Customer و Order
+        current_user = None
+        username = 'system'
+        try:
+            from core.middleware import get_current_user
+            current_user = get_current_user()
+            if current_user and hasattr(current_user, 'get_full_name'):
+                username = current_user.get_full_name() or current_user.username
+            elif current_user and hasattr(current_user, 'username'):
+                username = current_user.username
+        except Exception:
+            pass
+        
+        is_new = not self.pk
+        now_str = timezone.now().strftime('%Y-%m-%d %H:%M:%S')
+        log_entries = []
+        if self.logs:
+            log_entries = [entry.strip() for entry in self.logs.split(',') if entry.strip()]
+        
+        if is_new:
+            log_entries.append(f"{now_str} Payment Created By {username}")
+            log_entries.append(f"{now_str} Tracking Code: {self.tracking_code} By {username}")
+            log_entries.append(f"{now_str} Order: {self.order.order_number if self.order else 'N/A'} By {username}")
+            log_entries.append(f"{now_str} Customer: {self.order.customer.customer_name if self.order and self.order.customer else 'N/A'} By {username}")
+            log_entries.append(f"{now_str} Gateway: {self.get_gateway_display_persian()} By {username}")
+            log_entries.append(f"{now_str} Amount: {self.display_amount:,.0f} Toman By {username}")
+            log_entries.append(f"{now_str} Status: {self.get_status_display_persian()} By {username}")
+        else:
+            try:
+                old = Payment.objects.get(pk=self.pk)
+            except Payment.DoesNotExist:
+                old = None
+            log_entries.append(f"{now_str} Payment Updated By {username}")
+            if old:
+                if old.status != self.status:
+                    log_entries.append(f"{now_str} Status changed from {old.get_status_display_persian()} to {self.get_status_display_persian()} By {username}")
+                if old.gateway != self.gateway:
+                    log_entries.append(f"{now_str} Gateway changed from {old.get_gateway_display_persian()} to {self.get_gateway_display_persian()} By {username}")
+                if old.amount != self.amount:
+                    log_entries.append(f"{now_str} Amount changed from {old.display_amount:,.0f} to {self.display_amount:,.0f} Toman By {username}")
+                if old.gateway_transaction_id != self.gateway_transaction_id and self.gateway_transaction_id:
+                    log_entries.append(f"{now_str} Transaction ID: {self.gateway_transaction_id} By {username}")
+                if self.error_message and old.error_message != self.error_message:
+                    log_entries.append(f"{now_str} Error: {self.error_message[:100]} By {username}")
+        
+        log_entries = sorted(log_entries, key=lambda x: x[:19])  # Sort by timestamp
+        self.logs = ', '.join(log_entries) + (',' if log_entries else '')
         
         super().save(*args, **kwargs)
         try:
-            from django.core.management import call_command
             call_command('export_payments_logs_to_csv')
         except Exception:
             pass
