@@ -127,6 +127,14 @@ def admin_dashboard_view(request):
         'recent_activities': ActivityLog.objects.select_related('user')[:10]
     }
     
+    # 🚨 Check for un-priced products (for super admin alarm)
+    un_priced_products_count = 0
+    if request.user.is_super_admin():
+        un_priced_products_count = Product.objects.filter(
+            status='In-stock',
+            price=0
+        ).count()
+    
     # 💰 Super Admin هیچ محدودیتی ندارد
     products_for_price_management = None
     if request.user.is_super_admin():  # Super Admin همیشه دسترسی دارد
@@ -139,6 +147,7 @@ def admin_dashboard_view(request):
         'user': request.user,
         'stats': stats,
         'products_for_price_management': products_for_price_management,
+        'un_priced_products_count': un_priced_products_count,
     }
     return render(request, 'core/admin_dashboard.html', context)
 
@@ -1387,8 +1396,13 @@ def index_view(request):
         )
     
     # دریافت محصولات واقعی از مدل Product
-    products = Product.objects.filter(status='In-stock').order_by('-created_at')
-    credit_products = Product.objects.filter(status='In-stock').order_by('-created_at')
+    all_products = Product.objects.filter(status='In-stock').order_by('-created_at')
+    
+    # جداسازی محصولات با قیمت و بدون قیمت
+    products = all_products.filter(price__gt=0).order_by('-created_at')
+    un_priced_products = all_products.filter(price=0).order_by('-created_at')
+    credit_products = all_products.filter(price__gt=0).order_by('-created_at')
+    
     # اگر نوع پرداخت در مدل دارید، می‌توانید فیلتر کنید (مثلاً payment_type='credit')
     # credit_products = Product.objects.filter(status='In-stock', payment_type='credit').order_by('-created_at')
 
@@ -1450,7 +1464,8 @@ def index_view(request):
     context = {
         'title': 'کارخانه کاغذ و مقوای همایون',
         'price_data': price_data,
-        'products': products,
+        'products': products,  # فقط محصولات با قیمت
+        'un_priced_products': un_priced_products,
         'credit_products': credit_products,
         'user': request.user,
         'unfinished_payment_orders': unfinished_payment_orders,

@@ -114,9 +114,16 @@ function initializeSelectionButtons() {
     });
 }
 function handleSelectionButtonClick(button) {
+    // Check if button is disabled (un-priced product)
+    if (button.disabled) {
+        showAlert('این محصول هنوز قیمت‌گذاری نشده است و قابل انتخاب نیست!', 'warning');
+        return;
+    }
+    
     const section = button.dataset.section;
     const row = button.closest('.stock-row');
     const checkbox = row.querySelector('.stock-checkbox');
+    
     if (button.classList.contains('selected')) {
         button.classList.remove('selected');
         button.querySelector('.selection-icon').textContent = '⭕';
@@ -127,10 +134,12 @@ function handleSelectionButtonClick(button) {
         updateSelectionCount(section);
         return;
     }
+    
     if (selectedItems[section] >= MAX_TOTAL_SELECTION) {
         showAlert(`حداکثر ${MAX_TOTAL_SELECTION} مورد قابل انتخاب است!`, 'warning');
         return;
     }
+    
     // Directly select the product (no confirmation popup)
     button.classList.add('selected');
     button.querySelector('.selection-icon').textContent = '✅';
@@ -141,9 +150,16 @@ function handleSelectionButtonClick(button) {
     updateSelectionCount(section);
 }
 function handleCheckboxChange(checkbox) {
+    // Check if checkbox is disabled (un-priced product)
+    if (checkbox.disabled) {
+        showAlert('این محصول هنوز قیمت‌گذاری نشده است و قابل انتخاب نیست!', 'warning');
+        return;
+    }
+    
     const section = checkbox.dataset.section;
     const row = checkbox.closest('.stock-row');
     const button = row.querySelector('.selection-btn');
+    
     if (checkbox.checked) {
         if (selectedItems[section] >= MAX_TOTAL_SELECTION) {
             checkbox.checked = false;
@@ -181,13 +197,15 @@ function updateSelectionCount(section) {
     }
 }
 function updateProductCounts() {
-    const cashRows = document.querySelectorAll('#cashStockTable .stock-row');
+    // Count only selectable products (exclude un-priced products)
+    const cashRows = document.querySelectorAll('#cashStockTable .stock-row:not(.un-priced-row)');
     const cashCount = cashRows.length;
     const cashTotalElement = document.getElementById('cashTotalCount');
     if (cashTotalElement) {
         cashTotalElement.textContent = cashCount;
     }
-    const creditRows = document.querySelectorAll('#creditStockTable .stock-row');
+    
+    const creditRows = document.querySelectorAll('#creditStockTable .stock-row:not(.un-priced-row)');
     const creditCount = creditRows.length;
     const creditTotalElement = document.getElementById('creditTotalCount');
     if (creditTotalElement) {
