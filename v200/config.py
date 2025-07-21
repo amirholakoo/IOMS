@@ -39,4 +39,17 @@ STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]    # 📂 مسیرهای �
 
 # 🖼️ تنظیمات فایل‌های رسانه‌ای (عکس، ویدیو، فایل)
 MEDIA_URL = '/media/'                                     # 🔗 آدرس URL فایل‌های رسانه‌ای
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')             # 📂 مسیر ذخیره فایل‌های آپلود شده 
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')             # 📂 مسیر ذخیره فایل‌های آپلود شده
+
+# 📱 تنظیمات SMS Server
+SMS_SERVER_URL = config('SMS_SERVER_URL', default='http://192.168.1.60:5003')  # 🔗 آدرس سرور SMS
+SMS_API_KEY = config('SMS_API_KEY', default='ioms_sms_server_2025')            # 🔑 کلید API سرور SMS
+SMS_TIMEOUT = config('SMS_TIMEOUT', default=30, cast=int)                      # ⏰ زمان انتظار برای SMS (ثانیه)
+SMS_RETRY_ATTEMPTS = config('SMS_RETRY_ATTEMPTS', default=3, cast=int)         # 🔄 تعداد تلاش‌های مجدد SMS
+SMS_FALLBACK_TO_FAKE = config('SMS_FALLBACK_TO_FAKE', default=True, cast=bool) # 🔄 استفاده از SMS فیک در صورت خطا
+
+# 📊 تنظیمات لاگ‌گیری و مانیتورینگ
+LOG_LEVEL = config('LOG_LEVEL', default='INFO')                               # 📋 سطح لاگ‌گیری
+LOG_FILE_PATH = config('LOG_FILE_PATH', default=os.path.join(BASE_DIR, 'logs')) # 📂 مسیر فایل‌های لاگ
+ENABLE_HEALTH_CHECKS = config('ENABLE_HEALTH_CHECKS', default=True, cast=bool)  # 🔍 فعال‌سازی بررسی سلامت
+ENABLE_METRICS = config('ENABLE_METRICS', default=True, cast=bool)              # 📊 فعال‌سازی متریک‌ها 

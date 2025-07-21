@@ -84,6 +84,19 @@ services:
       DJANGO_SETTINGS_MODULE: HomayOMS.settings.dev
       TYPE: dev
       
+      # 📱 تنظیمات SMS Server
+      SMS_SERVER_URL: http://192.168.1.60:5003
+      SMS_API_KEY: ioms_sms_server_2025
+      SMS_TIMEOUT: 30
+      SMS_RETRY_ATTEMPTS: 3
+      SMS_FALLBACK_TO_FAKE: 'True'
+      
+      # 📊 تنظیمات لاگ‌گیری و مانیتورینگ
+      LOG_LEVEL: INFO
+      LOG_FILE_PATH: /app/logs
+      ENABLE_HEALTH_CHECKS: 'True'
+      ENABLE_METRICS: 'True'
+      
     volumes:
       - static_volume:/app/staticfiles
       - media_volume:/app/media

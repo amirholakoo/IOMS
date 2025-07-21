@@ -895,9 +895,40 @@ def customer_sms_login_view(request):
                 'attempts': 0
             }
             
-            # 🚀 ارسال SMS (فعلاً fake برای تست)
-            # TODO: اتصال به API واقعی SMS
-            fake_send_sms(phone, verification_code)
+            # 🚀 ارسال SMS با سرویس جدید
+            try:
+                from sms.services import get_sms_service
+                sms_service = get_sms_service()
+                success, verification, result = sms_service.send_verification_code(phone, user)
+                
+                if success:
+                    # ذخیره کد تایید از سرویس جدید
+                    session_data = {
+                        'phone': phone,
+                        'code': verification.verification_code,
+                        'user_id': user.id,
+                        'created_at': verification.created_at.isoformat(),
+                        'attempts': 0,
+                        'verification_id': verification.id
+                    }
+                    request.session['sms_verification'] = session_data
+                    print(f"✅ Real SMS sent successfully to {phone}")
+                    print(f"🔢 Generated verification code: {verification.verification_code}")
+                    print(f"📝 Session data stored: {session_data}")
+                else:
+                    # خطا در ارسال SMS واقعی
+                    print(f"❌ Real SMS failed: {result}")
+                    messages.error(request, f'❌ خطا در ارسال کد تایید: {result}')
+                    return render(request, 'accounts/customer_sms_login.html')
+                    
+            except ImportError as e:
+                print(f"❌ SMS service import error: {e}")
+                messages.error(request, '❌ سرویس SMS در دسترس نیست')
+                return render(request, 'accounts/customer_sms_login.html')
+            except Exception as e:
+                print(f"❌ SMS service error: {e}")
+                messages.error(request, f'❌ خطا در ارسال کد تایید: {str(e)}')
+                return render(request, 'accounts/customer_sms_login.html')
             
             # ثبت لاگ ارسال کد تایید
             ActivityLog.log_activity(
@@ -960,6 +991,11 @@ def customer_sms_verify_view(request):
     if request.method == 'POST':
         entered_code = request.POST.get('verification_code', '').strip()
         
+        print(f"🔍 DEBUG: Verification attempt")
+        print(f"📞 Phone: {sms_data.get('phone')}")
+        print(f"🔢 Entered code: '{entered_code}'")
+        print(f"📝 Session data: {sms_data}")
+        
         if not entered_code:
             messages.error(request, '🔢 لطفاً کد تایید را وارد کنید')
             return render(request, 'accounts/customer_sms_verify.html', {
@@ -972,8 +1008,17 @@ def customer_sms_verify_view(request):
             messages.error(request, '🚫 تعداد تلاش‌های مجاز تمام شد. لطفاً مجدداً درخواست کنید')
             return redirect('accounts:customer_sms_login')
         
-        # بررسی صحت کد
+        # بررسی صحت کد با روش session-based
+        print(f"🔍 DEBUG: Comparing codes")
+        print(f"🔢 Session code: '{sms_data.get('code')}'")
+        print(f"🔢 Entered code: '{entered_code}'")
+        print(f"🔍 Codes match: {entered_code == sms_data.get('code')}")
+        
         if entered_code == sms_data['code']:
+            print("✅ DEBUG: Code verification successful")
+            print("🚀 DEBUG: Proceeding to login user")
+            
+            # کد معتبر است - ورود کاربر
             try:
                 # دریافت کاربر و ورود
                 user = User.objects.get(id=sms_data['user_id'])
@@ -996,6 +1041,9 @@ def customer_sms_verify_view(request):
                 
                 messages.success(request, f'🎉 خوش آمدید {user.get_full_name()}!')
                 
+                print(f"✅ DEBUG: User logged in successfully: {user.get_full_name()}")
+                print("🔄 DEBUG: Redirecting to customer dashboard")
+                
                 # بررسی next parameter برای redirect
                 next_url = request.GET.get('next') or request.POST.get('next')
                 if next_url:
@@ -1004,12 +1052,14 @@ def customer_sms_verify_view(request):
                 return redirect('accounts:customer_dashboard')
                 
             except User.DoesNotExist:
+                print("❌ DEBUG: User not found in database")
                 request.session.pop('sms_verification', None)
                 messages.error(request, '❌ خطا در ورود. لطفاً مجدداً تلاش کنید')
                 return redirect('accounts:customer_sms_login')
-        
+                
         else:
-            # افزایش تعداد تلاش‌های ناموفق
+            print("❌ DEBUG: Code verification failed")
+            # کد نامعتبر است
             sms_data['attempts'] = sms_data.get('attempts', 0) + 1
             request.session['sms_verification'] = sms_data
             
@@ -1020,7 +1070,11 @@ def customer_sms_verify_view(request):
                 request.session.pop('sms_verification', None)
                 messages.error(request, '🚫 تعداد تلاش‌های مجاز تمام شد. لطفاً مجدداً درخواست کنید')
                 return redirect('accounts:customer_sms_login')
-    
+            
+            return render(request, 'accounts/customer_sms_verify.html', {
+                'phone': sms_data['phone'],
+                'remaining_time': 300 - int((timezone.now() - timezone.datetime.fromisoformat(sms_data['created_at'])).total_seconds())
+            })
     return render(request, 'accounts/customer_sms_verify.html', {
         'phone': sms_data['phone'],
         'remaining_time': 300 - int((timezone.now() - timezone.datetime.fromisoformat(sms_data['created_at'])).total_seconds())
@@ -1051,8 +1105,31 @@ def resend_sms_code_view(request):
         })
         request.session['sms_verification'] = sms_data
         
-        # ارسال SMS جدید
-        fake_send_sms(sms_data['phone'], new_verification_code)
+        # ارسال SMS جدید با سرویس واقعی
+        try:
+            from sms.services import get_sms_service
+            sms_service = get_sms_service()
+            success, verification, result = sms_service.send_verification_code(sms_data['phone'], user)
+            
+            if success:
+                # به‌روزرسانی session با اطلاعات جدید
+                sms_data.update({
+                    'code': verification.verification_code,
+                    'created_at': verification.created_at.isoformat(),
+                    'attempts': 0,
+                    'verification_id': verification.id
+                })
+                request.session['sms_verification'] = sms_data
+                print(f"✅ Real SMS resend successful to {sms_data['phone']}")
+            else:
+                print(f"❌ Real SMS resend failed: {result}")
+                messages.error(request, f'❌ خطا در ارسال مجدد: {result}')
+                return redirect('accounts:customer_sms_verify')
+                
+        except Exception as e:
+            print(f"❌ SMS resend error: {e}")
+            messages.error(request, f'❌ خطا در ارسال مجدد: {str(e)}')
+            return redirect('accounts:customer_sms_verify')
         
         # ثبت لاگ
         ActivityLog.log_activity(
@@ -1078,8 +1155,16 @@ def resend_sms_code_view(request):
 
 def fake_send_sms(phone, code):
     """
-    📱 ارسال SMS فیک برای تست
-    🚀 TODO: جایگزینی با API واقعی SMS
+    📱 ارسال SMS فیک برای تست - DISABLED
+    🚀 این تابع غیرفعال شده است و فقط از SMS واقعی استفاده می‌شود
+    """
+    print(f"❌ Fake SMS is DISABLED. Use real SMS service for {phone}")
+    raise Exception("Fake SMS is disabled. Use real SMS service.")
+
+
+def _legacy_fake_sms(phone, code):
+    """
+    📱 ارسال SMS فیک برای تست (Legacy)
     """
     current_time = timezone.now()
     
@@ -1130,15 +1215,7 @@ def fake_send_sms(phone, code):
     print("🔧 Replace with real SMS API when ready.")
     print("="*60 + "\n")
     
-    # TODO: Real SMS implementation
-    # Example:
-    # import requests
-    # response = requests.post('https://api.sms-provider.com/send', {
-    #     'phone': phone,
-    #     'message': f'کد تایید شما: {code}',
-    #     'api_key': settings.SMS_API_KEY
-    # })
-    # return response.json()
+    return True
 
 
 def get_client_ip(request):

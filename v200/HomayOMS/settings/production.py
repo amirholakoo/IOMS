@@ -108,4 +108,17 @@ MEDIA_ROOT = config('MEDIA_ROOT', default=BASE_DIR / 'media')
 
 # 🔧 تنظیمات timezone
 TIME_ZONE = config('TIME_ZONE', default='Asia/Tehran')
-LANGUAGE_CODE = config('LANGUAGE_CODE', default='fa-ir') 
+LANGUAGE_CODE = config('LANGUAGE_CODE', default='fa-ir')
+
+# 📱 تنظیمات SMS برای تولید
+SMS_SERVER_URL = config('SMS_SERVER_URL', default='http://192.168.1.60:5003')
+SMS_API_KEY = config('SMS_API_KEY', default='ioms_sms_server_2025')
+SMS_TIMEOUT = config('SMS_TIMEOUT', default=30, cast=int)
+SMS_RETRY_ATTEMPTS = config('SMS_RETRY_ATTEMPTS', default=3, cast=int)
+SMS_FALLBACK_TO_FAKE = config('SMS_FALLBACK_TO_FAKE', default=False, cast=bool)
+
+# 📊 تنظیمات لاگ‌گیری و مانیتورینگ
+LOG_LEVEL = config('LOG_LEVEL', default='WARNING')
+LOG_FILE_PATH = config('LOG_FILE_PATH', default=os.path.join(BASE_DIR, 'logs'))
+ENABLE_HEALTH_CHECKS = config('ENABLE_HEALTH_CHECKS', default=True, cast=bool)
+ENABLE_METRICS = config('ENABLE_METRICS', default=True, cast=bool) 

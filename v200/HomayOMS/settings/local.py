@@ -5,6 +5,8 @@
 """
 
 from .base import *
+from decouple import config
+import os
 
 # 🐛 فعال‌سازی حالت دیباگ برای توسعه محلی
 DEBUG = True
@@ -44,4 +46,17 @@ LOGGING = {
 }
 
 # 🔗 تنظیمات CORS برای توسعه محلی (اجازه کلی)
-CORS_ALLOW_ALL_ORIGINS = True 
+CORS_ALLOW_ALL_ORIGINS = True
+
+# 📱 تنظیمات SMS برای توسعه محلی
+SMS_SERVER_URL = config('SMS_SERVER_URL', default='http://localhost:5003')
+SMS_API_KEY = config('SMS_API_KEY', default='ioms_sms_server_2025')
+SMS_TIMEOUT = config('SMS_TIMEOUT', default=30, cast=int)
+SMS_RETRY_ATTEMPTS = config('SMS_RETRY_ATTEMPTS', default=3, cast=int)
+SMS_FALLBACK_TO_FAKE = config('SMS_FALLBACK_TO_FAKE', default=True, cast=bool)
+
+# 📊 تنظیمات لاگ‌گیری و مانیتورینگ
+LOG_LEVEL = config('LOG_LEVEL', default='DEBUG')
+LOG_FILE_PATH = config('LOG_FILE_PATH', default=os.path.join(BASE_DIR, 'logs'))
+ENABLE_HEALTH_CHECKS = config('ENABLE_HEALTH_CHECKS', default=True, cast=bool)
+ENABLE_METRICS = config('ENABLE_METRICS', default=True, cast=bool) 

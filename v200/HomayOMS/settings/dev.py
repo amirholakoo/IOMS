@@ -5,6 +5,8 @@
 """
 
 from .base import *
+from decouple import config
+import os
 
 # 🐛 فعال‌سازی حالت دیباگ برای توسعه
 DEBUG = True
@@ -51,4 +53,17 @@ LOGGING = {
 CORS_ALLOW_ALL_ORIGINS = True
 
 # 🔧 تنظیمات اضافی توسعه
-INTERNAL_IPS = ['127.0.0.1']  # آی‌پی‌های داخلی 
+INTERNAL_IPS = ['127.0.0.1']  # آی‌پی‌های داخلی
+
+# 📱 تنظیمات SMS برای توسعه
+SMS_SERVER_URL = config('SMS_SERVER_URL', default='http://192.168.1.60:5003')
+SMS_API_KEY = config('SMS_API_KEY', default='ioms_sms_server_2025')
+SMS_TIMEOUT = config('SMS_TIMEOUT', default=30, cast=int)
+SMS_RETRY_ATTEMPTS = config('SMS_RETRY_ATTEMPTS', default=3, cast=int)
+SMS_FALLBACK_TO_FAKE = config('SMS_FALLBACK_TO_FAKE', default=True, cast=bool)
+
+# 📊 تنظیمات لاگ‌گیری و مانیتورینگ
+LOG_LEVEL = config('LOG_LEVEL', default='INFO')
+LOG_FILE_PATH = config('LOG_FILE_PATH', default=os.path.join(BASE_DIR, 'logs'))
+ENABLE_HEALTH_CHECKS = config('ENABLE_HEALTH_CHECKS', default=True, cast=bool)
+ENABLE_METRICS = config('ENABLE_METRICS', default=True, cast=bool) 

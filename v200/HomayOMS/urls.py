@@ -29,6 +29,9 @@ urlpatterns = [
     # 🔄 همگام‌سازی موجودی
     path('inventory-sync/', include('inventory_sync.urls')),
     
+    # 📱 سیستم پیامک
+    path('sms/', include('sms.urls')),
+    
     # 🏠 صفحه اصلی
     # 🏠 صفحه اصلی کارخانه کاغذ و مقوای همایون
     path('', views.index_view, name='index'),
