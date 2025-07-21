@@ -92,7 +92,7 @@ class SMSService:
     
     def send_sms(self, phone_number, message, message_type='NOTIFICATION', user=None, template=None, extra_data=None):
         """
-        ارسال پیامک
+        ارسال پیامک با مدیریت خطاهای پیشرفته
         """
         # فرمت کردن شماره تلفن
         formatted_phone = self.format_phone_number(phone_number)
@@ -107,6 +107,13 @@ class SMSService:
             extra_data=extra_data or {},
             status='PENDING'
         )
+        
+        # بررسی سلامت سرور SMS قبل از ارسال
+        if not self.check_server_health():
+            error_msg = "SMS server is not available"
+            sms_message.mark_as_failed(error_msg)
+            logger.error(f"SMS server health check failed for {formatted_phone}")
+            return False, sms_message, error_msg
         
         # آماده‌سازی درخواست
         url = f"{self.base_url}/api/v1/verify/send"
@@ -136,7 +143,7 @@ class SMSService:
                         return True, sms_message, "SMS sent successfully"
                     else:
                         # خطای API
-                        error_msg = response_data.get('error', 'Unknown API error')
+                        error_msg = response_data.get('message', 'Unknown API error')
                         sms_message.mark_as_failed(error_msg, response_data)
                         logger.error(f"SMS API error for {formatted_phone}: {error_msg}")
                         return False, sms_message, error_msg
@@ -155,11 +162,39 @@ class SMSService:
                     else:
                         return False, sms_message, error_msg
                         
-            except requests.RequestException as e:
-                # خطای اتصال
-                error_msg = f"Connection error: {str(e)}"
+            except requests.exceptions.ConnectionError as e:
+                # خطای اتصال شبکه
+                error_msg = f"Network connection error: Unable to reach SMS server"
                 sms_message.mark_as_failed(error_msg)
                 logger.error(f"SMS connection error for {formatted_phone}: {error_msg}")
+                
+                if attempt < self.retry_attempts - 1:
+                    logger.info(f"Retrying SMS send to {formatted_phone} in 3 seconds...")
+                    import time
+                    time.sleep(3)
+                    continue
+                else:
+                    return False, sms_message, error_msg
+                    
+            except requests.exceptions.Timeout as e:
+                # خطای timeout
+                error_msg = f"Request timeout: SMS server is not responding"
+                sms_message.mark_as_failed(error_msg)
+                logger.error(f"SMS timeout error for {formatted_phone}: {error_msg}")
+                
+                if attempt < self.retry_attempts - 1:
+                    logger.info(f"Retrying SMS send to {formatted_phone} in 3 seconds...")
+                    import time
+                    time.sleep(3)
+                    continue
+                else:
+                    return False, sms_message, error_msg
+                    
+            except requests.RequestException as e:
+                # سایر خطاهای requests
+                error_msg = f"Request error: {str(e)}"
+                sms_message.mark_as_failed(error_msg)
+                logger.error(f"SMS request error for {formatted_phone}: {error_msg}")
                 
                 if attempt < self.retry_attempts - 1:
                     logger.info(f"Retrying SMS send to {formatted_phone} in 3 seconds...")
@@ -171,9 +206,54 @@ class SMSService:
         
         return False, sms_message, "All retry attempts failed"
     
+    def _format_persian_sms_message(self, phone_number, verification_code, expires_at):
+        """
+        فرمت کردن پیام SMS با متن انگلیسی و اعداد فارسی
+        """
+        # تبدیل زمان به فرمت فارسی
+        time_str = expires_at.strftime('%H:%M')
+        
+        # استفاده از متن انگلیسی با اعداد فارسی برای اطمینان از نمایش صحیح
+        message = f"""Verification Code: {verification_code}
+Valid until: {time_str}
+HomayOMS"""
+        
+        return message
+    
+    def _format_persian_sms_message_compact(self, phone_number, verification_code, expires_at):
+        """
+        فرمت فشرده پیام SMS برای دستگاه‌های قدیمی
+        """
+        time_str = expires_at.strftime('%H:%M')
+        
+        message = f"""Code: {verification_code}
+Until: {time_str}
+HomayOMS"""
+        
+        return message
+    
+    def _format_persian_sms_message_detailed(self, phone_number, verification_code, expires_at):
+        """
+        فرمت تفصیلی پیام SMS با اطلاعات کامل
+        """
+        time_str = expires_at.strftime('%H:%M')
+        date_str = expires_at.strftime('%Y/%m/%d')
+        
+        message = f"""Verification Code HomayOMS
+
+Phone: {phone_number}
+Code: {verification_code}
+Date: {date_str}
+Time: {time_str}
+
+Enter this code in login page
+HomayOMS"""
+        
+        return message
+    
     def send_verification_code(self, phone_number, user=None):
         """
-        ارسال کد تایید
+        ارسال کد تایید با مدیریت خطا و fallback
         """
         # تولید کد تایید
         verification_code = ''.join(random.choices(string.digits, k=6))
@@ -188,17 +268,15 @@ class SMSService:
             expires_at=expires_at
         )
         
-        # آماده‌سازی پیام
-        message = f"""کد تایید HomayOMS
-
-شماره: {phone_number}
-کد: {verification_code}
-معتبر تا: {expires_at.strftime('%H:%M')}
-
-این کد را در صفحه ورود وارد کنید
-کد را با کسی به اشتراک نگذارید
-
-با تشکر از انتخاب شما"""
+        # آماده‌سازی پیام با فرمت فارسی مناسب
+        message_format = getattr(self.settings, 'sms_message_format', 'standard')
+        
+        if message_format == 'compact':
+            message = self._format_persian_sms_message_compact(phone_number, verification_code, expires_at)
+        elif message_format == 'detailed':
+            message = self._format_persian_sms_message_detailed(phone_number, verification_code, expires_at)
+        else:
+            message = self._format_persian_sms_message(phone_number, verification_code, expires_at)
         
         # ارسال پیامک
         success, sms_message, result = self.send_sms(
@@ -213,8 +291,34 @@ class SMSService:
         if success:
             verification.sms_message = sms_message
             verification.save()
-        
-        return success, verification, result
+            return True, verification, "SMS sent successfully"
+        else:
+            # بررسی امکان fallback به fake SMS
+            fallback_enabled = getattr(self.settings, 'sms_fallback_to_fake', False)
+            if fallback_enabled:
+                logger.warning(f"SMS failed for {phone_number}, using fake SMS fallback")
+                # حذف رکورد SMS ناموفق
+                if sms_message:
+                    sms_message.delete()
+                
+                # ایجاد رکورد fake SMS
+                fake_sms = SMSMessage.objects.create(
+                    phone_number=phone_number,
+                    message_content=message,
+                    message_type='VERIFICATION',
+                    user=user,
+                    extra_data={'verification_code': verification_code, 'is_fake': True},
+                    status='SENT'
+                )
+                
+                verification.sms_message = fake_sms
+                verification.save()
+                
+                return True, verification, "Fake SMS sent (fallback mode)"
+            else:
+                # حذف رکورد کد تایید در صورت عدم موفقیت
+                verification.delete()
+                return False, None, result
     
     def verify_code(self, phone_number, code):
         """

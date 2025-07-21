@@ -915,10 +915,27 @@ def customer_sms_login_view(request):
                     print(f"✅ Real SMS sent successfully to {phone}")
                     print(f"🔢 Generated verification code: {verification.verification_code}")
                     print(f"📝 Session data stored: {session_data}")
+                    
+                    # پیام موفقیت مناسب
+                    if "fallback" in result.lower():
+                        messages.warning(request, f'⚠️ کد تایید ارسال شد (حالت آزمایشی)')
+                    else:
+                        messages.success(request, f'📱 کد تایید به شماره {phone} ارسال شد')
+                        
                 else:
                     # خطا در ارسال SMS واقعی
                     print(f"❌ Real SMS failed: {result}")
-                    messages.error(request, f'❌ خطا در ارسال کد تایید: {result}')
+                    
+                    # پیام‌های خطای کاربرپسند
+                    if "network connection error" in result.lower() or "no route to host" in result.lower():
+                        messages.error(request, '🌐 خطا در اتصال به سرور SMS. لطفاً بعداً تلاش کنید یا با پشتیبانی تماس بگیرید.')
+                    elif "timeout" in result.lower():
+                        messages.error(request, '⏰ سرور SMS پاسخ نمی‌دهد. لطفاً بعداً تلاش کنید.')
+                    elif "server is not available" in result.lower():
+                        messages.error(request, '🔧 سرور SMS در دسترس نیست. لطفاً بعداً تلاش کنید.')
+                    else:
+                        messages.error(request, f'❌ خطا در ارسال کد تایید: {result}')
+                    
                     return render(request, 'accounts/customer_sms_login.html')
                     
             except ImportError as e:

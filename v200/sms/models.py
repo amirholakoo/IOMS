@@ -356,6 +356,28 @@ class SMSSettings(BaseModel):
         help_text="زمان انتظار برای پاسخ API"
     )
     
+    # تنظیمات fallback
+    sms_fallback_to_fake = models.BooleanField(
+        default=False,
+        verbose_name="فعال‌سازی fallback به fake SMS",
+        help_text="در صورت عدم دسترسی به سرور SMS، از fake SMS استفاده شود"
+    )
+    
+    # تنظیمات فرمت پیام
+    SMS_MESSAGE_FORMAT_CHOICES = [
+        ('standard', 'استاندارد'),
+        ('compact', 'فشرده'),
+        ('detailed', 'تفصیلی'),
+    ]
+    
+    sms_message_format = models.CharField(
+        max_length=20,
+        choices=SMS_MESSAGE_FORMAT_CHOICES,
+        default='standard',
+        verbose_name="فرمت پیام SMS",
+        help_text="فرمت پیام‌های SMS"
+    )
+    
     class Meta:
         verbose_name = "تنظیمات SMS"
         verbose_name_plural = "تنظیمات SMS"
@@ -378,6 +400,8 @@ class SMSSettings(BaseModel):
                 'enable_payment_notifications': True,
                 'retry_attempts': getattr(settings, 'SMS_RETRY_ATTEMPTS', 3),
                 'timeout_seconds': getattr(settings, 'SMS_TIMEOUT', 30),
+                'sms_fallback_to_fake': getattr(settings, 'SMS_FALLBACK_TO_FAKE', False),
+                'sms_message_format': getattr(settings, 'SMS_MESSAGE_FORMAT', 'standard'),
             }
         )
         return settings_obj 
