@@ -14,6 +14,7 @@
     {% load static %}
     <link rel="stylesheet" href="{% static 'css/main.css' %}">
     <link rel="stylesheet" href="{% static 'css/mobile.css' %}">
+    <link rel="stylesheet" href="{% static 'css/jalali-date-picker.css' %}">
     <link rel="stylesheet" href="{% static 'js/index.js' %}">
 
     {% block extra_css %}{% endblock %}
@@ -36,6 +37,9 @@
     
     <!-- Jalali Date Initializer -->
     <script src="{% static 'js/jalali-date-initializer.js' %}?v=3"></script>
+
+    <!-- Jalali Date Picker -->
+    <script src="{% static 'js/jalali-date-picker.js' %}?v=1"></script>
 
     {% block extra_js %}{% endblock %}
 </body>

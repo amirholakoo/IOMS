@@ -217,13 +217,13 @@ class ProductAdminForm(forms.ModelForm):
         return gsm
     
     def clean_breaks(self):
-        """اعتبارسنجی شکستگی با تبدیل خودکار اعداد فارسی"""
+        """اعتبارسنجی پارگی با تبدیل خودکار اعداد فارسی"""
         breaks = self.cleaned_data.get('breaks')
         if breaks:
             try:
                 return normalize_number_input(str(breaks))
             except NumberValidationError:
-                raise forms.ValidationError('شکستگی باید فقط شامل اعداد باشد')
+                raise forms.ValidationError('پارگی باید فقط شامل اعداد باشد')
         return breaks
     
     def clean_price(self):
@@ -255,7 +255,7 @@ class ProductAdmin(admin.ModelAdmin):
         'gsm',                # ⚖️ GSM
         'length',             # 📐 طول
         'grade',              # 🏆 درجه کیفیت
-        'breaks',             # 💔 شکستگی
+        'breaks',             # 💔 پارگی
         'total_area_display', # 📐 مساحت کل
         'total_weight_display',  # ⚖️ وزن کل
         'is_available_display',  # ✅ در دسترس

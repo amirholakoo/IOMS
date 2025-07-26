@@ -294,8 +294,7 @@ def orders_list_view(request):
     search_query = request.GET.get('search', '').strip()
     status_filter = request.GET.get('status', '').strip()
     payment_filter = request.GET.get('payment', '').strip()
-    date_from = request.GET.get('date_from', '').strip()
-    date_to = request.GET.get('date_to', '').strip()
+    filter_by = request.GET.get('filter_by', 'date').strip()
     
     # اعمال فیلتر جستجو
     if search_query:
@@ -314,23 +313,13 @@ def orders_list_view(request):
     if payment_filter:
         orders = orders.filter(payment_method=payment_filter)
     
-    # اعمال فیلتر تاریخ
-    if date_from:
-        try:
-            from_date = datetime.strptime(date_from, '%Y-%m-%d').date()
-            orders = orders.filter(created_at__date__gte=from_date)
-        except ValueError:
-            pass
-    
-    if date_to:
-        try:
-            to_date = datetime.strptime(date_to, '%Y-%m-%d').date()
-            orders = orders.filter(created_at__date__lte=to_date)
-        except ValueError:
-            pass
-    
-    # مرتب‌سازی
-    orders = orders.order_by('-created_at')
+    # مرتب‌سازی بر اساس فیلتر انتخاب شده
+    if filter_by == 'last_changes':
+        # مرتب‌سازی بر اساس آخرین تغییرات (updated_at)
+        orders = orders.order_by('-updated_at')
+    else:
+        # مرتب‌سازی بر اساس تاریخ ایجاد (created_at) - پیش‌فرض
+        orders = orders.order_by('-created_at')
     
     # 📄 صفحه‌بندی
     paginator = Paginator(orders, 25)
@@ -343,8 +332,7 @@ def orders_list_view(request):
         'search_query': search_query,
         'status_filter': status_filter,
         'payment_filter': payment_filter,
-        'date_from': date_from,
-        'date_to': date_to,
+        'filter_by': filter_by,
         'status_choices': Order.ORDER_STATUS_CHOICES,
         'payment_choices': Order.PAYMENT_METHOD_CHOICES,
         'total_orders': orders.count(),
@@ -687,68 +675,127 @@ def finance_overview_view(request):
         severity='LOW'
     )
     
-    # 📅 دریافت بازه زمانی از پارامترهای URL
-    time_range = request.GET.get('timeRange', 'month')
+    # 📅 دریافت فیلتر از پارامترهای URL
+    filter_by = request.GET.get('filterBy', 'this_month')
+    search_term = request.GET.get('search', '')
     
-    # محاسبه تاریخ شروع بر اساس بازه زمانی
+    # محاسبه تاریخ شروع بر اساس فیلتر
     today = timezone.now().date()
-    if time_range == 'today':
+    if filter_by == 'today':
         start_date = today
-    elif time_range == 'week':
-        start_date = today - timedelta(days=7)
-    elif time_range == 'month':
-        start_date = today - timedelta(days=30)
-    elif time_range == 'quarter':
-        start_date = today - timedelta(days=90)
-    elif time_range == 'year':
-        start_date = today - timedelta(days=365)
+        end_date = today
+    elif filter_by == 'this_week':
+        # Start of current week (Monday)
+        start_date = today - timedelta(days=today.weekday())
+        end_date = today
+    elif filter_by == 'this_month':
+        # Start of current month
+        start_date = today.replace(day=1)
+        end_date = today
+    elif filter_by == 'recently_changed':
+        # For recently changed, we'll use updated_at field and set a reasonable range
+        start_date = today - timedelta(days=30)  # Last 30 days for recent changes
+        end_date = today
     else:
-        start_date = today - timedelta(days=30)  # پیش‌فرض: ماه
+        start_date = today.replace(day=1)  # پیش‌فرض: این ماه
+        end_date = today
     
     # 📊 محاسبه آمار مالی واقعی
     # درآمد کل (سفارشات تایید شده و تحویل داده شده)
-    total_revenue = Order.objects.filter(
-        status__in=['Confirmed', 'Delivered'],
-        created_at__date__gte=start_date
-    ).aggregate(total=Sum('final_amount'))['total'] or 0
+    revenue_query = Order.objects.filter(
+        status__in=['Confirmed', 'Delivered']
+    )
     
-    # هزینه‌ها (محصولات فروخته شده)
-    total_expenses = OrderItem.objects.filter(
-        order__status__in=['Confirmed', 'Delivered'],
-        order__created_at__date__gte=start_date
-    ).aggregate(total=Sum('total_price'))['total'] or 0
+    expenses_query = OrderItem.objects.filter(
+        order__status__in=['Confirmed', 'Delivered']
+    )
+    
+    orders_query = Order.objects.all()
+    
+    # Apply date filtering based on filter type
+    if filter_by == 'recently_changed':
+        # For recently changed, use updated_at field
+        revenue_query = revenue_query.filter(updated_at__date__gte=start_date, updated_at__date__lte=end_date)
+        expenses_query = expenses_query.filter(order__updated_at__date__gte=start_date, order__updated_at__date__lte=end_date)
+        orders_query = orders_query.filter(updated_at__date__gte=start_date, updated_at__date__lte=end_date)
+    else:
+        # For other filters, use created_at field
+        revenue_query = revenue_query.filter(created_at__date__gte=start_date, created_at__date__lte=end_date)
+        expenses_query = expenses_query.filter(order__created_at__date__gte=start_date, order__created_at__date__lte=end_date)
+        orders_query = orders_query.filter(created_at__date__gte=start_date, created_at__date__lte=end_date)
+    
+    total_revenue = revenue_query.aggregate(total=Sum('final_amount'))['total'] or 0
+    total_expenses = expenses_query.aggregate(total=Sum('total_price'))['total'] or 0
+    total_orders = orders_query.count()
     
     # سود خالص (درآمد - هزینه)
     net_profit = total_revenue - total_expenses
     
-    # تعداد سفارشات
-    total_orders = Order.objects.filter(
-        created_at__date__gte=start_date
-    ).count()
-    
     # محاسبه درصد تغییر نسبت به دوره قبل
-    previous_start_date = start_date - (today - start_date)
+    if filter_by == 'today':
+        previous_start_date = start_date - timedelta(days=1)
+        previous_end_date = start_date - timedelta(days=1)
+    elif filter_by == 'this_week':
+        previous_start_date = start_date - timedelta(days=7)
+        previous_end_date = start_date - timedelta(days=1)
+    elif filter_by == 'this_month':
+        # Previous month
+        if start_date.month == 1:
+            previous_start_date = start_date.replace(year=start_date.year-1, month=12)
+        else:
+            previous_start_date = start_date.replace(month=start_date.month-1)
+        previous_end_date = start_date - timedelta(days=1)
+    else:  # recently_changed
+        previous_start_date = start_date - timedelta(days=30)
+        previous_end_date = start_date - timedelta(days=1)
     
     # آمار دوره قبل
-    prev_revenue = Order.objects.filter(
-        status__in=['Confirmed', 'Delivered'],
-        created_at__date__gte=previous_start_date,
-        created_at__date__lt=start_date
-    ).aggregate(total=Sum('final_amount'))['total'] or 0
-    
-    prev_orders = Order.objects.filter(
-        created_at__date__gte=previous_start_date,
-        created_at__date__lt=start_date
-    ).count()
+    if filter_by == 'recently_changed':
+        prev_revenue = Order.objects.filter(
+            status__in=['Confirmed', 'Delivered'],
+            updated_at__date__gte=previous_start_date,
+            updated_at__date__lte=previous_end_date
+        ).aggregate(total=Sum('final_amount'))['total'] or 0
+        
+        prev_orders = Order.objects.filter(
+            updated_at__date__gte=previous_start_date,
+            updated_at__date__lte=previous_end_date
+        ).count()
+    else:
+        prev_revenue = Order.objects.filter(
+            status__in=['Confirmed', 'Delivered'],
+            created_at__date__gte=previous_start_date,
+            created_at__date__lte=previous_end_date
+        ).aggregate(total=Sum('final_amount'))['total'] or 0
+        
+        prev_orders = Order.objects.filter(
+            created_at__date__gte=previous_start_date,
+            created_at__date__lte=previous_end_date
+        ).count()
     
     # محاسبه درصد تغییر
     revenue_change = ((total_revenue - prev_revenue) / prev_revenue * 100) if prev_revenue > 0 else 0
     orders_change = ((total_orders - prev_orders) / prev_orders * 100) if prev_orders > 0 else 0
     
     # 🧾 آخرین تراکنش‌ها (سفارشات اخیر)
-    recent_transactions = Order.objects.select_related('customer').filter(
-        created_at__date__gte=start_date
-    ).order_by('-created_at')[:10]
+    if filter_by == 'recently_changed':
+        recent_transactions = Order.objects.select_related('customer').filter(
+            updated_at__date__gte=start_date,
+            updated_at__date__lte=end_date
+        ).order_by('-updated_at')[:10]
+    else:
+        recent_transactions = Order.objects.select_related('customer').filter(
+            created_at__date__gte=start_date,
+            created_at__date__lte=end_date
+        ).order_by('-created_at')[:10]
+    
+    # Apply search filter if provided
+    if search_term:
+        recent_transactions = recent_transactions.filter(
+            Q(order_number__icontains=search_term) |
+            Q(customer__customer_name__icontains=search_term) |
+            Q(status__icontains=search_term)
+        )
     
     # اضافه کردن اطلاعات پرداخت به تراکنش‌ها
     for transaction in recent_transactions:
@@ -797,7 +844,8 @@ def finance_overview_view(request):
         },
         'recent_transactions': recent_transactions,
         'performance_summary': performance_summary,
-        'time_range': time_range,
+        'filter_by': filter_by,
+        'search_term': search_term,
     }
     return render(request, 'core/finance_overview.html', context)
 
@@ -927,8 +975,9 @@ def activity_logs_view(request):
     user_filter = request.GET.get('user', '')
     date_from = request.GET.get('date_from', '')
     date_to = request.GET.get('date_to', '')
+    search_query = request.GET.get('search', '')
     
-    logs = ActivityLog.objects.select_related('user', 'content_type')
+    logs = ActivityLog.objects.select_related('user', 'content_type').order_by('-created_at')
     
     # 🔍 اعمال فیلترها
     if action_filter:
@@ -938,13 +987,43 @@ def activity_logs_view(request):
         logs = logs.filter(severity=severity_filter)
     
     if user_filter:
-        logs = logs.filter(user__username__icontains=user_filter)
+        logs = logs.filter(
+            Q(user__username__icontains=user_filter) |
+            Q(user__first_name__icontains=user_filter) |
+            Q(user__last_name__icontains=user_filter)
+        )
     
+    # اعمال فیلتر تاریخ با پردازش صحیح
     if date_from:
-        logs = logs.filter(created_at__date__gte=date_from)
+        try:
+            from datetime import datetime
+            from_date = datetime.strptime(date_from, '%Y-%m-%d').date()
+            logs = logs.filter(created_at__date__gte=from_date)
+            print(f"[DEBUG] Activity Logs - Date From: {date_from} -> {from_date}")
+        except ValueError as e:
+            # اگر تاریخ نامعتبر باشد، فیلتر را نادیده بگیر
+            print(f"[DEBUG] Activity Logs - Invalid date_from: {date_from}, Error: {e}")
+            pass
     
     if date_to:
-        logs = logs.filter(created_at__date__lte=date_to)
+        try:
+            from datetime import datetime
+            to_date = datetime.strptime(date_to, '%Y-%m-%d').date()
+            logs = logs.filter(created_at__date__lte=to_date)
+            print(f"[DEBUG] Activity Logs - Date To: {date_to} -> {to_date}")
+        except ValueError as e:
+            # اگر تاریخ نامعتبر باشد، فیلتر را نادیده بگیر
+            print(f"[DEBUG] Activity Logs - Invalid date_to: {date_to}, Error: {e}")
+            pass
+    
+    # اعمال فیلتر جستجو
+    if search_query:
+        logs = logs.filter(
+            Q(description__icontains=search_query) |
+            Q(user__username__icontains=search_query) |
+            Q(ip_address__icontains=search_query) |
+            Q(user_agent__icontains=search_query)
+        )
     
     # 📊 آمار لاگ‌ها
     from django.utils import timezone
@@ -993,6 +1072,7 @@ def activity_logs_view(request):
         'user_filter': user_filter,
         'date_from': date_from,
         'date_to': date_to,
+        'search_query': search_query,
         'users_list': users_list,
         'action_choices': ActivityLog.ACTION_CHOICES,
         'severity_choices': ActivityLog.SEVERITY_CHOICES,
@@ -1291,7 +1371,7 @@ def set_working_hours_view(request):
                 'error': '⏰ فرمت زمان نامعتبر است (HH:MM)'
             }, status=400)
         
-        # 🔍 بررسی منطقی بودن زمان‌ها
+        # �� بررسی منطقی بودن زمان‌ها
         if start_time_obj >= end_time_obj:
             return JsonResponse({
                 'success': False,
@@ -2318,7 +2398,7 @@ class ProductForm(ModelForm, NumberValidationMixin):
         return self.clean_number_field('length', allow_empty=False, min_value=1)
     
     def clean_breaks(self):
-        """💔 اعتبارسنجی تعداد شکستگی با تبدیل خودکار اعداد فارسی"""
+        """💔 اعتبارسنجی تعداد پارگی با تبدیل خودکار اعداد فارسی"""
         return self.clean_number_field('breaks', allow_empty=True, min_value=0)
     
     def clean_price(self):
@@ -2790,9 +2870,8 @@ def customer_orders_view(request):
     search_query = request.GET.get('search', '').strip()
     status_filter = request.GET.get('status', '').strip()
     payment_filter = request.GET.get('payment', '').strip()
-    date_from = request.GET.get('date_from', '').strip()
-    date_to = request.GET.get('date_to', '').strip()
-
+    filter_by = request.GET.get('filter_by', 'date').strip()
+    
     # اعمال فیلترها
     if search_query:
         orders = orders.filter(
@@ -2806,22 +2885,13 @@ def customer_orders_view(request):
     if payment_filter:
         orders = orders.filter(payment_method=payment_filter)
 
-    if date_from:
-        try:
-            from_date = datetime.strptime(date_from, '%Y-%m-%d').date()
-            orders = orders.filter(created_at__date__gte=from_date)
-        except ValueError:
-            pass
-
-    if date_to:
-        try:
-            to_date = datetime.strptime(date_to, '%Y-%m-%d').date()
-            orders = orders.filter(created_at__date__lte=to_date)
-        except ValueError:
-            pass
-
-    # مرتب‌سازی
-    orders = orders.order_by('-created_at')
+    # مرتب‌سازی بر اساس فیلتر انتخاب شده
+    if filter_by == 'last_changes':
+        # مرتب‌سازی بر اساس آخرین تغییرات (updated_at)
+        orders = orders.order_by('-updated_at')
+    else:
+        # مرتب‌سازی بر اساس تاریخ ایجاد (created_at) - پیش‌فرض
+        orders = orders.order_by('-created_at')
 
     # 📄 صفحه‌بندی
     paginator = Paginator(orders, 10)  # کمتر برای مشتریان
@@ -2840,8 +2910,7 @@ def customer_orders_view(request):
         'search_query': search_query,
         'status_filter': status_filter,
         'payment_filter': payment_filter,
-        'date_from': date_from,
-        'date_to': date_to,
+        'filter_by': filter_by,
         'status_choices': Order.ORDER_STATUS_CHOICES,
         'payment_choices': Order.PAYMENT_METHOD_CHOICES,
         'total_orders': orders.count(),

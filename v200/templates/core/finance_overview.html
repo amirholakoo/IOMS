@@ -259,17 +259,16 @@
             <!-- Filter Controls -->
             <div class="row mb-3">
                 <div class="col-md-4">
-                    <label class="form-label text-white">📅 بازه زمانی:</label>
-                    <select class="form-select" id="timeRange">
-                        <option value="today">امروز</option>
-                        <option value="week">این هفته</option>
-                        <option value="month" selected>این ماه</option>
-                        <option value="quarter">این فصل</option>
-                        <option value="year">این سال</option>
+                    <label class="form-label text-white">Filter by:</label>
+                    <select class="form-select" id="filterBy">
+                        <option value="today">Today</option>
+                        <option value="this_week">This Week</option>
+                        <option value="this_month" selected>This Month</option>
+                        <option value="recently_changed">Recently Changed</option>
                     </select>
                 </div>
                 <div class="col-md-6">
-                    <label class="form-label text-white">🔍 فیلتر:</label>
+                    <label class="form-label text-white">جستجو:</label>
                     <input type="text" class="form-control" placeholder="جستجو در گزارش‌ها..." id="searchFilter">
                 </div>
                 <div class="col-md-2 d-flex align-items-end">
@@ -400,7 +399,7 @@
 <script>
     // Update Reports Function
     function updateReports() {
-        const timeRange = document.getElementById('timeRange').value;
+        const filterBy = document.getElementById('filterBy').value;
         const searchFilter = document.getElementById('searchFilter').value;
         
         // Show loading state
@@ -409,9 +408,9 @@
             document.getElementById(id).textContent = '⏳ در حال بارگذاری...';
         });
         
-        // Redirect to the same page with new time range parameter
+        // Redirect to the same page with new filter parameter
         const currentUrl = new URL(window.location);
-        currentUrl.searchParams.set('timeRange', timeRange);
+        currentUrl.searchParams.set('filterBy', filterBy);
         if (searchFilter) {
             currentUrl.searchParams.set('search', searchFilter);
         }
@@ -420,22 +419,36 @@
     
     // Initialize on page load
     document.addEventListener('DOMContentLoaded', function() {
-        // Set the current time range in the select
-        const timeRange = '{{ time_range }}';
-        if (timeRange) {
-            document.getElementById('timeRange').value = timeRange;
+        // Set the current filter in the select
+        const filterBy = '{{ filter_by }}';
+        if (filterBy) {
+            document.getElementById('filterBy').value = filterBy;
         }
         
-        // Add search functionality
+        // Add real-time search functionality
         document.getElementById('searchFilter').addEventListener('input', function(e) {
             const searchTerm = e.target.value.toLowerCase();
             const rows = document.querySelectorAll('tbody tr');
             
             rows.forEach(row => {
                 const text = row.textContent.toLowerCase();
-                row.style.display = text.includes(searchTerm) ? '' : 'none';
+                if (text.includes(searchTerm)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
             });
         });
+        
+        // Add search term from URL if present
+        const urlParams = new URLSearchParams(window.location.search);
+        const searchParam = urlParams.get('search');
+        if (searchParam) {
+            document.getElementById('searchFilter').value = searchParam;
+            // Trigger search
+            const event = new Event('input');
+            document.getElementById('searchFilter').dispatchEvent(event);
+        }
     });
 </script>
 {% endblock %} 

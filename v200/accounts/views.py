@@ -459,6 +459,15 @@ def user_list_view(request):
     # مرتب‌سازی
     users = users.order_by('-created_at')
     
+    # محاسبه آمار کلی
+    total_users = User.objects.count()
+    active_users = User.objects.filter(status=User.UserStatus.ACTIVE).count()
+    pending_users = User.objects.filter(status=User.UserStatus.PENDING).count()
+    customer_users = User.objects.filter(role=User.UserRole.CUSTOMER).count()
+    admin_users = User.objects.filter(role=User.UserRole.ADMIN).count()
+    super_admin_users = User.objects.filter(role=User.UserRole.SUPER_ADMIN).count()
+    finance_users = User.objects.filter(role=User.UserRole.FINANCE).count()
+    
     # صفحه‌بندی
     paginator = Paginator(users, 20)
     page_number = request.GET.get('page')
@@ -471,7 +480,13 @@ def user_list_view(request):
         'search_query': search_query,
         'role_filter': role_filter,
         'status_filter': status_filter,
-        'total_users': users.count(),
+        'total_users': total_users,
+        'active_users': active_users,
+        'pending_users': pending_users,
+        'customer_users': customer_users,
+        'admin_users': admin_users,
+        'super_admin_users': super_admin_users,
+        'finance_users': finance_users,
     }
     return render(request, 'accounts/user_list.html', context)
 

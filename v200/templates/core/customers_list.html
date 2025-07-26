@@ -439,35 +439,7 @@
         </div>
     </div>
 
-    <!-- Statistics Row -->
-    <div class="stats-row">
-        <div class="row">
-            <div class="col-md-3">
-                <div class="stat-card stat-primary">
-                    <h3>{{ total_customers }}</h3>
-                    <p class="mb-0">👥 کل مشتریان</p>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="stat-card stat-success">
-                    <h3>{{ page_obj.paginator.count|default:0 }}</h3>
-                    <p class="mb-0">✅ کل مشتریان</p>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="stat-card stat-warning">
-                    <h3>{{ total_customers|default:0 }}</h3>
-                    <p class="mb-0">🆕 مشتریان فیلتر شده</p>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="stat-card stat-info">
-                    <h3>{{ page_obj.number|default:1 }}</h3>
-                    <p class="mb-0">📄 صفحه فعلی</p>
-                </div>
-            </div>
-        </div>
-    </div>
+
 
     <!-- Search and Filter Form -->
     <div class="customers-filter">
@@ -501,11 +473,7 @@
                         🔄 پاک کردن
                     </a>
                 </div>
-                <div class="col-md-2 text-end">
-                    <span class="badge badge-modern bg-info fs-6">
-                        📊 {{ total_customers }} مشتری
-                    </span>
-                </div>
+
             </div>
         </form>
     </div>

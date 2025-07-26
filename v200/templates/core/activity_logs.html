@@ -220,12 +220,6 @@
                 </div>
             </div>
             <div class="col-md-2">
-                <div class="stat-card" style="background: linear-gradient(45deg, #fd7e14, #dc3545); color: white;">
-                    <h4>{{ logs_stats.severity_stats.HIGH|default:0 }}</h4>
-                    <small>🟠 مهم</small>
-                </div>
-            </div>
-            <div class="col-md-2">
                 <div class="stat-card" style="background: linear-gradient(45deg, #dc3545, #c82333); color: white;">
                     <h4>{{ logs_stats.severity_stats.CRITICAL|default:0 }}</h4>
                     <small>🔴 بحرانی</small>
@@ -290,6 +284,10 @@
                 <label class="form-label">📅 تا تاریخ</label>
                 <input type="date" name="date_to" class="form-control" value="{{ date_to|default:'' }}">
             </div>
+            <div class="col-md-2">
+                <label class="form-label">🔍 جستجو</label>
+                <input type="text" name="search" class="form-control" value="{{ search_query|default:'' }}" placeholder="جستجو در توضیحات، کاربر، IP...">
+            </div>
             <div class="col-md-1">
                 <label class="form-label">&nbsp;</label>
                 <div class="d-grid">
@@ -305,6 +303,10 @@
             <button class="btn ms-3" onclick="refreshLogs()" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; border: none; border-radius: 15px; padding: 12px 25px; font-weight: 600; box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3); transition: all 0.3s ease;">
                 🔄 بروزرسانی
             </button>
+            
+            <a href="{% url 'core:activity_logs' %}" class="btn ms-2" style="background: linear-gradient(135deg, #6c757d 0%, #545b62 100%); color: white; border: none; border-radius: 15px; padding: 12px 25px; font-weight: 600; box-shadow: 0 4px 15px rgba(108, 117, 125, 0.3); transition: all 0.3s ease;">
+                🗑️ پاک کردن فیلترها
+            </a>
         </div>
     </div>
 
@@ -322,7 +324,9 @@
                         </div>
                     </div>
                     <div class="d-flex gap-2 align-items-center">
-                        <span class="action-badge action-{{ log.action|lower }}">{{ log.get_action_icon }} {{ log.get_action_display }}</span>
+                        {% if log.action != 'VIEW' %}
+                            <span class="action-badge action-{{ log.action|lower }}">{{ log.get_action_icon }} {{ log.get_action_display }}</span>
+                        {% endif %}
                         <span class="severity-badge severity-{{ log.severity|lower }}">{{ log.get_severity_display }}</span>
                     </div>
                 </div>

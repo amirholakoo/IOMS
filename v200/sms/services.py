@@ -206,40 +206,117 @@ class SMSService:
         
         return False, sms_message, "All retry attempts failed"
     
-    def _format_persian_sms_message(self, phone_number, verification_code, expires_at):
+    def send_customer_activation_notification(self, customer, activated_by=None):
         """
-        فرمت کردن پیام SMS با متن انگلیسی و اعداد فارسی
+        🎉 Send beautiful activation notification to customer
         """
-        # تبدیل زمان به فرمت فارسی
-        time_str = expires_at.strftime('%H:%M')
-        
-        # استفاده از متن انگلیسی با اعداد فارسی برای اطمینان از نمایش صحیح
-        message = f"""Verification Code: {verification_code}
-Valid until: {time_str}
-HomayOMS"""
+        try:
+            # Format beautiful activation message
+            message = self._format_customer_activation_message(
+                customer.name, 
+                activated_by
+            )
+            
+            # Send SMS
+            success, sms_message, result = self.send_sms(
+                customer.phone, 
+                message,
+                message_type='NOTIFICATION',
+                user=activated_by,
+                extra_data={
+                    'customer_id': customer.id,
+                    'customer_name': customer.name,
+                    'activated_by': activated_by.get_full_name() if activated_by else 'Administration'
+                }
+            )
+            
+            if success:
+                # Log successful notification
+                from core.models import ActivityLog
+                ActivityLog.log_activity(
+                    user=activated_by,
+                    action='CUSTOMER_ACTIVATION_SMS_SENT',
+                    description=f'🎉 Activation SMS sent to {customer.name} ({customer.phone})',
+                    severity='MEDIUM',
+                    phone=customer.phone,
+                    extra_data={
+                        'customer_id': customer.id,
+                        'customer_name': customer.name,
+                        'message_content': message
+                    }
+                )
+                
+                logger.info(f"✅ Customer activation SMS sent to {customer.phone}")
+                return True, sms_message, "Activation SMS sent successfully"
+            else:
+                logger.error(f"❌ Failed to send activation SMS to {customer.phone}: {result}")
+                return False, sms_message, f"Failed to send SMS: {result}"
+                
+        except Exception as e:
+            logger.error(f"Error sending activation SMS: {e}")
+            return False, None, f"Error: {str(e)}"
+    
+    def send_welcome_notification(self, customer):
+        """
+        🎊 Send beautiful welcome message to new customer
+        """
+        try:
+            # Format beautiful welcome message
+            message = self._format_welcome_message(customer.name)
+            
+            # Send SMS
+            success, sms_message, result = self.send_sms(
+                customer.phone, 
+                message,
+                message_type='NOTIFICATION',
+                user=None,
+                extra_data={
+                    'customer_id': customer.id,
+                    'customer_name': customer.name,
+                    'message_type': 'welcome'
+                }
+            )
+            
+            if success:
+                logger.info(f"✅ Welcome SMS sent to {customer.phone}")
+                return True, sms_message, "Welcome SMS sent successfully"
+            else:
+                logger.error(f"❌ Failed to send welcome SMS to {customer.phone}: {result}")
+                return False, sms_message, f"Failed to send SMS: {result}"
+                
+        except Exception as e:
+            logger.error(f"Error sending welcome SMS: {e}")
+            return False, None, f"Error: {str(e)}"
+    
+    def _format_verification_sms_message(self, phone_number, verification_code, expires_at):
+        """
+        Simple verification SMS with just the code
+        """
+        message = f"code : {verification_code}"
         
         return message
     
-    def _format_persian_sms_message_compact(self, phone_number, verification_code, expires_at):
+    def _format_verification_sms_compact(self, phone_number, verification_code, expires_at):
         """
-        فرمت فشرده پیام SMS برای دستگاه‌های قدیمی
+        Compact verification SMS for older devices
         """
         time_str = expires_at.strftime('%H:%M')
         
-        message = f"""Code: {verification_code}
+        message = f"""HomayOMS
+Code: {verification_code}
 Until: {time_str}
-HomayOMS"""
+Keep private!"""
         
         return message
     
-    def _format_persian_sms_message_detailed(self, phone_number, verification_code, expires_at):
+    def _format_verification_sms_detailed(self, phone_number, verification_code, expires_at):
         """
-        فرمت تفصیلی پیام SMS با اطلاعات کامل
+        Detailed verification SMS with full information
         """
         time_str = expires_at.strftime('%H:%M')
         date_str = expires_at.strftime('%Y/%m/%d')
         
-        message = f"""Verification Code HomayOMS
+        message = f"""HomayOMS Security Verification
 
 Phone: {phone_number}
 Code: {verification_code}
@@ -247,7 +324,97 @@ Date: {date_str}
 Time: {time_str}
 
 Enter this code in login page
-HomayOMS"""
+Do not share with anyone!
+
+HomayOMS Security Team"""
+        
+        return message
+    
+    def _format_customer_activation_message(self, customer_name, activated_by=None):
+        """
+        Beautiful customer activation notification
+        """
+        display_name = customer_name.strip() if customer_name else "User"
+        admin_name = activated_by.get_full_name() if activated_by else "Administration"
+        
+        message = f"""Welcome to HomayOMS!
+
+Dear {display_name},
+Your account has been activated successfully by {admin_name}.
+
+You can now login to your account
+Use your phone number for authentication
+Start shopping with confidence
+
+Thank you for choosing HomayOMS!
+Homay Paper & Cardboard Factory"""
+        
+        return message
+    
+    def _format_order_status_message(self, order_number, status, amount=None):
+        """
+        Beautiful order status notification
+        """
+        amount_str = f"\nAmount: {amount:,.0f} Toman" if amount else ""
+        
+        message = f"""Order Status Update
+
+Order: {order_number}
+Status: {status}{amount_str}
+
+HomayOMS - Your Trusted Partner"""
+        
+        return message
+    
+    def _format_payment_success_message(self, order_number, amount):
+        """
+        Beautiful payment success notification
+        """
+        message = f"""Payment Successful!
+
+Order: {order_number}
+Amount: {amount:,.0f} Toman
+Payment completed successfully
+
+Thank you for your purchase!
+HomayOMS - Quality Guaranteed"""
+        
+        return message
+    
+    def _format_payment_failed_message(self, order_number):
+        """
+        Beautiful payment failure notification
+        """
+        message = f"""Payment Failed
+
+Order: {order_number}
+Payment was not completed
+
+Please try again or contact support
+We're here to help!
+
+HomayOMS Support Team"""
+        
+        return message
+    
+    def _format_welcome_message(self, customer_name):
+        """
+        Beautiful welcome message for new customers
+        """
+        display_name = customer_name.strip() if customer_name else "Valued Customer"
+        
+        message = f"""Welcome to HomayOMS!
+
+Dear {display_name},
+Your account has been created successfully.
+
+You can now access our services
+Login with your phone number
+Browse our quality products
+Secure payment options
+
+Homay Paper & Cardboard Factory
+Quality • Trust • Excellence"""
         
         return message
     
@@ -272,11 +439,11 @@ HomayOMS"""
         message_format = getattr(self.settings, 'sms_message_format', 'standard')
         
         if message_format == 'compact':
-            message = self._format_persian_sms_message_compact(phone_number, verification_code, expires_at)
+            message = self._format_verification_sms_compact(phone_number, verification_code, expires_at)
         elif message_format == 'detailed':
-            message = self._format_persian_sms_message_detailed(phone_number, verification_code, expires_at)
+            message = self._format_verification_sms_detailed(phone_number, verification_code, expires_at)
         else:
-            message = self._format_persian_sms_message(phone_number, verification_code, expires_at)
+            message = self._format_verification_sms_message(phone_number, verification_code, expires_at)
         
         # ارسال پیامک
         success, sms_message, result = self.send_sms(
@@ -435,7 +602,7 @@ class SMSNotificationService:
             customer_phone = order.customer.phone
             
             # ارسال پیام
-            message = f"سفارش {order.order_number} شما {status_display} شد.\nمبلغ: {order.final_amount:,.0f} تومان"
+            message = self._format_order_status_message(order.order_number, status_display, order.final_amount)
             
             success, sms_message, result = self.sms_service.send_sms(
                 phone_number=customer_phone,
@@ -466,9 +633,9 @@ class SMSNotificationService:
             customer_phone = payment.order.customer.phone
             
             if status == 'SUCCESS':
-                message = f"پرداخت سفارش {payment.order.order_number} با موفقیت انجام شد.\nمبلغ: {payment.display_amount:,.0f} تومان"
+                message = self._format_payment_success_message(payment.order.order_number, payment.display_amount)
             else:
-                message = f"پرداخت سفارش {payment.order.order_number} ناموفق بود.\nلطفاً مجدداً تلاش کنید."
+                message = self._format_payment_failed_message(payment.order.order_number)
             
             success, sms_message, result = self.sms_service.send_sms(
                 phone_number=customer_phone,

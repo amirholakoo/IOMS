@@ -14,46 +14,52 @@ class Command(BaseCommand):
         
         templates_data = [
             {
-                'name': 'کد تایید ورود',
+                'name': 'Verification Code',
                 'template_type': 'VERIFICATION',
-                'content': 'کد تایید شما: {code}\nمعتبر تا {expires_at}\n\nHomayOMS',
-                'variables': {'code': 'کد 6 رقمی', 'expires_at': 'زمان انقضا'}
+                'content': 'HomayOMS Verification\n\nYour security code: {code}\nValid until: {expires_at}\n\nPlease enter this code to continue.\n\nKeep this code private!\nHomayOMS Security Team',
+                'variables': {'code': '6-digit code', 'expires_at': 'expiration time'}
             },
             {
-                'name': 'تایید سفارش',
+                'name': 'Order Confirmed',
                 'template_type': 'ORDER_STATUS',
-                'content': 'سفارش {order_number} شما تایید شد.\nمبلغ: {amount} تومان\n\nHomayOMS',
-                'variables': {'order_number': 'شماره سفارش', 'amount': 'مبلغ'}
+                'content': 'Order Status Update\n\nOrder: {order_number}\nStatus: Confirmed\nAmount: {amount} Toman\n\nHomayOMS - Your Trusted Partner',
+                'variables': {'order_number': 'order number', 'amount': 'amount'}
             },
             {
-                'name': 'آماده تحویل',
+                'name': 'Ready for Delivery',
                 'template_type': 'ORDER_STATUS',
-                'content': 'سفارش {order_number} شما آماده تحویل است.\nلطفاً برای دریافت مراجعه کنید.\n\nHomayOMS',
-                'variables': {'order_number': 'شماره سفارش'}
+                'content': 'Order Status Update\n\nOrder: {order_number}\nStatus: Ready for Delivery\n\nPlease visit us to collect your order.\n\nHomayOMS - Quality Guaranteed',
+                'variables': {'order_number': 'order number'}
             },
             {
-                'name': 'تحویل شده',
+                'name': 'Order Delivered',
                 'template_type': 'ORDER_STATUS',
-                'content': 'سفارش {order_number} شما تحویل داده شد.\nاز خرید شما متشکریم.\n\nHomayOMS',
-                'variables': {'order_number': 'شماره سفارش'}
+                'content': 'Order Status Update\n\nOrder: {order_number}\nStatus: Delivered\n\nThank you for your purchase!\n\nHomayOMS - Your Trusted Partner',
+                'variables': {'order_number': 'order number'}
             },
             {
-                'name': 'پرداخت موفق',
+                'name': 'Payment Successful',
                 'template_type': 'PAYMENT',
-                'content': 'پرداخت سفارش {order_number} با موفقیت انجام شد.\nمبلغ: {amount} تومان\n\nHomayOMS',
-                'variables': {'order_number': 'شماره سفارش', 'amount': 'مبلغ'}
+                'content': 'Payment Successful!\n\nOrder: {order_number}\nAmount: {amount} Toman\nPayment completed successfully\n\nThank you for your purchase!\nHomayOMS - Quality Guaranteed',
+                'variables': {'order_number': 'order number', 'amount': 'amount'}
             },
             {
-                'name': 'پرداخت ناموفق',
+                'name': 'Payment Failed',
                 'template_type': 'PAYMENT',
-                'content': 'پرداخت سفارش {order_number} ناموفق بود.\nلطفاً مجدداً تلاش کنید.\n\nHomayOMS',
-                'variables': {'order_number': 'شماره سفارش'}
+                'content': 'Payment Failed\n\nOrder: {order_number}\nPayment was not completed\n\nPlease try again or contact support\nWe\'re here to help!\n\nHomayOMS Support Team',
+                'variables': {'order_number': 'order number'}
             },
             {
-                'name': 'خوش‌آمدگویی',
+                'name': 'Welcome Message',
                 'template_type': 'NOTIFICATION',
-                'content': 'به HomayOMS خوش آمدید!\nحساب کاربری شما با موفقیت ایجاد شد.\n\nHomayOMS',
-                'variables': {}
+                'content': 'Welcome to HomayOMS!\n\nDear {customer_name},\nYour account has been created successfully.\n\nYou can now access our services\nLogin with your phone number\nBrowse our quality products\nSecure payment options\n\nHomay Paper & Cardboard Factory\nQuality • Trust • Excellence',
+                'variables': {'customer_name': 'customer name'}
+            },
+            {
+                'name': 'Account Activated',
+                'template_type': 'NOTIFICATION',
+                'content': 'Welcome to HomayOMS!\n\nDear {customer_name},\nYour account has been activated successfully by {activated_by}.\n\nYou can now login to your account\nUse your phone number for authentication\nStart shopping with confidence\n\nThank you for choosing HomayOMS!\nHomay Paper & Cardboard Factory',
+                'variables': {'customer_name': 'customer name', 'activated_by': 'admin name'}
             },
         ]
         

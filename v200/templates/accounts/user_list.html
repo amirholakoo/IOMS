@@ -251,35 +251,51 @@
 
     <!-- آمار کلی -->
     <div class="row mb-4">
-        <div class="col-md-3">
+        <div class="col-md-2">
             <div class="card text-center">
                 <div class="card-body">
                     <h5 class="card-title text-primary">{{ total_users }}</h5>
-                    <p class="card-text">کل کاربران</p>
+                    <p class="card-text">👥 کل کاربران</p>
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
+        <div class="col-md-2">
             <div class="card text-center">
                 <div class="card-body">
-                    <h5 class="card-title text-success">{{ page_obj.paginator.count }}</h5>
-                    <p class="card-text">نتایج یافت شده</p>
+                    <h5 class="card-title text-success">{{ active_users }}</h5>
+                    <p class="card-text">✅ کاربران فعال</p>
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
+        <div class="col-md-2">
             <div class="card text-center">
                 <div class="card-body">
-                    <h5 class="card-title text-info">{{ page_obj.number }}</h5>
-                    <p class="card-text">صفحه فعلی</p>
+                    <h5 class="card-title text-warning">{{ pending_users }}</h5>
+                    <p class="card-text">⏳ در انتظار تایید</p>
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
+        <div class="col-md-2">
             <div class="card text-center">
                 <div class="card-body">
-                    <h5 class="card-title text-warning">{{ page_obj.paginator.num_pages }}</h5>
-                    <p class="card-text">کل صفحات</p>
+                    <h5 class="card-title text-info">{{ customer_users }}</h5>
+                    <p class="card-text">🔵 مشتریان</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title text-danger">{{ admin_users }}</h5>
+                    <p class="card-text">🟡 ادمین‌ها</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title text-secondary">{{ finance_users }}</h5>
+                    <p class="card-text">🟢 مالی</p>
                 </div>
             </div>
         </div>

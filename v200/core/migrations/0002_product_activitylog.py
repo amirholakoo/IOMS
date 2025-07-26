@@ -28,7 +28,7 @@ class Migration(migrations.Migration):
                 ('gsm', models.IntegerField(help_text='وزن محصول به گرم بر متر مربع', verbose_name='⚖️ GSM (g/m²)')),
                 ('length', models.IntegerField(help_text='طول محصول به متر', verbose_name='📐 طول (m)')),
                 ('grade', models.CharField(help_text='درجه و کیفیت محصول', max_length=255, verbose_name='🏆 درجه کیفیت')),
-                ('breaks', models.IntegerField(default=0, help_text='تعداد شکستگی\u200cهای موجود در محصول', verbose_name='💔 تعداد شکستگی')),
+                ('breaks', models.IntegerField(default=0, help_text='تعداد پارگی\u200cهای موجود در محصول', verbose_name='💔 تعداد پارگی')),
                 ('qr_code', models.TextField(blank=True, help_text='کد QR مرتبط با محصول برای ردیابی سریع', null=True, verbose_name='📱 کد QR')),
             ],
             options={

@@ -53,12 +53,11 @@
                     </select>
                 </div>
                 <div class="col-md-2">
-                    <label class="form-label">📅 از تاریخ</label>
-                    <input type="date" name="date_from" class="form-control" value="{{ date_from }}">
-                </div>
-                <div class="col-md-2">
-                    <label class="form-label">📅 تا تاریخ</label>
-                    <input type="date" name="date_to" class="form-control" value="{{ date_to }}">
+                    <label class="form-label">🔍 فیلتر بر اساس:</label>
+                    <select name="filter_by" class="form-select">
+                        <option value="date" {% if filter_by == 'date' %}selected{% endif %}>تاریخ</option>
+                        <option value="last_changes" {% if filter_by == 'last_changes' %}selected{% endif %}>آخرین تغییرات</option>
+                    </select>
                 </div>
                 <div class="col-md-1">
                     <label class="form-label">&nbsp;</label>
@@ -91,7 +90,15 @@
                 <div class="row align-items-center">
                     <div class="col-md-3">
                         <h6 class="mb-0">🏷️ {{ order.order_number }}</h6>
-                        <small class="text-muted"><span class="jalali-date" data-date="{{ order.created_at|date:'Y-m-d H:i:s' }}">{{ order.created_at|date:"Y/m/d H:i" }}</span></small>
+                        <small class="text-muted">
+                            {% if filter_by == 'last_changes' %}
+                                <span class="jalali-date" data-date="{{ order.updated_at|date:'Y-m-d H:i:s' }}">{{ order.updated_at|date:"Y/m/d H:i" }}</span>
+                                <br><span class="text-info">🔄 آخرین تغییر</span>
+                            {% else %}
+                                <span class="jalali-date" data-date="{{ order.created_at|date:'Y-m-d H:i:s' }}">{{ order.created_at|date:"Y/m/d H:i" }}</span>
+                                <br><span class="text-muted">📅 تاریخ ایجاد</span>
+                            {% endif %}
+                        </small>
                     </div>
                     <div class="col-md-3">
                         <h6 class="mb-0">👤 {{ order.customer.customer_name }}</h6>
@@ -192,7 +199,7 @@
             <ul class="pagination justify-content-center">
                 {% if page_obj.has_previous %}
                     <li class="page-item">
-                        <a class="page-link" href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if status_filter %}status={{ status_filter }}&{% endif %}{% if payment_filter %}payment={{ payment_filter }}&{% endif %}{% if date_from %}date_from={{ date_from }}&{% endif %}{% if date_to %}date_to={{ date_to }}&{% endif %}page={{ page_obj.previous_page_number }}">قبلی</a>
+                        <a class="page-link" href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if status_filter %}status={{ status_filter }}&{% endif %}{% if payment_filter %}payment={{ payment_filter }}&{% endif %}{% if filter_by %}filter_by={{ filter_by }}&{% endif %}page={{ page_obj.previous_page_number }}">قبلی</a>
                     </li>
                 {% endif %}
                 
@@ -203,14 +210,14 @@
                         </li>
                     {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
                         <li class="page-item">
-                            <a class="page-link" href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if status_filter %}status={{ status_filter }}&{% endif %}{% if payment_filter %}payment={{ payment_filter }}&{% endif %}{% if date_from %}date_from={{ date_from }}&{% endif %}{% if date_to %}date_to={{ date_to }}&{% endif %}page={{ num }}">{{ num }}</a>
+                            <a class="page-link" href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if status_filter %}status={{ status_filter }}&{% endif %}{% if payment_filter %}payment={{ payment_filter }}&{% endif %}{% if filter_by %}filter_by={{ filter_by }}&{% endif %}page={{ num }}">{{ num }}</a>
                         </li>
                     {% endif %}
                 {% endfor %}
                 
                 {% if page_obj.has_next %}
                     <li class="page-item">
-                        <a class="page-link" href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if status_filter %}status={{ status_filter }}&{% endif %}{% if payment_filter %}payment={{ payment_filter }}&{% endif %}{% if date_from %}date_from={{ date_from }}&{% endif %}{% if date_to %}date_to={{ date_to }}&{% endif %}page={{ page_obj.next_page_number }}">بعدی</a>
+                        <a class="page-link" href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if status_filter %}status={{ status_filter }}&{% endif %}{% if payment_filter %}payment={{ payment_filter }}&{% endif %}{% if filter_by %}filter_by={{ filter_by }}&{% endif %}page={{ page_obj.next_page_number }}">بعدی</a>
                     </li>
                 {% endif %}
             </ul>

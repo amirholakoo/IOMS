@@ -303,12 +303,12 @@ class Product(BaseModel):
         help_text="درجه و کیفیت محصول"
     )
     
-    # 💔 تعداد شکستگی‌ها
-    breaks = models.IntegerField(
-        default=0,
-        verbose_name="💔 تعداد شکستگی",
-        help_text="تعداد شکستگی‌های موجود در محصول"
-    )
+            # 💔 تعداد شکستگی‌ها
+        breaks = models.IntegerField(
+            default=0,
+            verbose_name="💔 تعداد شکستگی",
+            help_text="تعداد شکستگی‌های موجود در محصول"
+        )
     
     # 📱 کد QR محصول
     qr_code = models.TextField(
