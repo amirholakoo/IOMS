@@ -52,10 +52,18 @@ HomayOMS is a comprehensive **Inventory & Order Management System** designed for
 
 ### 🏢 Business Features
 - **Customer Management**: Complete customer profile system
-- **Inventory Tracking**: Product and stock management (planned)
-- **Order Processing**: Order creation and management (planned)
-- **Financial Management**: Pricing and invoice system (planned)
-- **Reporting System**: Business analytics and reports (planned)
+- **Inventory Tracking**: Product and stock management with external SQLite sync
+- **Order Processing**: Atomic order creation and management system
+- **Financial Management**: Pricing and invoice system with cash/credit control
+- **Reporting System**: Business analytics and reports with Persian calendar
+
+### 🔄 Advanced Features (v201+)
+- **🔄 Atomic Order System**: Eliminates unfinished orders with immediate creation
+- **📱 Real SMS Integration**: SIM800C hardware with Raspberry Pi server
+- **🔄 Inventory Synchronization**: Bidirectional sync with external SQLite databases
+- **💰 Cash Purchase Control**: Super Admin can disable cash purchases
+- **📅 Persian Calendar**: Automatic Jalali date conversion and display
+- **🔒 Enhanced Security**: Customer deletion protection, comprehensive logging
 
 ### 🎨 User Interface
 - **Responsive Design**: Works perfectly on all devices
@@ -69,26 +77,34 @@ HomayOMS is a comprehensive **Inventory & Order Management System** designed for
 ### Backend
 - **Python 3.8+**: Core programming language
 - **Django 5.2+**: Web framework with admin interface
-- **SQLite/PostgreSQL**: Database management
-- **Django REST Framework**: API development (planned)
+- **PostgreSQL**: Production database (SQLite for development)
+- **Gunicorn**: Production WSGI server
+- **Nginx**: Reverse proxy and static file serving
 
 ### Frontend
-- **Tailwind CSS**: Utility-first CSS framework
 - **HTML5/CSS3**: Modern web standards
-- **JavaScript**: Interactive functionality
+- **JavaScript**: Interactive functionality with Persian support
 - **Vazirmatn Font**: Persian typography
+- **Responsive Design**: Mobile-first approach
+
+### Hardware Integration (v201+)
+- **SIM800C GSM Module**: Real SMS functionality
+- **Raspberry Pi**: Hardware server platform
+- **Flask**: SMS API server
+- **Serial Communication**: Hardware control via serial ports
 
 ### DevOps & Tools
 - **Git**: Version control
-- **Docker**: Containerization (planned)
+- **Docker**: Containerization with Docker Compose
+- **Systemd**: Service management on Raspberry Pi
 - **GitHub Actions**: CI/CD pipeline (planned)
-- **Nginx**: Web server (production)
 
 ### Security
 - **Django Security**: Built-in security features
 - **HTTPS**: SSL/TLS encryption
 - **CSRF Protection**: Cross-site request forgery protection
 - **XSS Prevention**: Cross-site scripting protection
+- **Role-Based Permissions**: Granular access control
 
 ## 📦 Installation
 
@@ -97,13 +113,15 @@ HomayOMS is a comprehensive **Inventory & Order Management System** designed for
 Python 3.8+
 pip
 git
+PostgreSQL (for production)
+SQLite3 (for inventory sync)
 ```
 
 ### Quick Start
 ```bash
 # Clone the repository
 git clone https://github.com/amirholakoo/IOMS.git
-cd IOMS/v1
+cd IOMS/v201  # Use v201 for latest features
 
 # Create virtual environment
 python -m venv venv
@@ -115,11 +133,20 @@ pip install -r requirements.txt
 # Run migrations
 python manage.py migrate
 
+# Setup roles and permissions
+python manage.py setup_roles
+
 # Create superuser
 python manage.py createsuperuser
 
-# Create test customer
-python manage.py create_test_customer
+# Setup SMS templates
+python manage.py setup_sms_templates
+
+# Setup field mappings for inventory sync
+python manage.py setup_field_mappings
+
+# Create test data
+python manage.py create_full_test_data
 
 # Run development server
 python manage.py runserver
@@ -128,10 +155,41 @@ python manage.py runserver
 ### Environment Configuration
 ```bash
 # Copy environment file
-cp .env.example .env
+cp env.local .env
 
 # Edit environment variables
 nano .env
+```
+
+### ⚠️ Important: Inventory Sync Setup
+
+**The inventory sync app requires an external SQLite database file that is NOT included in the repository.**
+
+#### Setting Up Your SQLite Database
+```bash
+# Create a new SQLite database
+sqlite3 inventory_sync/db.sqlite3
+
+# Or use your existing inventory database
+cp /path/to/your/existing/inventory.db inventory_sync/db.sqlite3
+
+# Required table structure
+CREATE TABLE Products (
+    id INTEGER PRIMARY KEY,
+    reel_number TEXT UNIQUE NOT NULL,
+    width INTEGER,
+    length INTEGER,
+    weight REAL,
+    status TEXT DEFAULT 'In-stock',
+    date TEXT,
+    notes TEXT
+);
+```
+
+#### Configure Database Path
+```bash
+# In your .env file
+SQLITE_DB_PATH=/path/to/your/inventory.db
 ```
 
 ## 🔧 Django Management Commands
@@ -154,8 +212,10 @@ Look for commands like:
 ```
 create_full_test_data
 setup_roles
-create_test_products
-create_daily_test_customer
+setup_sms_templates
+setup_field_mappings
+test_sqlite_connection
+test_sms_connection
 ...
 ```
 
@@ -175,16 +235,53 @@ This will create test users for all roles and print their credentials in the ter
 # Setup roles and permissions
 python manage.py setup_roles --create-superuser --username admin --password admin123
 
+# Setup SMS templates and field mappings
+python manage.py setup_sms_templates
+python manage.py setup_field_mappings
+
 # Create test users and products
 python manage.py create_full_test_data
 python manage.py create_test_products --count 10
 
-# Create daily test customers for SMS login
-python manage.py create_daily_test_customer --count 3
+# Test connections
+python manage.py test_sqlite_connection
+python manage.py test_sms_connection
 ```
 
 **5. See output and use credentials:**
 After running `create_full_test_data`, you'll see a table of test users and passwords you can use to log in.
+
+---
+
+### 🔄 Inventory Sync Commands
+
+**Test SQLite Connection:**
+```bash
+python manage.py test_sqlite_connection
+```
+Tests connectivity to external SQLite database for inventory sync.
+
+**Setup Field Mappings:**
+```bash
+python manage.py setup_field_mappings
+```
+Creates default field mappings for inventory synchronization.
+
+---
+
+### 📱 SMS Commands
+
+**Test SMS Connection:**
+```bash
+python manage.py test_sms_connection
+```
+Tests SMS server connectivity and hardware status.
+
+**Setup SMS Templates:**
+```bash
+python manage.py setup_sms_templates
+```
+Creates default SMS templates for verification and notifications.
 
 ---
 
@@ -230,6 +327,8 @@ After running `create_full_test_data`, you'll see a table of test users and pass
 - If you get `CommandError` or `ModuleNotFoundError`, check your folder structure and `__init__.py` files.
 - Use `python manage.py help` to discover all commands.
 - For bulk data, use `--count` or similar arguments if available.
+- **For inventory sync**: Ensure your SQLite database file exists and is accessible.
+- **For SMS testing**: Ensure SMS server is running and hardware is connected.
 - If you add a new command, document it in this section for the next developer!
 
 ---
@@ -246,6 +345,7 @@ After running `create_full_test_data`, you'll see a table of test users and pass
 - Run and test with real data in seconds
 - Add their own commands with confidence
 - Troubleshoot common issues quickly
+- Set up inventory sync and SMS functionality properly
 
 ---
 
@@ -255,7 +355,7 @@ After running `create_full_test_data`, you'll see a table of test users and pass
 
 | Role | Access Level | Features |
 |------|-------------|----------|
-| **🔴 Super Admin** | Full System Access | User management, System settings, All modules |
+| **🔴 Super Admin** | Full System Access | User management, System settings, All modules, SMS management, Inventory sync |
 | **🟡 Admin** | Operational Access | Customer management, Orders, Inventory, Reports |
 | **🟢 Finance** | Financial Access | Pricing, Invoices, Financial reports, Payments |
 | **🔵 Customer** | Limited Access | Own orders, Profile management, SMS verification |
@@ -264,37 +364,59 @@ After running `create_full_test_data`, you'll see a table of test users and pass
 
 1. **Staff Login** (`/accounts/staff/login/`)
    - Username + Password authentication
-   - Role validation
+   - Role validation and permissions
    - Session management
 
-2. **Customer Login** (`/accounts/customer/login/`)
+2. **Customer SMS Login** (`/accounts/customer/login/`)
    - Phone number verification
-   - SMS code authentication
+   - SMS code authentication via SIM800C hardware
    - No password required
+   - Customer activation notifications
 
 ## 📊 Project Structure
 
 ```
 HomayOMS/
-├── accounts/                 # User authentication & management
-│   ├── models.py            # Custom User model with roles
-│   ├── views.py             # Authentication views
-│   ├── urls.py              # URL routing
-│   └── management/          # Django management commands
-├── core/                    # Core business logic
-│   ├── models.py            # Customer, Order models
-│   ├── views.py             # Business views
-│   └── urls.py              # Core URL routing
-├── HomayOMS/                # Project settings
-│   ├── settings/            # Environment-based settings
-│   ├── urls.py              # Main URL configuration
-│   └── baseModel.py         # Base model with timestamps
-├── templates/               # HTML templates
-│   ├── accounts/            # Authentication templates
-│   └── core/                # Business templates
-├── static/                  # Static files (CSS, JS, images)
-├── requirements.txt         # Python dependencies
-└── manage.py               # Django management script
+├── v201/                    # 🎯 Latest Production Version
+│   ├── accounts/            # User authentication & management
+│   │   ├── models.py        # Custom User model with roles
+│   │   ├── views.py         # Authentication views
+│   │   ├── permissions.py   # Role-based permissions
+│   │   └── management/      # Django management commands
+│   ├── core/                # Core business logic
+│   │   ├── models.py        # Customer, Order, Product models
+│   │   ├── views.py         # Business views with atomic order system
+│   │   ├── urls.py          # Core URL routing
+│   │   └── management/      # Management commands
+│   ├── inventory_sync/      # Inventory synchronization
+│   │   ├── models.py        # SyncConfig, SyncLog, ProductMapping
+│   │   ├── services.py      # SQLiteInventoryService, InventorySyncService
+│   │   ├── views.py         # Sync management views
+│   │   └── templates/       # Persian UI templates
+│   ├── payments/            # Payment processing
+│   │   ├── models.py        # Payment models
+│   │   ├── services.py      # Payment services
+│   │   └── views.py         # Payment views
+│   ├── sms/                 # SMS integration
+│   │   ├── models.py        # SMS templates, messages, verifications
+│   │   ├── services.py      # SMSService, SMSNotificationService
+│   │   └── views.py         # SMS management views
+│   ├── HomayOMS/            # Project settings
+│   │   ├── settings/        # Environment-based settings
+│   │   ├── urls.py          # Main URL configuration
+│   │   └── baseModel.py     # Base model with timestamps
+│   ├── templates/           # HTML templates
+│   │   ├── accounts/        # Authentication templates
+│   │   ├── core/            # Business templates
+│   │   └── inventory_sync/  # Sync templates
+│   ├── static/              # Static files (CSS, JS, images)
+│   ├── requirements.txt     # Python dependencies
+│   ├── config.py            # Environment configuration
+│   └── manage.py            # Django management script
+├── v200/                    # Previous version
+├── v1.1/                    # Legacy version
+├── v1/                      # Legacy version
+└── v0/                      # Initial version
 ```
 
 ## ✅ Completed Features
@@ -307,73 +429,96 @@ HomayOMS/
 - ✅ **Session Management**: User activity tracking
 - ✅ **Profile Management**: User profile editing
 
-### 🎨 User Interface
-- ✅ **Professional Login Pages**: Beautiful 4-role login interface
-- ✅ **Responsive Design**: Mobile-first approach
-- ✅ **Persian RTL Support**: Full Persian language support
-- ✅ **Modern UI Components**: Tailwind CSS styling
-- ✅ **Customer Dashboard**: Role-specific dashboard
-- ✅ **Staff Dashboard**: Admin and management interfaces
+### 🔄 Advanced Order System (v201+)
+- ✅ **Atomic Order Creation**: Orders created with items immediately
+- ✅ **Page Exit Protection**: Automatic order cancellation on page exit
+- ✅ **Product Reservation**: Products marked as 'Pre-order' to prevent double booking
+- ✅ **Automatic Cleanup**: Draft orders cancelled after timeout or page exit
+- ✅ **Unfinished Orders**: Continue payment for incomplete orders
 
-### 🏢 Business Logic
-- ✅ **Customer Model**: Complete customer profile system
-- ✅ **Base Model**: Timestamp fields for all models
-- ✅ **Admin Interface**: Django admin customization
-- ✅ **Management Commands**: Test user creation utilities
+### 📱 Real SMS Integration (v201+)
+- ✅ **SIM800C Hardware**: Real SMS functionality with GSM module
+- ✅ **Raspberry Pi Server**: Flask API server for hardware control
+- ✅ **Customer Activation**: Automatic SMS notifications when accounts are activated
+- ✅ **Verification System**: Secure SMS code authentication
+- ✅ **Message Templates**: Configurable SMS templates with variable substitution
+
+### 🔄 Inventory Synchronization (v201+)
+- ✅ **External SQLite Integration**: Bidirectional sync with external inventory systems
+- ✅ **Field Mapping System**: Configurable field mappings between systems
+- ✅ **Product Import/Export**: Import products and export sales status
+- ✅ **Comprehensive Logging**: All sync operations logged with detailed information
+- ✅ **Mobile-Friendly Persian UI**: Responsive interface for sync management
+
+### 💰 Cash Purchase Control (v201+)
+- ✅ **Super Admin Control**: Toggle cash purchase availability
+- ✅ **Dynamic UI Updates**: Real-time interface updates based on settings
+- ✅ **Customer Guidance**: Clear notifications about payment limitations
+- ✅ **Alternative Options**: Credit (نسیه) payment remains available
+
+### 📅 Persian Calendar Integration (v201+)
+- ✅ **Automatic Conversion**: All dates automatically converted to Persian Jalali format
+- ✅ **Accurate Algorithm**: Proper Persian calendar conversion with leap year support
+- ✅ **Client-Side Processing**: No server overhead, pure JavaScript conversion
+- ✅ **Visual Styling**: Converted dates displayed in blue with medium font weight
+
+### 🎨 User Interface
+- ✅ **Professional Design**: Beautiful Persian RTL interface
+- ✅ **Responsive Layout**: Mobile-first approach with touch-friendly elements
+- ✅ **Modern Components**: Clean, professional interface with animations
+- ✅ **Accessibility**: WCAG compliant design patterns
 
 ### 🔧 Development & DevOps
 - ✅ **Environment Configuration**: Local, Dev, Production settings
-- ✅ **Git Version Control**: Complete project history
-- ✅ **Documentation**: Comprehensive code documentation
-- ✅ **Code Quality**: Persian comments and emojis
-- ✅ **Security Best Practices**: CSRF, XSS protection
+- ✅ **Production Deployment**: Manual deployment on Raspberry Pi
+- ✅ **Docker Support**: Containerization with Docker Compose
+- ✅ **Comprehensive Logging**: Structured logging and monitoring
+- ✅ **Security Best Practices**: CSRF, XSS protection, secure headers
 
 ## 📝 TODO List
 
-### 🔐 Authentication Enhancements
-- [ ] **SMS API Integration**: Connect to SMS service provider
-- [ ] **Two-Factor Authentication**: Additional security layer
-- [ ] **Password Reset**: Email-based password recovery
-- [ ] **Account Lockout**: Brute force protection
-- [ ] **Login History**: Detailed login tracking
+### 🔄 Order Management Enhancements
+- [ ] **Order Templates**: Predefined order templates for common scenarios
+- [ ] **Bulk Order Processing**: Mass order operations
+- [ ] **Order History**: Detailed order history and tracking
+- [ ] **Order Notifications**: Real-time order status notifications
 
-### 🏢 Business Features
-- [ ] **Product Management**: Product catalog and categories
-- [ ] **Inventory Tracking**: Stock levels and movements
-- [ ] **Order Management**: Order creation and processing
-- [ ] **Invoice System**: Automated invoice generation
-- [ ] **Payment Integration**: Payment gateway integration
-- [ ] **Shipping Management**: Delivery tracking
-- [ ] **Supplier Management**: Vendor and supplier profiles
+### 📱 SMS System Improvements
+- [ ] **SMS Templates**: More customizable SMS templates
+- [ ] **Bulk SMS**: Mass SMS sending capabilities
+- [ ] **SMS Analytics**: Message delivery statistics and analytics
+- [ ] **SMS Scheduling**: Scheduled SMS sending
+
+### 🔄 Inventory Sync Enhancements
+- [ ] **Real-time Sync**: WebSocket-based real-time synchronization
+- [ ] **Conflict Resolution**: Handle data conflicts between systems
+- [ ] **Incremental Sync**: Only sync changed data
+- [ ] **API Integration**: REST API for external system integration
 
 ### 📊 Analytics & Reporting
 - [ ] **Sales Reports**: Revenue and sales analytics
-- [ ] **Inventory Reports**: Stock level reports
+- [ ] **Inventory Reports**: Stock level reports and alerts
 - [ ] **Customer Analytics**: Customer behavior insights
-- [ ] **Financial Reports**: Profit/loss statements
-- [ ] **Dashboard Widgets**: Real-time metrics
+- [ ] **Financial Reports**: Profit/loss statements and cash flow
 
 ### 🎨 User Experience
 - [ ] **Dark Mode**: Theme switching capability
-- [ ] **Notifications**: Real-time notifications
+- [ ] **Notifications**: Real-time notifications system
 - [ ] **Search Functionality**: Global search across modules
 - [ ] **Data Export**: CSV/Excel export capabilities
-- [ ] **Bulk Operations**: Mass data operations
 
 ### 🔧 Technical Improvements
 - [ ] **API Development**: RESTful API endpoints
-- [ ] **Database Optimization**: Query optimization
-- [ ] **Caching System**: Redis integration
-- [ ] **Background Tasks**: Celery integration
+- [ ] **Database Optimization**: Query optimization and indexing
+- [ ] **Caching System**: Redis integration for performance
+- [ ] **Background Tasks**: Celery integration for async tasks
 - [ ] **Testing Suite**: Unit and integration tests
-- [ ] **Docker Deployment**: Containerization
-- [ ] **CI/CD Pipeline**: Automated deployment
+- [ ] **CI/CD Pipeline**: Automated deployment and testing
 
 ### 📱 Mobile & Integration
 - [ ] **Mobile App**: React Native mobile application
 - [ ] **Webhook Integration**: Third-party integrations
 - [ ] **Email Notifications**: Automated email system
-- [ ] **SMS Notifications**: Bulk SMS capabilities
 - [ ] **Barcode Scanning**: QR code integration
 
 ## 🤝 Contributing
