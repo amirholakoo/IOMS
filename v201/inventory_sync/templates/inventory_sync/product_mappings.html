@@ -1,0 +1,182 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}نگاشت محصولات - همگام‌سازی موجودی{% endblock %}
+
+{% block extra_css %}
+<style>
+    .mapping-card {
+        background: white;
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 15px;
+        box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        border-left: 4px solid #667eea;
+    }
+    
+    .mapping-imported { border-left-color: #28a745; }
+    .mapping-updated { border-left-color: #17a2b8; }
+    .mapping-exported { border-left-color: #ffc107; }
+    .mapping-error { border-left-color: #dc3545; }
+    
+    .filter-section {
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+    }
+    
+    .status-badge {
+        font-size: 0.8em;
+        padding: 4px 8px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h3 mb-0">
+                    <i class="fas fa-link me-2"></i>
+                    نگاشت محصولات
+                </h1>
+                <a href="{% url 'inventory_sync:sync_dashboard' %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-1"></i> بازگشت به داشبورد
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="filter-section">
+                <form method="get" class="row g-3">
+                    <div class="col-md-4">
+                        <label for="sync_status" class="form-label">وضعیت همگام‌سازی</label>
+                        <select class="form-select" id="sync_status" name="sync_status">
+                            <option value="">همه</option>
+                            {% for value, label in sync_statuses %}
+                                <option value="{{ value }}" {% if value == current_sync_status %}selected{% endif %}>
+                                    {{ label }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="search" class="form-label">جستجو</label>
+                        <input type="text" class="form-control" id="search" name="search" 
+                               value="{{ search }}" placeholder="جستجو در شماره ریل یا توضیحات...">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">&nbsp;</label>
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-search me-1"></i> جستجو
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mappings -->
+    <div class="row">
+        <div class="col-12">
+            {% if mappings %}
+                {% for mapping in mappings %}
+                    <div class="mapping-card mapping-{{ mapping.sync_status }}">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div class="flex-grow-1">
+                                <div class="d-flex align-items-center mb-2">
+                                    <h5 class="mb-0 me-3">شماره ریل: {{ mapping.reel_number }}</h5>
+                                    <span class="badge status-badge 
+                                        {% if mapping.sync_status == 'imported' %}bg-success
+                                        {% elif mapping.sync_status == 'updated' %}bg-info
+                                        {% elif mapping.sync_status == 'exported' %}bg-warning
+                                        {% elif mapping.sync_status == 'error' %}bg-danger
+                                        {% else %}bg-secondary{% endif %}">
+                                        {{ mapping.get_sync_status_display }}
+                                    </span>
+                                </div>
+                                
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <small class="text-muted">شناسه خارجی:</small>
+                                        <br><strong>{{ mapping.external_id }}</strong>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <small class="text-muted">شناسه Django:</small>
+                                        <br>
+                                        {% if mapping.django_product_id %}
+                                            <strong>{{ mapping.django_product_id }}</strong>
+                                        {% else %}
+                                            <span class="text-muted">تعریف نشده</span>
+                                        {% endif %}
+                                    </div>
+                                    <div class="col-md-3">
+                                        <small class="text-muted">آخرین همگام‌سازی:</small>
+                                        <br><strong>{{ mapping.last_synced|date:"Y/m/d H:i" }}</strong>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <small class="text-muted">تاریخ ایجاد:</small>
+                                        <br><strong>{{ mapping.created_at|date:"Y/m/d H:i" }}</strong>
+                                    </div>
+                                </div>
+                                
+                                {% if mapping.notes %}
+                                    <div class="mt-3">
+                                        <small class="text-muted"><strong>توضیحات:</strong></small>
+                                        <div class="bg-light p-2 rounded mt-1">
+                                            <small>{{ mapping.notes }}</small>
+                                        </div>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+                
+                <!-- Pagination -->
+                {% if mappings.has_other_pages %}
+                    <nav class="mt-4">
+                        <ul class="pagination justify-content-center">
+                            {% if mappings.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ mappings.previous_page_number }}{% if current_sync_status %}&sync_status={{ current_sync_status }}{% endif %}{% if search %}&search={{ search }}{% endif %}">قبلی</a>
+                                </li>
+                            {% endif %}
+                            
+                            {% for num in mappings.paginator.page_range %}
+                                {% if mappings.number == num %}
+                                    <li class="page-item active">
+                                        <span class="page-link">{{ num }}</span>
+                                    </li>
+                                {% elif num > mappings.number|add:'-3' and num < mappings.number|add:'3' %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ num }}{% if current_sync_status %}&sync_status={{ current_sync_status }}{% endif %}{% if search %}&search={{ search }}{% endif %}">{{ num }}</a>
+                                    </li>
+                                {% endif %}
+                            {% endfor %}
+                            
+                            {% if mappings.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ mappings.next_page_number }}{% if current_sync_status %}&sync_status={{ current_sync_status }}{% endif %}{% if search %}&search={{ search }}{% endif %}">بعدی</a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                {% endif %}
+                
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-link fa-3x text-muted mb-3"></i>
+                    <h4 class="text-muted">نگاشتی یافت نشد</h4>
+                    <p class="text-muted">هیچ نگاشت محصولی برای نمایش وجود ندارد.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %} 

@@ -1,0 +1,467 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}داشبورد همگام‌سازی موجودی{% endblock %}
+
+{% block extra_css %}
+<style>
+    .sync-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 15px;
+        padding: 25px;
+        margin-bottom: 20px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    }
+    
+    .stats-card {
+        background: white;
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        border-left: 4px solid #667eea;
+    }
+    
+    .btn-sync {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white !important;
+        border: none;
+        padding: 12px 25px;
+        border-radius: 8px;
+        font-weight: 600;
+        text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+        transition: all 0.3s ease;
+    }
+    
+    .btn-sync:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        color: white !important;
+    }
+    
+    .btn-secondary {
+        background: #6c757d !important;
+        color: white !important;
+        text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+    }
+    
+    .status-indicator {
+        display: inline-block;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        margin-right: 8px;
+    }
+    
+    .status-active { background-color: #28a745; }
+    .status-inactive { background-color: #dc3545; }
+    
+    .log-item {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 10px;
+        border-left: 4px solid #667eea;
+    }
+    
+    .log-success { border-left-color: #28a745; }
+    .log-error { border-left-color: #dc3545; }
+    .log-warning { border-left-color: #ffc107; }
+</style>
+{% endblock %}
+
+{% block content %}
+{% csrf_token %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="row align-items-center mb-4">
+                <div class="col-md-3">
+                    <a href="{% url 'core:admin_dashboard' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-1"></i> بازگشت به داشبورد اصلی
+                    </a>
+                </div>
+                <div class="col-md-6 text-center">
+                    <h1 class="h3 mb-0">
+                        <i class="fas fa-sync-alt me-2"></i>
+                        داشبورد همگام‌سازی موجودی
+                    </h1>
+                </div>
+                <div class="col-md-3 text-end">
+                    <div class="d-flex gap-2 justify-content-end">
+                        <button class="btn btn-sync" onclick="testConnection()">
+                            <i class="fas fa-plug me-1"></i> تست اتصال
+                        </button>
+                        <button class="btn btn-sync" onclick="refreshStatus()">
+                            <i class="fas fa-refresh me-1"></i> بروزرسانی
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Status Overview -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="stats-card">
+                <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-boxes fa-2x text-primary"></i>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <h4 class="mb-0" id="importable-count">{{ importable_count }}</h4>
+                        <p class="text-muted mb-0">قابل وارد کردن</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card">
+                <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-link fa-2x text-success"></i>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <h4 class="mb-0">{{ total_mappings }}</h4>
+                        <p class="text-muted mb-0">کل نگاشت‌ها</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card">
+                <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-clock fa-2x text-warning"></i>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <h4 class="mb-0">{{ config.auto_sync_interval_minutes }}m</h4>
+                        <p class="text-muted mb-0">فاصله همگام‌سازی خودکار</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card">
+                <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-toggle-on fa-2x text-info"></i>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <h4 class="mb-0">
+                            <span class="status-indicator {% if config.is_auto_sync_enabled %}status-active{% else %}status-inactive{% endif %}"></span>
+                            {% if config.is_auto_sync_enabled %}فعال{% else %}غیرفعال{% endif %}
+                        </h4>
+                        <p class="text-muted mb-0">وضعیت همگام‌سازی خودکار</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sync Actions -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="sync-card">
+                <h4 class="mb-3">
+                    <i class="fas fa-cogs me-2"></i>
+                    عملیات همگام‌سازی
+                </h4>
+                <div class="row">
+                    <div class="col-md-4">
+                        <button class="btn btn-sync w-100 mb-2" onclick="performFullSync()">
+                            <i class="fas fa-sync-alt me-2"></i>
+                            همگام‌سازی کامل
+                        </button>
+                        <small class="text-light">صادر کردن فروش + بررسی واردات</small>
+                    </div>
+                    <div class="col-md-4">
+                        <a href="{% url 'inventory_sync:import_products' %}" class="btn btn-sync w-100 mb-2">
+                            <i class="fas fa-download me-2"></i>
+                            وارد کردن محصولات
+                        </a>
+                        <small class="text-light">انتخاب و وارد کردن از SQLite</small>
+                    </div>
+                    <div class="col-md-4">
+                        <a href="{% url 'inventory_sync:sync_config' %}" class="btn btn-secondary w-100 mb-2">
+                            <i class="fas fa-cog me-2"></i>
+                            تنظیمات
+                        </a>
+                        <small class="text-light">مدیریت تنظیمات همگام‌سازی</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Auto Sync Info -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="stats-card">
+                <h5><i class="fas fa-calendar me-2"></i>آخرین همگام‌سازی خودکار</h5>
+                {% if config.last_auto_sync %}
+                    <p class="mb-1"><strong>{{ config.last_auto_sync|date:"M d, Y H:i" }}</strong></p>
+                    <small class="text-muted">{{ config.last_auto_sync|timesince }} پیش</small>
+                {% else %}
+                    <p class="text-muted mb-0">هرگز</p>
+                {% endif %}
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="stats-card">
+                <h5><i class="fas fa-calendar-check me-2"></i>همگام‌سازی خودکار بعدی</h5>
+                {% if next_auto_sync %}
+                    <p class="mb-1"><strong>{{ next_auto_sync|date:"M d, Y H:i" }}</strong></p>
+                    <small class="text-muted">در {{ next_auto_sync|timeuntil }}</small>
+                {% else %}
+                    <p class="text-muted mb-0">برنامه‌ریزی نشده</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Logs -->
+    <div class="row">
+        <div class="col-12">
+            <div class="stats-card">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5><i class="fas fa-history me-2"></i>گزارش‌های اخیر همگام‌سازی</h5>
+                    <a href="{% url 'inventory_sync:sync_logs' %}" class="btn btn-sm btn-outline-primary">
+                        مشاهده همه
+                    </a>
+                </div>
+                {% if recent_logs %}
+                    {% for log in recent_logs %}
+                        <div class="log-item {% if log.errors %}log-error{% elif log.products_imported > 0 or log.products_exported > 0 %}log-success{% else %}log-warning{% endif %}">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <strong>{{ log.get_sync_type_display }}</strong>
+                                    <p class="mb-1">{{ log.operation }}</p>
+                                    <small class="text-muted">
+                                        {% if log.products_imported > 0 %}وارد شده: {{ log.products_imported }}{% endif %}
+                                        {% if log.products_updated > 0 %}بروزرسانی شده: {{ log.products_updated }}{% endif %}
+                                        {% if log.products_exported > 0 %}صادر شده: {{ log.products_exported }}{% endif %}
+                                        {% if log.duration_seconds %}• {{ log.duration_seconds|floatformat:2 }}ثانیه{% endif %}
+                                    </small>
+                                </div>
+                                <div class="text-end">
+                                    <small class="text-muted">{{ log.executed_at|date:"M d, H:i" }}</small>
+                                    {% if log.executed_by %}
+                                        <br><small class="text-muted">توسط {{ log.executed_by.username }}</small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-muted text-center py-3">هنوز گزارشی وجود ندارد</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Loading Modal -->
+<div class="modal fade" id="loadingModal" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-header border-0 pb-0">
+                <button type="button" class="btn-close" onclick="hideLoading()" title="بستن"></button>
+            </div>
+            <div class="modal-body text-center">
+                <div class="spinner-border text-primary mb-3" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mb-0" id="loadingMessage">در حال پردازش...</p>
+                <small class="text-muted mt-2 d-block">در صورت طولانی شدن عملیات، می‌توانید این پنجره را ببندید</small>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let loadingModal = null;
+
+function showLoading(message = 'در حال پردازش...') {
+    document.getElementById('loadingMessage').textContent = message;
+    
+    // Hide any existing modal first
+    if (loadingModal) {
+        try {
+            loadingModal.hide();
+        } catch (e) {
+            console.log('Error hiding existing modal:', e);
+        }
+    }
+    
+    try {
+        loadingModal = new bootstrap.Modal(document.getElementById('loadingModal'));
+        loadingModal.show();
+    } catch (e) {
+        console.log('Error showing modal:', e);
+    }
+}
+
+function hideLoading() {
+    try {
+        if (loadingModal) {
+            loadingModal.hide();
+            loadingModal = null;
+        } else {
+            // Fallback: try to hide using getInstance
+            const modal = bootstrap.Modal.getInstance(document.getElementById('loadingModal'));
+            if (modal) {
+                modal.hide();
+            }
+        }
+    } catch (e) {
+        console.log('Error hiding modal:', e);
+        // Force hide by removing modal backdrop and classes
+        const modalElement = document.getElementById('loadingModal');
+        if (modalElement) {
+            modalElement.classList.remove('show');
+            modalElement.style.display = 'none';
+            const backdrop = document.querySelector('.modal-backdrop');
+            if (backdrop) {
+                backdrop.remove();
+            }
+        }
+    }
+}
+
+function showAlert(message, type = 'success') {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    document.querySelector('.container-fluid').insertBefore(alertDiv, document.querySelector('.row'));
+    
+    // Auto-dismiss after 5 seconds
+    setTimeout(() => {
+        if (alertDiv.parentNode) {
+            alertDiv.remove();
+        }
+    }, 5000);
+}
+
+async function performFullSync() {
+    if (!confirm('همگام‌سازی کامل انجام شود؟ این کار فروش‌ها را صادر کرده و واردات را بررسی می‌کند.')) {
+        return;
+    }
+    
+    showLoading('در حال انجام همگام‌سازی کامل...');
+    
+    // Add timeout to prevent stuck modal
+    const timeoutId = setTimeout(() => {
+        hideLoading();
+        showAlert('عملیات همگام‌سازی کامل بیش از حد طول کشید. لطفاً دوباره تلاش کنید.', 'warning');
+    }, 120000); // 2 minutes timeout for full sync
+    
+    try {
+        const response = await fetch('{% url "inventory_sync:perform_full_sync" %}', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/json',
+            },
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        clearTimeout(timeoutId); // Clear timeout on success
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showAlert(data.message, 'success');
+            setTimeout(() => location.reload(), 2000);
+        } else {
+            showAlert(data.message, 'danger');
+        }
+    } catch (error) {
+        clearTimeout(timeoutId); // Clear timeout on error
+        showAlert('خطا در انجام همگام‌سازی: ' + error.message, 'danger');
+    } finally {
+        hideLoading();
+    }
+}
+
+async function testConnection() {
+    showLoading('در حال تست اتصال SQLite...');
+    
+    // Add timeout to prevent stuck modal
+    const timeoutId = setTimeout(() => {
+        hideLoading();
+        showAlert('عملیات تست اتصال بیش از حد طول کشید. لطفاً دوباره تلاش کنید.', 'warning');
+    }, 15000); // 15 seconds timeout
+    
+    try {
+        const response = await fetch('{% url "inventory_sync:test_sqlite_connection" %}');
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        clearTimeout(timeoutId); // Clear timeout on success
+        
+        if (data.success) {
+            showAlert(data.message, 'success');
+        } else {
+            showAlert(data.message, 'danger');
+        }
+    } catch (error) {
+        clearTimeout(timeoutId); // Clear timeout on error
+        showAlert('خطا در تست اتصال: ' + error.message, 'danger');
+    } finally {
+        hideLoading();
+    }
+}
+
+async function refreshStatus() {
+    showLoading('در حال بروزرسانی وضعیت...');
+    
+    // Add timeout to prevent stuck modal
+    const timeoutId = setTimeout(() => {
+        hideLoading();
+        showAlert('عملیات بروزرسانی وضعیت بیش از حد طول کشید. لطفاً دوباره تلاش کنید.', 'warning');
+    }, 10000); // 10 seconds timeout
+    
+    try {
+        const response = await fetch('{% url "inventory_sync:get_sync_status" %}');
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        clearTimeout(timeoutId); // Clear timeout on success
+        
+        if (data.success) {
+            document.getElementById('importable-count').textContent = data.status.importable_count;
+            showAlert('وضعیت با موفقیت بروزرسانی شد', 'success');
+        } else {
+            showAlert(data.message, 'danger');
+        }
+    } catch (error) {
+        clearTimeout(timeoutId); // Clear timeout on error
+        showAlert('خطا در بروزرسانی وضعیت: ' + error.message, 'danger');
+    } finally {
+        hideLoading();
+    }
+}
+
+// Auto-refresh disabled - only manual refresh
+// setInterval(refreshStatus, 30000);
+</script>
+{% endblock %} 

@@ -1,0 +1,400 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}📦 مدیریت موجودی - HomayOMS{% endblock %}
+
+{% block extra_css %}
+<style>
+    .inventory-header {
+        background: linear-gradient(135deg, #6f42c1, #e83e8c);
+        color: white;
+        padding: 0.5rem 0;
+        margin-bottom: 0.5rem;
+        border-radius: 15px;
+    }
+    
+    .inventory-header .row:first-child { margin-top: 0 !important; padding-top: 0 !important; }
+    
+    /* Eliminate spacing between header and stats */
+    .inventory-header + .inventory-stats {
+        margin-top: 0;
+        padding-top: 0;
+    }
+    
+    .inventory-stats {
+        background: white;
+        border-radius: 15px;
+        padding: 1.5rem;
+        margin-bottom: 0.5rem;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+    }
+    
+    .stat-box {
+        text-align: center;
+        padding: 1.5rem;
+        border-radius: 12px;
+        margin-bottom: 1rem;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .stat-box::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1));
+        pointer-events: none;
+    }
+    
+    .stat-primary { background: linear-gradient(45deg, #6f42c1, #e83e8c); color: white; }
+    .stat-success { background: linear-gradient(45deg, #28a745, #20c997); color: white; }
+    .stat-warning { background: linear-gradient(45deg, #ffc107, #fd7e14); color: white; }
+    .stat-danger { background: linear-gradient(45deg, #dc3545, #c82333); color: white; }
+    .stat-info { background: linear-gradient(45deg, #17a2b8, #6f42c1); color: white; }
+    
+    .warehouse-section {
+        background: white;
+        border-radius: 15px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+    }
+    
+    .warehouse-card {
+        border: 2px solid #e9ecef;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        transition: all 0.3s ease;
+        background: linear-gradient(135deg, #f8f9fa, #ffffff);
+    }
+    
+    .warehouse-card:hover {
+        border-color: #6f42c1;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(111, 66, 193, 0.15);
+    }
+    
+    .warehouse-header {
+        display: flex;
+        justify-content: between;
+        align-items: center;
+        margin-bottom: 1rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid #e9ecef;
+    }
+    
+    .warehouse-name {
+        font-size: 1.1rem;
+        font-weight: bold;
+        color: #6f42c1;
+    }
+    
+    .capacity-bar {
+        background: #e9ecef;
+        height: 8px;
+        border-radius: 4px;
+        overflow: hidden;
+        margin: 0.5rem 0;
+    }
+    
+    .capacity-fill {
+        height: 100%;
+        transition: width 0.3s ease;
+    }
+    
+    .capacity-low { background: linear-gradient(90deg, #28a745, #20c997); }
+    .capacity-medium { background: linear-gradient(90deg, #ffc107, #fd7e14); }
+    .capacity-high { background: linear-gradient(90deg, #dc3545, #c82333); }
+    
+    .product-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+    
+    .product-mini-card {
+        background: white;
+        border: 1px solid #e9ecef;
+        border-radius: 8px;
+        padding: 1rem;
+        text-align: center;
+        transition: all 0.3s ease;
+    }
+    
+    .product-mini-card:hover {
+        border-color: #6f42c1;
+        box-shadow: 0 4px 12px rgba(111, 66, 193, 0.15);
+    }
+    
+    .product-status {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        display: inline-block;
+        margin-left: 5px;
+    }
+    
+    .status-available { background: #28a745; }
+    .status-low { background: #ffc107; }
+    .status-out { background: #dc3545; }
+    
+    .quick-actions {
+        background: white;
+        border-radius: 15px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+    }
+    
+    .action-btn {
+        padding: 1rem;
+        border-radius: 12px;
+        border: 2px solid #e9ecef;
+        background: white;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        color: #495057;
+        display: block;
+        text-align: center;
+    }
+    
+    .action-btn:hover {
+        border-color: #6f42c1;
+        background: #6f42c1;
+        color: white;
+        transform: translateY(-2px);
+        text-decoration: none;
+    }
+    
+    .action-btn-strong {
+        font-weight: bold;
+        font-size: 1.1rem;
+        box-shadow: 0 4px 16px rgba(111,66,193,0.08);
+        border-width: 2px;
+        transition: all 0.2s;
+    }
+    .action-btn-create {
+        background: linear-gradient(45deg, #28a745, #20c997);
+        color: white;
+        border-color: #28a745;
+    }
+    .action-btn-create:hover {
+        background: linear-gradient(45deg, #20c997, #28a745);
+        color: #fff;
+        border-color: #20c997;
+    }
+    .action-btn-update {
+        background: linear-gradient(45deg, #007bff, #0056b3);
+        color: white;
+        border-color: #007bff;
+    }
+    .action-btn-update:hover {
+        background: linear-gradient(45deg, #0056b3, #007bff);
+        color: #fff;
+        border-color: #0056b3;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Inventory Header -->
+    <div class="inventory-header">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 class="display-5 mb-3">📦 مدیریت موجودی انبار</h1>
+                <p class="lead mb-0">نظارت و کنترل موجودی محصولات در تمام انبارها</p>
+            </div>
+            <div class="col-md-4 text-end">
+                <a href="{% url 'core:admin_dashboard' %}" class="btn btn-light me-2" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 15px; padding: 12px 25px; font-weight: 600; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3); transition: all 0.3s ease;">
+                    ↩️ بازگشت به داشبورد مدیریت
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Overall Statistics -->
+    <div class="inventory-stats">
+        <h4 class="mb-2">📊 آمار کلی موجودی</h4>
+        <div class="row">
+            <div class="col-md-2">
+                <div class="stat-box stat-primary">
+                    <h3>{{ inventory_stats.total_products }}</h3>
+                    <small>📦 کل اقلام</small>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="stat-box stat-success">
+                    <h3>{{ inventory_stats.in_stock_count }}</h3>
+                    <small>✅ موجود</small>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="stat-box stat-warning">
+                    <h3>{{ inventory_stats.sold_count }}</h3>
+                    <small>💰 فروخته شده</small>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="stat-box stat-danger">
+                    <h3>{{ inventory_stats.pre_order_count }}</h3>
+                    <small>⏳ پیش‌سفارش</small>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="stat-box stat-info">
+                    <h3>{{ inventory_stats.warehouse_capacity_percentage }}%</h3>
+                    <small>📈 ظرفیت انبار</small>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="stat-box stat-primary">
+                    <h3>{{ inventory_stats.warehouses_count }}</h3>
+                    <small>🏢 انبارها</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="quick-actions">
+        <h4 class="mb-4">⚡ عملیات سریع</h4>
+        <div class="row justify-content-center">
+            <div class="col-md-4 mb-3">
+                <a href="{% url 'core:add_product' %}" class="action-btn action-btn-strong action-btn-create">
+                    <div class="mb-2" style="font-size:2rem;">➕</div>
+                    <strong style="font-size:1.2rem;">افزودن محصول جدید</strong>
+                    <small class="d-block text-muted">ثبت محصول جدید در انبار</small>
+                </a>
+            </div>
+            <div class="col-md-4 mb-3">
+                <a href="{% url 'core:products_list' %}" class="action-btn action-btn-strong action-btn-update">
+                    <div class="mb-2" style="font-size:2rem;">🔄</div>
+                    <strong style="font-size:1.2rem;">بروزرسانی موجودی</strong>
+                    <small class="d-block text-muted">تغییر تعداد یا وضعیت محصول</small>
+                </a>
+            </div>
+        </div>
+    </div>
+
+
+
+    <!-- Warehouses Overview -->
+    <div class="warehouse-section">
+        <h4 class="mb-4">🏢 نمای کلی انبارها</h4>
+        
+        <!-- Dynamic Warehouse Cards -->
+        {% for location_code, location_data in inventory_stats.location_stats.items %}
+        <div class="warehouse-card">
+            <div class="warehouse-header">
+                <div>
+                    <div class="warehouse-name">{{ location_data.name }}</div>
+                    <small class="text-muted">
+                        {% if location_code == 'Anbar_Akhal' %}انبار اصلی محصولات
+                        {% elif location_code == 'Anbar_Muhvateh_Kordan' %}انبار فرعی محوطه
+                        {% elif location_code == 'Anbar_Khamir_Kordan' %}انبار کردان
+                        {% elif location_code == 'Anbar_Khamir_Ghadim' %}انبار خمیر قدیم
+                        {% elif location_code == 'Anbar_Koochak' %}انبار کوچک
+                        {% elif location_code == 'Anbar_Salon_Tolid' %}انبار سالن تولید
+                        {% elif location_code == 'Anbar_Sangin' %}انبار سنگین
+                        {% else %}انبار محصولات{% endif %}
+                    </small>
+                </div>
+                <div class="text-end">
+                    {% if location_data.total > 0 %}
+                        <span class="badge bg-success">✅ فعال</span>
+                    {% else %}
+                        <span class="badge bg-secondary">⏸️ خالی</span>
+                    {% endif %}
+                    <div class="mt-1">
+                        <small class="text-muted">ظرفیت: {{ location_data.capacity_percentage }}%</small>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="text-center">
+                        <h5 class="text-primary">{{ location_data.total }}</h5>
+                        <small class="text-muted">📦 محصولات</small>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="text-center">
+                        <h5 class="text-success">{{ location_data.in_stock }}</h5>
+                        <small class="text-muted">✅ موجود</small>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="text-center">
+                        <h5 class="text-warning">{{ location_data.sold }}</h5>
+                        <small class="text-muted">💰 فروخته شده</small>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="text-center">
+                        <h5 class="text-danger">{{ location_data.pre_order }}</h5>
+                        <small class="text-muted">⏳ پیش‌سفارش</small>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="capacity-bar">
+                <div class="capacity-fill 
+                    {% if location_data.capacity_percentage >= 70 %}capacity-high
+                    {% elif location_data.capacity_percentage >= 40 %}capacity-medium
+                    {% else %}capacity-low{% endif %}" 
+                    style="width: {{ location_data.capacity_percentage }}%"></div>
+            </div>
+            
+            <div class="product-grid">
+                {% for product in location_data.products %}
+                <div class="product-mini-card">
+                    <div class="product-status 
+                        {% if product.status == 'In-stock' %}status-available
+                        {% elif product.status == 'Sold' %}status-out
+                        {% else %}status-low{% endif %}"></div>
+                    <strong>{{ product.reel_number }}</strong>
+                    <div><small>{{ product.length }}m - {{ product.grade }}</small></div>
+                    <div><small class="
+                        {% if product.status == 'In-stock' %}text-success
+                        {% elif product.status == 'Sold' %}text-danger
+                        {% else %}text-warning{% endif %}">
+                        {% if product.status == 'In-stock' %}موجود
+                        {% elif product.status == 'Sold' %}فروخته شده
+                        {% else %}پیش‌سفارش{% endif %}
+                    </small></div>
+                </div>
+                {% empty %}
+                <div class="text-center text-muted">
+                    <small>📦 محصولی در این انبار موجود نیست</small>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% empty %}
+        <div class="text-center">
+            <p class="text-muted">📦 هیچ انباری یافت نشد</p>
+        </div>
+        {% endfor %}
+
+        <!-- More warehouses can be added here -->
+        <div class="text-center mt-4">
+            <button class="btn btn-outline-primary btn-lg" onclick="viewAllWarehouses()">
+                🏢 مشاهده همه انبارها
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// حذف توابع addNewProduct و updateInventory و showNotification و ...
+</script>
+{% endblock %} 

@@ -1,0 +1,454 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}💰 نمای کلی مالی - HomayOMS{% endblock %}
+
+{% block extra_css %}
+<style>
+    .finance-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 1.5rem 0;
+        margin-bottom: 0.5rem;
+        border-radius: 15px;
+    }
+    
+    .stat-card {
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 15px;
+        padding: 1.5rem;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        transition: transform 0.3s ease;
+        border-left: 5px solid;
+        margin-bottom: 0;
+        backdrop-filter: blur(10px);
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-5px);
+    }
+    
+    .stat-card.revenue { border-left-color: #28a745; }
+    .stat-card.expenses { border-left-color: #dc3545; }
+    .stat-card.profit { border-left-color: #007bff; }
+    .stat-card.orders { border-left-color: #ffc107; }
+    
+    .stat-number {
+        font-size: 2.5rem;
+        font-weight: bold;
+        margin-bottom: 0.5rem;
+        color: #333 !important;
+    }
+    
+    .stat-label {
+        color: #495057 !important;
+        font-size: 1rem;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+    }
+    
+    .stat-change {
+        font-size: 0.875rem;
+        font-weight: bold;
+    }
+    
+    .stat-change.positive { color: #28a745 !important; }
+    .stat-change.negative { color: #dc3545 !important; }
+    
+    .report-section {
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 15px;
+        padding: 1.5rem;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        margin-bottom: 0;
+        backdrop-filter: blur(10px);
+    }
+    
+    .report-section h5 {
+        color: #333 !important;
+        font-weight: 700;
+    }
+    
+    .report-section .table {
+        background: white;
+        border-radius: 10px;
+        overflow: hidden;
+    }
+    
+    .report-section .table th {
+        background-color: #667eea !important;
+        color: white !important;
+        border: none;
+        font-weight: 600;
+    }
+    
+    .report-section .table td {
+        color: #333 !important;
+        border-color: #e9ecef;
+        vertical-align: middle;
+    }
+    
+    .report-section .table tbody tr:hover {
+        background-color: #f8f9fa;
+    }
+    
+    .btn-finance {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        color: white;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        font-weight: bold;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-finance:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        color: white;
+    }
+    
+    .badge-status {
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: bold;
+        text-shadow: none;
+    }
+    
+    .badge-paid { 
+        background-color: #d4edda !important; 
+        color: #155724 !important; 
+        border: 1px solid #c3e6cb;
+    }
+    .badge-pending { 
+        background-color: #fff3cd !important; 
+        color: #856404 !important; 
+        border: 1px solid #ffeaa7;
+    }
+    .badge-overdue { 
+        background-color: #f8d7da !important; 
+        color: #721c24 !important; 
+        border: 1px solid #f5c6cb;
+    }
+    
+    /* Ensure form elements are visible */
+    .form-label {
+        font-weight: 600 !important;
+        margin-bottom: 0.5rem !important;
+    }
+    
+    .form-select, .form-control {
+        background-color: white !important;
+        border: 1px solid #ced4da !important;
+        color: #495057 !important;
+    }
+    
+    .form-select:focus, .form-control:focus {
+        border-color: #667eea !important;
+        box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25) !important;
+    }
+    
+    /* Fix button visibility in header */
+    .finance-header .btn-light {
+        background-color: rgba(255, 255, 255, 0.9) !important;
+        color: #495057 !important;
+        border: 1px solid rgba(255, 255, 255, 0.3) !important;
+        font-weight: 600 !important;
+    }
+    
+    .finance-header .btn-light:hover {
+        background-color: white !important;
+        color: #333 !important;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    }
+    
+    .finance-header .btn-outline-light {
+        background-color: transparent !important;
+        color: white !important;
+        border: 2px solid white !important;
+        font-weight: 600 !important;
+    }
+    
+    .finance-header .btn-outline-light:hover {
+        background-color: white !important;
+        color: #495057 !important;
+    }
+    
+    /* Fix summary section text visibility */
+    .report-section h6 {
+        color: #333 !important;
+        font-weight: 700 !important;
+        margin-bottom: 1rem !important;
+    }
+    
+    .report-section .list-unstyled li {
+        color: #495057 !important;
+        font-weight: 500 !important;
+        margin-bottom: 0.5rem !important;
+        padding: 0.25rem 0 !important;
+    }
+    
+    /* Fix button in report section */
+    .report-section .btn-light {
+        background-color: #667eea !important;
+        color: white !important;
+        border: none !important;
+        font-weight: 600 !important;
+        padding: 0.75rem 1.5rem !important;
+        border-radius: 8px !important;
+        transition: all 0.3s ease !important;
+    }
+    
+    .report-section .btn-light:hover {
+        background-color: #5a6fd8 !important;
+        color: white !important;
+        transform: translateY(-2px) !important;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3) !important;
+    }
+    
+    /* Ensure breadcrumb is visible */
+    .breadcrumb {
+        background-color: rgba(255, 255, 255, 0.9) !important;
+        border-radius: 10px;
+        padding: 0.75rem 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .breadcrumb-item a {
+        color: #667eea !important;
+        text-decoration: none;
+    }
+    
+    .breadcrumb-item.active {
+        color: #6c757d !important;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Navigation -->
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+                            <li class="breadcrumb-item"><a href="{% url 'core:admin_dashboard' %}">🏠 داشبورد</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'core:finance_dashboard' %}">💰 مالی</a></li>
+            <li class="breadcrumb-item active">نمای کلی</li>
+        </ol>
+    </nav>
+
+    <!-- Complete Finance Overview Section -->
+    <div class="finance-header">
+        <div class="container">
+            <div class="row align-items-center mb-3">
+                <div class="col-md-8 text-center text-md-start">
+                    <h1 class="mb-2">💰 نمای کلی مالی</h1>
+                    <p class="lead mb-0">گزارش‌های تفصیلی مالی و تحلیل عملکرد</p>
+                </div>
+                <div class="col-md-4 text-center text-md-end">
+                    <a href="{% url 'core:finance_dashboard' %}" class="btn btn-light me-2">
+                        🏠 داشبورد مالی
+                    </a>
+                    <a href="{% url 'core:admin_dashboard' %}" class="btn btn-outline-light">
+                        🏠 داشبورد اصلی
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Filter Controls -->
+            <div class="row mb-3">
+                <div class="col-md-4">
+                    <label class="form-label text-white">Filter by:</label>
+                    <select class="form-select" id="filterBy">
+                        <option value="today">Today</option>
+                        <option value="this_week">This Week</option>
+                        <option value="this_month" selected>This Month</option>
+                        <option value="recently_changed">Recently Changed</option>
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label text-white">جستجو:</label>
+                    <input type="text" class="form-control" placeholder="جستجو در گزارش‌ها..." id="searchFilter">
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button class="btn btn-light w-100" onclick="updateReports()">
+                        🔄 بروزرسانی
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Statistics Cards -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="stat-card revenue">
+                        <div class="stat-number text-success" id="totalRevenue">{{ financial_stats.total_revenue|floatformat:0 }} ت</div>
+                        <div class="stat-label">💰 کل درآمد</div>
+                        <div class="stat-change {% if financial_stats.revenue_change >= 0 %}positive{% else %}negative{% endif %}">
+                            {% if financial_stats.revenue_change >= 0 %}↗️{% else %}↘️{% endif %} {{ financial_stats.revenue_change|floatformat:1 }}% نسبت به دوره قبل
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card expenses">
+                        <div class="stat-number text-danger" id="totalExpenses">{{ financial_stats.total_expenses|floatformat:0 }} ت</div>
+                        <div class="stat-label">💸 کل هزینه‌ها</div>
+                        <div class="stat-change negative">
+                            💰 هزینه‌های عملیاتی
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card profit">
+                        <div class="stat-number text-primary" id="netProfit">{{ financial_stats.net_profit|floatformat:0 }} ت</div>
+                        <div class="stat-label">📈 سود خالص</div>
+                        <div class="stat-change {% if financial_stats.net_profit >= 0 %}positive{% else %}negative{% endif %}">
+                            {% if financial_stats.net_profit >= 0 %}↗️{% else %}↘️{% endif %} سود خالص
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card orders">
+                        <div class="stat-number text-warning" id="totalOrders">{{ financial_stats.total_orders }}</div>
+                        <div class="stat-label">🛒 تعداد سفارشات</div>
+                        <div class="stat-change {% if financial_stats.orders_change >= 0 %}positive{% else %}negative{% endif %}">
+                            {% if financial_stats.orders_change >= 0 %}↗️{% else %}↘️{% endif %} {{ financial_stats.orders_change|floatformat:1 }}% نسبت به دوره قبل
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Financial Reports -->
+            <div class="row mb-4">
+                <div class="col-md-12">
+                    <div class="report-section">
+                        <h5 class="mb-3 text-white">🧾 آخرین تراکنش‌ها</h5>
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>📅 تاریخ</th>
+                                        <th>🏷️ شماره سفارش</th>
+                                        <th>💰 مبلغ</th>
+                                        <th>📊 وضعیت سفارش</th>
+                                        <th>💳 وضعیت پرداخت</th>
+                                        <th>👤 مشتری</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for transaction in recent_transactions %}
+                                    <tr>
+                                        <td><span class="jalali-date" data-date="{{ transaction.created_at|date:'Y-m-d H:i:s' }}">{{ transaction.created_at|date:"Y/m/d H:i" }}</span></td>
+                                        <td>{{ transaction.order_number }}</td>
+                                        <td class="text-success">+{{ transaction.final_amount|floatformat:0 }} ت</td>
+                                        <td>
+                                            {% if transaction.status == 'Confirmed' %}
+                                                <span class="badge-status badge-paid">✅ تایید شده</span>
+                                            {% elif transaction.status == 'Delivered' %}
+                                                <span class="badge-status badge-paid">🚚 تحویل شده</span>
+                                            {% elif transaction.status == 'Pending' %}
+                                                <span class="badge-status badge-pending">⏳ در انتظار</span>
+                                            {% elif transaction.status == 'Processing' %}
+                                                <span class="badge-status badge-pending">🔄 در حال پردازش</span>
+                                            {% elif transaction.status == 'Cancelled' %}
+                                                <span class="badge-status badge-overdue">❌ لغو شده</span>
+                                            {% else %}
+                                                <span class="badge-status badge-pending">{{ transaction.get_status_display }}</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if transaction.latest_payment %}
+                                                {% if transaction.latest_payment.status == 'SUCCESS' %}
+                                                    <span class="badge-status badge-paid">✅ پرداخت شده</span>
+                                                {% elif transaction.latest_payment.status == 'PENDING' %}
+                                                    <span class="badge-status badge-pending">⏳ در انتظار پرداخت</span>
+                                                {% elif transaction.latest_payment.status == 'FAILED' %}
+                                                    <span class="badge-status badge-overdue">❌ پرداخت ناموفق</span>
+                                                {% else %}
+                                                    <span class="badge-status badge-pending">{{ transaction.latest_payment.get_status_display }}</span>
+                                                {% endif %}
+                                            {% else %}
+                                                <span class="badge-status badge-pending">⏳ بدون پرداخت</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ transaction.customer.customer_name }}</td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="6" class="text-center text-light">هیچ تراکنشی در این بازه زمانی یافت نشد</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="text-center mt-3">
+                            <a href="{% url 'core:orders_list' %}" class="btn btn-light">📄 مشاهده همه سفارشات</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+
+        </div>
+    </div>
+    
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Update Reports Function
+    function updateReports() {
+        const filterBy = document.getElementById('filterBy').value;
+        const searchFilter = document.getElementById('searchFilter').value;
+        
+        // Show loading state
+        const elements = ['totalRevenue', 'totalExpenses', 'netProfit', 'totalOrders'];
+        elements.forEach(id => {
+            document.getElementById(id).textContent = '⏳ در حال بارگذاری...';
+        });
+        
+        // Redirect to the same page with new filter parameter
+        const currentUrl = new URL(window.location);
+        currentUrl.searchParams.set('filterBy', filterBy);
+        if (searchFilter) {
+            currentUrl.searchParams.set('search', searchFilter);
+        }
+        window.location.href = currentUrl.toString();
+    }
+    
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        // Set the current filter in the select
+        const filterBy = '{{ filter_by }}';
+        if (filterBy) {
+            document.getElementById('filterBy').value = filterBy;
+        }
+        
+        // Add real-time search functionality
+        document.getElementById('searchFilter').addEventListener('input', function(e) {
+            const searchTerm = e.target.value.toLowerCase();
+            const rows = document.querySelectorAll('tbody tr');
+            
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                if (text.includes(searchTerm)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        });
+        
+        // Add search term from URL if present
+        const urlParams = new URLSearchParams(window.location.search);
+        const searchParam = urlParams.get('search');
+        if (searchParam) {
+            document.getElementById('searchFilter').value = searchParam;
+            // Trigger search
+            const event = new Event('input');
+            document.getElementById('searchFilter').dispatchEvent(event);
+        }
+    });
+</script>
+{% endblock %} 

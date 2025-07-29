@@ -1,0 +1,1019 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}{{ title }}{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/main.css' %}">
+<link rel="stylesheet" href="{% static 'css/mobile.css' %}">
+<link rel="stylesheet" href="{% static 'css/selection-styles.css' %}">
+<style>
+    /* Un-priced products styling */
+    .un-priced-row {
+        border-bottom: 2px solid #dc3545 !important;
+        position: relative;
+    }
+    
+    .un-priced-row .selection-btn {
+        background: #6c757d !important;
+        color: white !important;
+        cursor: not-allowed !important;
+        opacity: 0.6;
+        pointer-events: none;
+    }
+    
+    .un-priced-row .selection-btn:hover {
+        background: #6c757d !important;
+        transform: none !important;
+    }
+    
+    .un-priced-row .selection-icon {
+        color: #dc3545 !important;
+    }
+    
+    .un-priced-row .selection-btn span:last-child {
+        color: #dc3545 !important;
+        font-weight: bold;
+    }
+    
+    .un-priced-warning {
+        background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+        border: 2px solid #ffc107;
+        border-radius: 10px;
+        padding: 15px;
+        margin: 10px 0;
+        text-align: center;
+        color: #856404;
+        font-weight: 600;
+        box-shadow: 0 4px 15px rgba(255, 193, 7, 0.2);
+    }
+    
+    .un-priced-warning::before {
+        content: "⚠️ ";
+        font-size: 1.2rem;
+    }
+</style>
+{% endblock %}
+{% block content %}
+{% csrf_token %}
+
+    <!-- Cash Purchase Disabled Alert -->
+    <div id="cashPurchaseDisabledAlert" class="alert alert-warning text-center" style="display: none; margin: 20px auto; max-width: 800px;">
+        <div class="d-flex align-items-center justify-content-center">
+            <span style="font-size: 24px; margin-right: 10px;">⚠️</span>
+            <strong>توجه:</strong>
+            <span class="mx-2">در حال حاضر امکان خرید نقدی غیرفعال می‌باشد.</span>
+        </div>
+    </div>
+
+    <div class="container">
+        <nav class="navbar">
+            <div class="navbar-header">
+                <span class="navbar-logo">کارخانه کاغذ و مقوای همایون</span>
+                <button class="navbar-toggle" onclick="toggleMenu()">☰</button>
+            </div>
+            <ul class="nav-list" id="navbarMenu">
+                {% if user.is_authenticated %}
+                <li class="nav-item"><a href="{% url 'accounts:logout' %}" class="nav-link">خروج</a></li>
+                {% else %}
+                <li class="nav-item"><a href="{% url 'accounts:customer_sms_login' %}" class="nav-link">ورود</a></li>
+                {% endif %}
+            </ul>
+        </nav>
+
+        <!-- Main Content - Shown during working hours -->
+        <main class="main-content" id="mainContent">
+            
+            <section id="cashSection" class="section cash-section">
+                <div class="info-grid">
+                    <!-- Removed the info-card for product count -->
+                </div>
+
+                <!-- جدول موجودی نقدی -->
+                <div class="stock-table-container">
+                    <h3 class="stock-title">موجودی نقدی - انتخاب محصول</h3>
+                    
+                    <div class="selected-count">
+                        تعداد انتخاب شده: <span id="cashSelectedCount">0</span> از <span id="cashTotalCount">0</span>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="stock-table" id="cashStockTable">
+                            <thead>
+                                <tr>
+                                    <th>انتخاب</th>
+                                    <th>عرض (mm)</th>
+                                    <th>گرماژ (g/m²)</th>
+                                    <th>طول (m)</th>
+                                    <th>قیمت (تومان)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% if products %}
+                                {% for product in products %}
+                                <tr class="stock-row" data-type="cash" data-product-id="{{ product.id }}">
+                                    <td>
+                                      <button class="selection-btn" data-section="cash" type="button">
+                                        <span class="selection-icon">⭕</span>
+                                        <span>انتخاب</span>
+                                      </button>
+                                      <input type="checkbox" class="stock-checkbox" data-section="cash" style="display:none;">
+                                    </td>
+                                    <td>{{ product.width }}</td>
+                                    <td>{{ product.gsm }}</td>
+                                    <td>{{ product.length }}</td>
+                                    <td>{{ product.price|floatformat:0 }}</td>
+                                </tr>
+                                {% endfor %}
+                                {% else %}
+                                <tr>
+                                    <td colspan="5" class="text-center">
+                                        <div class="no-products-message">
+                                            <p>🔍 محصولی در انبار یافت نشد</p>
+                                            <small>لطفاً بعداً مراجعه کنید یا با مدیر سیستم تماس بگیرید</small>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="button-container">
+                    <button class="purchase-btn cash-btn" type="button" onclick="handleCashPurchase()" id="cashPurchaseBtn" disabled>
+                        <span class="btn-icon">💰</span>
+                        <span class="btn-text">خرید نقدی</span>
+                    </button>
+                </div>
+            </section>
+
+            <section id="creditSection" class="section credit-section">
+                <div class="section-header">
+                    <h2 class="section-title">نسیه</h2>
+                </div>
+
+                <div class="info-grid">
+                    <!-- Removed the info-card for credit section -->
+                </div>
+
+                <!-- جدول موجودی نسیه -->
+                <div class="stock-table-container">
+                    <h3 class="stock-title">موجودی نسیه - انتخاب محصول</h3>
+                    
+                    <div class="selected-count">
+                        تعداد انتخاب شده: <span id="creditSelectedCount">0</span> از <span id="creditTotalCount">0</span>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="stock-table" id="creditStockTable">
+                            <thead>
+                                <tr>
+                                    <th>انتخاب</th>
+                                    <th>عرض (mm)</th>
+                                    <th>گرماژ (g/m²)</th>
+                                    <th>طول (m)</th>
+                                    <th>قیمت (تومان)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% if products %}
+                                {% for product in products %}
+                                <tr class="stock-row" data-type="credit" data-product-id="{{ product.id }}">
+                                    <td>
+                                      <button class="selection-btn" data-section="credit" type="button">
+                                        <span class="selection-icon">⭕</span>
+                                        <span>انتخاب</span>
+                                      </button>
+                                      <input type="checkbox" class="stock-checkbox" data-section="credit" style="display:none;">
+                                    </td>
+                                    <td>{{ product.width }}</td>
+                                    <td>{{ product.gsm }}</td>
+                                    <td>{{ product.length }}</td>
+                                    <td>{{ product.price|floatformat:0 }}</td>
+                                </tr>
+                                {% endfor %}
+                                {% else %}
+                                <tr>
+                                    <td colspan="5" class="text-center">
+                                        <div class="no-products-message">
+                                            <p>🔍 محصولی در انبار یافت نشد</p>
+                                            <small>لطفاً بعداً مراجعه کنید یا با مدیر سیستم تماس بگیرید</small>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="button-container">
+                    <button class="purchase-btn credit-btn" type="button" onclick="handleCreditPurchase()" id="creditPurchaseBtn"
+                        disabled>
+                        <span class="btn-icon">📋</span>
+                        <span class="btn-text">خرید نسیه</span>
+                    </button>
+                </div>
+            </section>
+
+            <!-- 🔄 Unfinished Payment Orders Section -->
+            {% if user.is_authenticated and unfinished_payment_orders %}
+            <section id="unfinishedOrdersSection" class="section unfinished-orders-section">
+                <div class="section-header">
+                    <h2 class="section-title">🔄 سفارشات پرداخت نشده</h2>
+                    <p class="section-subtitle">سفارشاتی که پرداخت آن‌ها تکمیل نشده است</p>
+                </div>
+
+                <div class="unfinished-orders-container">
+                    {% for order_data in unfinished_payment_orders %}
+                    <div class="unfinished-order-card">
+                        <div class="order-header">
+                            <div class="order-info">
+                                <h4 class="order-number">{{ order_data.order_number }}</h4>
+                                <p class="order-date">
+                                    <span class="jalali-date" data-date="{{ order_data.order_date|date:'Y-m-d H:i:s' }}">
+                                        {{ order_data.order_date|date:"Y/m/d H:i" }}
+                                    </span>
+                                </p>
+                            </div>
+                            <div class="order-status">
+                                <span class="status-badge pending">در انتظار پرداخت</span>
+                            </div>
+                        </div>
+
+                        <div class="order-details">
+                            <div class="order-summary">
+                                <div class="summary-item">
+                                    <span class="label">تعداد اقلام:</span>
+                                    <span class="value">{{ order_data.cash_items_count }} محصول</span>
+                                </div>
+                                <div class="summary-item">
+                                    <span class="label">مبلغ قابل پرداخت:</span>
+                                    <span class="value amount">{{ order_data.total_cash_amount|floatformat:0 }} تومان</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="order-actions">
+                            <button class="continue-payment-btn" type="button" 
+                                    onclick="continuePayment('{{ order_data.order.id }}')"
+                                    data-order-id="{{ order_data.order.id }}">
+                                <span class="btn-icon">💳</span>
+                                <span class="btn-text">ادامه پرداخت</span>
+                            </button>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </section>
+            {% endif %}
+        </main>
+
+        <!-- Closed Content - Shown outside working hours -->
+        <main class="closed-content" id="closedContent" style="display: none;">
+            <div class="closed-container">
+                <div class="closed-icon">🔒</div>
+                <h2 class="closed-title">سایت در حال حاضر بسته است</h2>
+
+                <p class="closed-message">
+                    متأسفانه در حال حاضر خارج از ساعت کاری هستیم.
+                    لطفاً در ساعت کاری مجدداً مراجعه فرمایید.
+                </p>
+
+                <div class="working-hours-info">
+                    <h3 class="working-hours-title">ساعت کاری:</h3>
+                    <div class="working-hours-time" id="workingHoursDisplay">
+                        از 08:00 تا 18:00
+                    </div>
+                </div>
+
+                <div class="contact-info-closed">
+                    <h4>اطلاعات تماس:</h4>
+                    <p>📞 تلفن: 021-12345678</p>
+                    <p>📧 ایمیل: info@homayounpaper.com</p>
+                    <p>📍 آدرس: تهران، خیابان ولیعصر</p>
+                </div>
+
+                <button class="refresh-btn" onclick="checkWorkingHours()">
+                    <span class="btn-text">بررسی مجدد</span>
+                </button>
+            </div>
+        </main>
+
+        <!-- Footer - Always visible -->
+        <footer id="contactSection" class="footer">
+            <div class="footer-content">
+                <div class="footer-section contact-info">
+                    <h3 class="footer-title">اطلاعات تماس</h3>
+                    <div class="contact-items">
+                        <div class="contact-item">
+                            <span class="contact-icon">📞</span>
+                            <div class="contact-details">
+                                <span class="contact-label">تلفن تماس:</span>
+                                <span class="contact-value">۰۲۱-۱۲۳۴۵۶۷۸</span>
+                            </div>
+                        </div>
+                        <div class="contact-item">
+                            <span class="contact-icon">📱</span>
+                            <div class="contact-details">
+                                <span class="contact-label">موبایل:</span>
+                                <span class="contact-value">۰۹۱۲-۳۴۵-۶۷۸۹</span>
+                            </div>
+                        </div>
+                        <div class="contact-item email-item">
+                            <span class="contact-icon">📧</span>
+                            <div class="contact-details">
+                                <span class="contact-label">ایمیل:</span>
+                                <span class="contact-value">info@homayounpaper.com</span>
+                            </div>
+                        </div>
+                        <div class="contact-item">
+                            <span class="contact-icon">📍</span>
+                            <div class="contact-details">
+                                <span class="contact-label">آدرس:</span>
+                                <span class="contact-value">تهران، خیابان ولیعصر، پلاک ۱۲۳</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="footer-section working-hours">
+                    <h3 class="footer-title">ساعات کاری</h3>
+                    <div class="hours-info">
+                        <div class="hours-item">
+                            <span class="hours-label">شنبه تا چهارشنبه:</span>
+                            <span class="hours-value">۰۸:۰۰ - ۱۸:۰۰</span>
+                        </div>
+                        <div class="hours-item">
+                            <span class="hours-label">پنج‌شنبه:</span>
+                            <span class="hours-label">۰۸:۰۰ - ۱۶:۰۰</span>
+                        </div>
+                        <div class="hours-item">
+                            <span class="hours-label">جمعه:</span>
+                            <span class="hours-value">تعطیل</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="footer-section about-us">
+                    <h3 class="footer-title">درباره ما</h3>
+                    <p class="about-text">
+                        کارخانه کاغذ و مقوای همایون با بیش از ۲۰ سال تجربه در تولید و فروش
+                        انواع کاغذ و مقوا، ارائه‌دهنده بهترین محصولات با کیفیت و قیمت مناسب می‌باشد.
+                    </p>
+                    <div class="social-links">
+                        <a href="#" class="social-link">📘</a>
+                        <a href="#" class="social-link">📷</a>
+                        <a href="#" class="social-link">📞</a>
+                    </div>
+                </div>
+            </div>
+        </footer>
+    </div>
+{% endblock %}
+
+<style>
+
+
+
+.summary-card {
+    background: linear-gradient(135deg, #fff5f5, #fef7ff);
+    border: 2px solid #e5e7eb;
+    border-radius: 15px;
+    padding: 2rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+}
+
+.summary-card:hover {
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+}
+
+.summary-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #e5e7eb;
+}
+
+.summary-header h4 {
+    margin: 0;
+    color: #374151;
+    font-weight: 600;
+}
+
+.orders-count {
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.summary-stats {
+    margin-bottom: 1.5rem;
+}
+
+.order-preview {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    background: white;
+    border-radius: 10px;
+    margin-bottom: 0.75rem;
+    border: 1px solid #e5e7eb;
+    transition: all 0.3s ease;
+}
+
+.order-preview:hover {
+    background: #f9fafb;
+    border-color: #d1d5db;
+}
+
+.order-info strong {
+    color: #374151;
+    font-size: 0.95rem;
+}
+
+.order-info small {
+    color: #6b7280;
+    font-size: 0.8rem;
+}
+
+.status-badge {
+    padding: 0.4rem 0.8rem;
+    border-radius: 15px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-align: center;
+    min-width: 100px;
+}
+
+.status-badge.warning {
+    background: #fef3c7;
+    color: #92400e;
+    border: 1px solid #f59e0b;
+}
+
+.status-badge.info {
+    background: #dbeafe;
+    color: #1e40af;
+    border: 1px solid #3b82f6;
+}
+
+.status-badge.danger {
+    background: #fee2e2;
+    color: #991b1b;
+    border: 1px solid #ef4444;
+}
+
+.status-badge.secondary {
+    background: #f3f4f6;
+    color: #374151;
+    border: 1px solid #9ca3af;
+}
+
+.status-badge.pending {
+    background: #fef3c7;
+    color: #92400e;
+    border: 1px solid #f59e0b;
+}
+
+.more-orders {
+    text-align: center;
+    padding: 1rem;
+    color: #6b7280;
+    font-style: italic;
+}
+
+.summary-actions {
+    text-align: center;
+    padding-top: 1.5rem;
+    border-top: 2px solid #e5e7eb;
+}
+
+.summary-actions .btn {
+    background: linear-gradient(135deg, #10b981, #059669);
+    border: none;
+    padding: 1rem 2rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 6px rgba(16, 185, 129, 0.2);
+}
+
+.summary-actions .btn:hover {
+    background: linear-gradient(135deg, #059669, #047857);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(16, 185, 129, 0.3);
+}
+
+/* 🔄 Unfinished Payment Orders Styles */
+.unfinished-orders-section {
+    margin-top: 3rem;
+    padding: 2rem;
+    background: linear-gradient(135deg, #fef7ff, #fdf2f8);
+    border-radius: 20px;
+    border: 2px solid #e5e7eb;
+}
+
+.unfinished-orders-section .section-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.unfinished-orders-section .section-title {
+    color: #7c3aed;
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.unfinished-orders-section .section-subtitle {
+    color: #6b7280;
+    font-size: 1rem;
+    margin: 0;
+}
+
+.unfinished-orders-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.unfinished-order-card {
+    background: white;
+    border-radius: 15px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    border: 2px solid #e5e7eb;
+    transition: all 0.3s ease;
+}
+
+.unfinished-order-card:hover {
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+    border-color: #d1d5db;
+}
+
+.order-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.order-info h4 {
+    color: #374151;
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin: 0 0 0.5rem 0;
+}
+
+.order-info p {
+    color: #6b7280;
+    font-size: 0.9rem;
+    margin: 0;
+}
+
+.order-status .status-badge {
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-align: center;
+    min-width: 120px;
+}
+
+.order-details {
+    margin-bottom: 1.5rem;
+}
+
+.order-summary {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+}
+
+.summary-item {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.summary-item .label {
+    color: #6b7280;
+    font-size: 0.8rem;
+    margin-bottom: 0.25rem;
+}
+
+.summary-item .value {
+    color: #374151;
+    font-weight: 600;
+    font-size: 1rem;
+}
+
+.summary-item .value.amount {
+    color: #059669;
+    font-size: 1.1rem;
+}
+
+.order-actions {
+    text-align: center;
+}
+
+.continue-payment-btn {
+    background: linear-gradient(135deg, #7c3aed, #6d28d9);
+    color: white !important;
+    border: none;
+    padding: 1rem 2rem;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 6px rgba(124, 58, 237, 0.2);
+    text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.continue-payment-btn:hover {
+    background: linear-gradient(135deg, #6d28d9, #5b21b6);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(124, 58, 237, 0.3);
+}
+
+.continue-payment-btn .btn-icon {
+    font-size: 1.2rem;
+}
+
+.continue-payment-btn .btn-text {
+    font-weight: 600;
+}
+
+/* Responsive Design for Unfinished Orders */
+@media (max-width: 768px) {
+    .unfinished-orders-section {
+        padding: 1rem;
+        margin-top: 2rem;
+    }
+    
+    .order-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+    
+    .order-summary {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+    
+    .continue-payment-btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+.summary-actions .btn:hover {
+    background: linear-gradient(135deg, #059669, #047857);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(16, 185, 129, 0.3);
+}
+
+.summary-actions .btn-icon {
+    margin-left: 0.5rem;
+    font-size: 1.2rem;
+}
+
+
+
+.order-card {
+    background: white;
+    border: 2px solid #e5e7eb;
+    border-radius: 15px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+}
+
+.order-card:hover {
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+    border-color: #d1d5db;
+}
+
+.order-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.order-number {
+    margin: 0 0 0.5rem 0;
+    color: #374151;
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.order-meta {
+    display: flex;
+    gap: 1rem;
+    font-size: 0.9rem;
+    color: #6b7280;
+}
+
+.order-meta span {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.order-details {
+    margin-bottom: 1.5rem;
+}
+
+.order-message {
+    background: #f9fafb;
+    padding: 1rem;
+    border-radius: 10px;
+    margin-bottom: 1rem;
+    border-left: 4px solid #3b82f6;
+}
+
+.order-message p {
+    margin: 0;
+    color: #374151;
+    font-weight: 500;
+}
+
+.order-items h6 {
+    color: #374151;
+    margin-bottom: 0.75rem;
+    font-weight: 600;
+}
+
+.items-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem;
+    background: #f9fafb;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+}
+
+.item-name {
+    font-weight: 600;
+    color: #374151;
+}
+
+.item-quantity {
+    color: #6b7280;
+    font-size: 0.9rem;
+}
+
+.item-price {
+    font-weight: 600;
+    color: #059669;
+}
+
+.order-actions {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    align-items: center;
+    padding-top: 1rem;
+    border-top: 1px solid #e5e7eb;
+}
+
+.order-actions .btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    border-radius: 10px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    color: white !important;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+}
+
+.order-actions .btn.btn-success {
+    background: linear-gradient(135deg, #10b981, #059669) !important;
+    border: none !important;
+}
+
+.order-actions .btn.btn-primary {
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8) !important;
+    border: none !important;
+}
+
+.order-actions .btn.btn-secondary {
+    background: linear-gradient(135deg, #6b7280, #4b5563) !important;
+    border: none !important;
+}
+
+.order-actions .btn.btn-outline-info {
+    background: transparent !important;
+    border: 2px solid #3b82f6 !important;
+    color: #3b82f6 !important;
+    text-shadow: none !important;
+}
+
+.order-actions .btn.btn-outline-info:hover {
+    background: #3b82f6 !important;
+    color: white !important;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.2) !important;
+}
+
+.order-actions .btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.order-actions .btn-icon {
+    font-size: 1.1rem;
+}
+
+/* Bulk Action Section */
+.bulk-action-section {
+    margin-top: 2rem;
+}
+
+.bulk-action-card {
+    background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+    border: 2px solid #0ea5e9;
+    border-radius: 15px;
+    padding: 2rem;
+    text-align: center;
+}
+
+.bulk-action-header h4 {
+    color: #0c4a6e;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+}
+
+.bulk-action-header p {
+    color: #0369a1;
+    margin-bottom: 1.5rem;
+}
+
+.bulk-action-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.bulk-stats {
+    display: flex;
+    gap: 2rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.stat-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.stat-label {
+    font-size: 0.9rem;
+    color: #0369a1;
+    font-weight: 500;
+}
+
+.stat-value {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #0c4a6e;
+}
+
+.bulk-process-btn {
+    background: linear-gradient(135deg, #0ea5e9, #0284c7);
+    border: none;
+    padding: 1rem 2rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 6px rgba(14, 165, 233, 0.2);
+}
+
+.bulk-process-btn:hover {
+    background: linear-gradient(135deg, #0284c7, #0369a1);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(14, 165, 233, 0.3);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .summary-header {
+        flex-direction: column;
+        gap: 1rem;
+        text-align: center;
+    }
+    
+    .order-preview {
+        flex-direction: column;
+        gap: 0.75rem;
+        text-align: center;
+    }
+    
+    .order-status {
+        text-align: center;
+    }
+    
+    .summary-actions .btn {
+        width: 100%;
+        padding: 1.25rem 2rem;
+    }
+    
+    .order-header {
+        flex-direction: column;
+        gap: 1rem;
+        align-items: flex-start;
+    }
+    
+    .order-meta {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .order-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .order-actions .btn {
+        justify-content: center;
+    }
+    
+    .bulk-stats {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .bulk-process-btn {
+        width: 100%;
+        padding: 1.25rem 2rem;
+    }
+}
+</style>
+
+{% block extra_js %}
+<script>
+// 🔄 Continue Payment Function
+function continuePayment(orderId) {
+    // Show loading state
+    const button = event.target.closest('.continue-payment-btn');
+    const originalText = button.innerHTML;
+    button.innerHTML = '<span class="btn-icon">⏳</span><span class="btn-text">در حال انتقال...</span>';
+    button.disabled = true;
+    
+    // Redirect to payment summary page
+    const paymentUrl = `/payments/summary/${orderId}/`;
+    window.location.href = paymentUrl;
+}
+
+// Convert Jalali dates on page load
+document.addEventListener('DOMContentLoaded', function() {
+    // Convert all jalali-date elements
+    const jalaliElements = document.querySelectorAll('.jalali-date');
+    jalaliElements.forEach(function(element) {
+        const dateString = element.getAttribute('data-date');
+        if (dateString) {
+            // For now, just show the original date
+            // In a real implementation, you would convert to Jalali here
+            element.textContent = new Date(dateString).toLocaleDateString('fa-IR');
+        }
+    });
+});
+</script>
+
+<script src="{% static 'js/index.js' %}"></script>
+{% endblock %}

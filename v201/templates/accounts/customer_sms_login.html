@@ -1,0 +1,284 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}📱 ورود مشتری با SMS{% endblock %}
+
+{% block extra_css %}
+<style>
+    .sms-login-container {
+        max-width: 450px;
+        margin: 50px auto;
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        overflow: hidden;
+    }
+    
+    .sms-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 30px;
+        text-align: center;
+    }
+    
+    .sms-header h2 {
+        margin: 0;
+        font-size: 24px;
+        font-weight: 300;
+    }
+    
+    .sms-header p {
+        margin: 10px 0 0 0;
+        opacity: 0.9;
+        font-size: 14px;
+    }
+    
+    .sms-form {
+        padding: 40px;
+    }
+    
+    .form-group {
+        margin-bottom: 25px;
+    }
+    
+    .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        color: #333;
+        font-weight: 500;
+        font-size: 14px;
+    }
+    
+    .phone-input {
+        width: 100%;
+        padding: 15px;
+        border: 2px solid #e1e5e9;
+        border-radius: 8px;
+        font-size: 16px;
+        direction: ltr;
+        text-align: center;
+        transition: all 0.3s ease;
+    }
+    
+    .phone-input:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+    
+    .sms-btn {
+        width: 100%;
+        padding: 15px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .sms-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+    }
+    
+    .sms-btn:active {
+        transform: translateY(0);
+    }
+    
+    .help-text {
+        text-align: center;
+        margin-top: 20px;
+        color: #666;
+        font-size: 13px;
+    }
+    
+    .back-link {
+        text-align: center;
+        margin-top: 20px;
+    }
+    
+    .back-link a {
+        color: #667eea;
+        text-decoration: none;
+        font-size: 14px;
+    }
+    
+    .back-link a:hover {
+        text-decoration: underline;
+    }
+    
+    .phone-format {
+        background: #f8f9fa;
+        border: 1px solid #e9ecef;
+        border-radius: 6px;
+        padding: 10px;
+        margin-top: 10px;
+        font-size: 12px;
+        color: #6c757d;
+    }
+    
+    .messages {
+        margin-bottom: 20px;
+    }
+    
+    .messages .alert {
+        padding: 12px 15px;
+        border-radius: 6px;
+        margin-bottom: 10px;
+        border: none;
+    }
+    
+    .messages .alert-success {
+        background-color: #d4edda;
+        color: #155724;
+    }
+    
+    .messages .alert-error {
+        background-color: #f8d7da;
+        color: #721c24;
+    }
+    
+    .messages .alert-warning {
+        background-color: #fff3cd;
+        color: #856404;
+        border: 1px solid #ffeaa7;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="sms-login-container">
+    <div class="sms-header">
+        <h2>📱 ورود با شماره موبایل</h2>
+        <p>برای ورود به حساب کاربری خود شماره موبایل را وارد کنید</p>
+    </div>
+    
+    <div class="sms-form">
+        {% if messages %}
+            <div class="messages">
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+        
+        <form method="post">
+            {% csrf_token %}
+            
+            <div class="form-group">
+                <label for="phone">📞 شماره موبایل</label>
+                <input 
+                    type="tel" 
+                    id="phone" 
+                    name="phone" 
+                    class="phone-input"
+                    placeholder="۰۹۱۲۳۴۵۶۷۸۹ یا 09123456789"
+                    maxlength="11"
+                    pattern="09[0-9]{9}"
+                    required
+                    autocomplete="tel"
+                >
+                <div class="phone-format">
+                    💡 شماره موبایل باید با 09 شروع شده و 11 رقم باشد<br>
+                    مثال: ۰۹۱۲۳۴۵۶۷۸۹ یا 09123456789<br>
+                    <span class="text-info">✨ می‌توانید از اعداد فارسی یا انگلیسی استفاده کنید</span>
+                </div>
+            </div>
+            
+            <button type="submit" class="sms-btn">
+                📤 ارسال کد تایید
+            </button>
+            
+            <div class="help-text">
+                📱 کد تایید به شماره موبایل شما ارسال خواهد شد
+            </div>
+        </form>
+        
+        {% if show_signup_link %}
+            <div class="divider">
+                <span>یا</span>
+            </div>
+            <div class="signup-section">
+                <h4>📝 عضو نیستید؟</h4>
+                <p>برای استفاده از خدمات ما، ابتدا ثبت‌نام کنید</p>
+                <a href="{% url 'accounts:customer_registration' %}" class="signup-btn">
+                    📝 ثبت‌نام جدید
+                </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+// فرمت خودکار شماره تلفن با پشتیبانی از اعداد فارسی
+document.getElementById('phone').addEventListener('input', function(e) {
+    let value = e.target.value;
+    
+    // تبدیل اعداد فارسی به انگلیسی
+    const persianToEnglish = {
+        '۰': '0', '۱': '1', '۲': '2', '۳': '3', '۴': '4',
+        '۵': '5', '۶': '6', '۷': '7', '۸': '8', '۹': '9'
+    };
+    
+    // تبدیل اعداد فارسی
+    value = value.replace(/[۰-۹]/g, function(digit) {
+        return persianToEnglish[digit] || digit;
+    });
+    
+    // حذف کاراکترهای غیر عددی
+    value = value.replace(/\D/g, '');
+    
+    // محدود کردن طول
+    if (value.length > 11) {
+        value = value.substring(0, 11);
+    }
+    
+    e.target.value = value;
+});
+
+// اعتبارسنجی در هنگام blur
+document.getElementById('phone').addEventListener('blur', function(e) {
+    const value = e.target.value;
+    const phoneRegex = /^09\d{9}$/;
+    
+    if (value && !phoneRegex.test(value)) {
+        // نمایش خطا
+        let errorDiv = this.parentNode.querySelector('.phone-error');
+        if (!errorDiv) {
+            errorDiv = document.createElement('div');
+            errorDiv.className = 'phone-error text-danger small mt-1';
+            this.parentNode.appendChild(errorDiv);
+        }
+        errorDiv.textContent = '📱 شماره تلفن باید با 09 شروع شده و 11 رقم باشد';
+        this.classList.add('is-invalid');
+    } else {
+        // حذف خطا
+        const errorDiv = this.parentNode.querySelector('.phone-error');
+        if (errorDiv) {
+            errorDiv.remove();
+        }
+        this.classList.remove('is-invalid');
+        this.classList.add('is-valid');
+    }
+});
+
+// حذف خطا در هنگام focus
+document.getElementById('phone').addEventListener('focus', function(e) {
+    const errorDiv = this.parentNode.querySelector('.phone-error');
+    if (errorDiv) {
+        errorDiv.remove();
+    }
+    this.classList.remove('is-invalid', 'is-valid');
+});
+
+// Focus خودکار روی فیلد شماره تلفن
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('phone').focus();
+});
+</script>
+{% endblock %} 

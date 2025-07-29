@@ -1,0 +1,47 @@
+<!-- Product Detail Modal -->
+<div class="modal fade" id="productDetailModal" tabindex="-1" aria-labelledby="productDetailModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="productDetailModalLabel">📦 Product Details: {{ product.reel_number }}</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row mb-3">
+          <div class="col-md-6">
+            <strong>Location:</strong> {{ product.get_location_display }}<br>
+            <strong>Status:</strong> {{ product.get_status_display }}<br>
+            <strong>Grade:</strong> {{ product.grade }}<br>
+            <strong>Breaks:</strong> {{ product.breaks }}<br>
+            <strong>QR Code:</strong> {{ product.qr_code|default:'-' }}<br>
+          </div>
+          <div class="col-md-6">
+            <strong>Width:</strong> {{ product.width }} mm<br>
+            <strong>GSM:</strong> {{ product.gsm }} g/m²<br>
+            <strong>Length:</strong> {{ product.length }} m<br>
+            <strong>Price:</strong> {{ product.price|floatformat:0 }} تومان<br>
+            <strong>Created:</strong> <span class="jalali-date" data-date="{{ product.created_at|date:'Y-m-d H:i:s' }}">{{ product.created_at|date:'Y/m/d H:i' }}</span><br>
+            <strong>Updated:</strong> <span class="jalali-date" data-date="{{ product.updated_at|date:'Y-m-d H:i:s' }}">{{ product.updated_at|date:'Y/m/d H:i' }}</span><br>
+          </div>
+        </div>
+        <hr>
+        <h6>Recent Activity Logs</h6>
+        <ul class="list-group">
+          {% for log in product_logs %}
+            <li class="list-group-item small">
+              <span class="text-muted"><span class="jalali-date" data-date="{{ log.created_at|date:'Y-m-d H:i:s' }}">{{ log.created_at|date:'Y/m/d H:i' }}</span></span> -
+              <strong>{{ log.get_action_display|default:log.action }}</strong>:
+              {{ log.description|default:'-' }}
+              {% if log.user %}<span class="text-info">({{ log.user.username }})</span>{% endif %}
+            </li>
+          {% empty %}
+            <li class="list-group-item text-muted">No logs found.</li>
+          {% endfor %}
+        </ul>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div> 

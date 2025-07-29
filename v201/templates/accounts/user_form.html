@@ -1,0 +1,491 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ form_title }} - HomayOMS{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-container {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding: 2rem 0;
+        font-family: 'Tahoma', sans-serif;
+    }
+    
+    .form-card {
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 20px;
+        padding: 2rem;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        backdrop-filter: blur(10px);
+        margin-bottom: 2rem;
+    }
+    
+    .form-header {
+        text-align: center;
+        margin-bottom: 2rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid #ecf0f1;
+    }
+    
+    .form-title {
+        color: #2c3e50;
+        font-size: 2rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+    
+    .form-subtitle {
+        color: #7f8c8d;
+        font-size: 1.1rem;
+    }
+    
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+    
+    .form-label {
+        color: #2c3e50;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        display: block;
+    }
+    
+    .form-control, .form-select {
+        border: 2px solid #e9ecef;
+        border-radius: 10px;
+        padding: 0.75rem 1rem;
+        transition: all 0.3s ease;
+        font-size: 1rem;
+    }
+    
+    .form-control:focus, .form-select:focus {
+        border-color: #3498db;
+        box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
+        outline: none;
+    }
+    
+    .form-text {
+        color: #6c757d;
+        font-size: 0.875rem;
+        margin-top: 0.25rem;
+    }
+    
+    .required {
+        color: #e74c3c;
+    }
+    
+    .btn-primary {
+        background: linear-gradient(45deg, #3498db, #2980b9);
+        border: none;
+        color: white !important;
+        padding: 0.75rem 2rem;
+        border-radius: 10px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+    }
+    
+    .btn-primary:hover {
+        background: linear-gradient(45deg, #2980b9, #1f618d);
+        color: white !important;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+    }
+    
+    .btn-secondary {
+        background: #6c757d;
+        border: none;
+        color: white !important;
+        padding: 0.75rem 2rem;
+        border-radius: 10px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+    }
+    
+    .btn-secondary:hover {
+        background: #5a6268;
+        color: white !important;
+        transform: translateY(-2px);
+    }
+    
+    .back-button {
+        background: linear-gradient(45deg, #95a5a6, #7f8c8d);
+        color: white !important;
+        text-decoration: none;
+        padding: 0.5rem 1rem;
+        border-radius: 10px;
+        font-weight: 500;
+        margin-bottom: 2rem;
+        display: inline-block;
+        transition: all 0.3s ease;
+        text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+    }
+    
+    .back-button:hover {
+        background: linear-gradient(45deg, #7f8c8d, #6c7b7d);
+        color: white !important;
+        text-decoration: none !important;
+        transform: translateY(-2px);
+    }
+    
+    /* Bootstrap Button Override for Text Visibility */
+    .btn.btn-primary {
+        color: white !important;
+        background-color: #0d6efd !important;
+        border-color: #0d6efd !important;
+        text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+    }
+    
+    .btn.btn-primary:hover, 
+    .btn.btn-primary:focus, 
+    .btn.btn-primary:active {
+        color: white !important;
+        background-color: #0b5ed7 !important;
+        border-color: #0a58ca !important;
+    }
+    
+    .btn.btn-secondary {
+        color: white !important;
+        background-color: #6c757d !important;
+        border-color: #6c757d !important;
+        text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+    }
+    
+    .btn.btn-secondary:hover, 
+    .btn.btn-secondary:focus, 
+    .btn.btn-secondary:active {
+        color: white !important;
+        background-color: #5c636a !important;
+        border-color: #565e64 !important;
+    }
+    
+    .form-sections {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 2rem;
+    }
+    
+    .section {
+        background: #f8f9fa;
+        border-radius: 15px;
+        padding: 1.5rem;
+        border: 1px solid #e9ecef;
+    }
+    
+    .section-title {
+        color: #2c3e50;
+        font-size: 1.3rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid #3498db;
+    }
+    
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+    }
+    
+    @media (max-width: 768px) {
+        .form-row {
+            grid-template-columns: 1fr;
+        }
+    }
+    
+    .role-info {
+        background: #e3f2fd;
+        border: 1px solid #bbdefb;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-top: 0.5rem;
+    }
+    
+    .role-info h6 {
+        color: #1976d2;
+        margin-bottom: 0.5rem;
+    }
+    
+    .role-info ul {
+        margin: 0;
+        padding-left: 1.5rem;
+    }
+    
+    .role-info li {
+        color: #424242;
+        font-size: 0.875rem;
+        margin-bottom: 0.25rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <div class="container">
+        <a href="{% url 'accounts:user_list' %}" class="back-button">
+            ⬅️ بازگشت به لیست کاربران
+        </a>
+
+        <div class="form-card">
+            <div class="form-header">
+                <h1 class="form-title">{{ form_title }}</h1>
+                <p class="form-subtitle">
+                    {% if form_action == 'add' %}
+                        ایجاد کاربر جدید با نقش‌های مختلف
+                    {% else %}
+                        ویرایش اطلاعات کاربر موجود
+                    {% endif %}
+                </p>
+            </div>
+
+            <!-- پیام‌های سیستم -->
+            {% if messages %}
+                <div class="mb-4">
+                    {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            <form method="post" novalidate>
+                {% csrf_token %}
+                
+                <div class="form-sections">
+                    <!-- اطلاعات پایه -->
+                    <div class="section">
+                        <h3 class="section-title">📋 اطلاعات پایه</h3>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="first_name" class="form-label">
+                                    👤 نام <span class="required">*</span>
+                                </label>
+                                <input type="text" id="first_name" name="first_name" class="form-control" 
+                                       value="{{ user_obj.first_name|default:'' }}" required>
+                                <div class="form-text">نام واقعی کاربر</div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="last_name" class="form-label">
+                                    👨‍👩‍👧‍👦 نام خانوادگی <span class="required">*</span>
+                                </label>
+                                <input type="text" id="last_name" name="last_name" class="form-control" 
+                                       value="{{ user_obj.last_name|default:'' }}" required>
+                                <div class="form-text">نام خانوادگی کاربر</div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="username" class="form-label">
+                                    🆔 نام کاربری <span class="required">*</span>
+                                </label>
+                                <input type="text" id="username" name="username" class="form-control" 
+                                       value="{{ user_obj.username|default:'' }}" required>
+                                <div class="form-text">نام کاربری منحصر به فرد</div>
+                            </div>
+                            
+                
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="phone" class="form-label">
+                                    📱 شماره تلفن <span class="required">*</span>
+                                </label>
+                                <input type="tel" id="phone" name="phone" class="form-control" 
+                                       value="{{ user_obj.phone|default:'' }}" required placeholder="09123456789">
+                                <div class="form-text">شماره تلفن همراه (با 09 شروع شود)</div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="department" class="form-label">
+                                    🏢 بخش
+                                </label>
+                                <input type="text" id="department" name="department" class="form-control" 
+                                       value="{{ user_obj.department|default:'' }}">
+                                <div class="form-text">بخش یا واحد کاری (اختیاری)</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- نقش و دسترسی -->
+                    <div class="section">
+                        <h3 class="section-title">🎭 نقش و دسترسی</h3>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="role" class="form-label">
+                                    🎭 نقش کاربری <span class="required">*</span>
+                                </label>
+                                <select id="role" name="role" class="form-select" required>
+                                    <option value="">نقش را انتخاب کنید</option>
+                                    {% for role_value, role_display in user_roles %}
+                                        <option value="{{ role_value }}" 
+                                                {% if user_obj.role == role_value %}selected{% endif %}>
+                                            {{ role_display }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                                <div class="form-text">نقش کاربر تعیین کننده سطح دسترسی است</div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="status" class="form-label">
+                                    📊 وضعیت <span class="required">*</span>
+                                </label>
+                                <select id="status" name="status" class="form-select" required>
+                                    <option value="">وضعیت را انتخاب کنید</option>
+                                    {% for status_value, status_display in user_statuses %}
+                                        <option value="{{ status_value }}" 
+                                                {% if user_obj.status == status_value %}selected{% endif %}>
+                                            {{ status_display }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                                <div class="form-text">وضعیت فعلی کاربر در سیستم</div>
+                            </div>
+                        </div>
+                        
+                        <!-- اطلاعات نقش‌ها -->
+                        <div class="role-info">
+                            <h6>📖 توضیحات نقش‌ها:</h6>
+                            <ul>
+                                <li><strong>🔴 Super Admin:</strong> دسترسی کامل به تمام بخش‌ها شامل مدیریت کاربران</li>
+                                <li><strong>🟡 Admin:</strong> مدیریت عملیات روزانه، مشتریان، سفارشات و موجودی</li>
+                                <li><strong>🟢 Finance:</strong> مدیریت مالی، قیمت‌ها، فاکتورها و پرداخت‌ها</li>
+                                <li><strong>🔵 Customer:</strong> مشتری سیستم با دسترسی محدود به پنل مشتری</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- امنیت -->
+                    <div class="section">
+                        <h3 class="section-title">🔐 امنیت</h3>
+                        
+                        <div class="form-group">
+                            <label for="password" class="form-label">
+                                🔑 رمز عبور 
+                                {% if form_action == 'add' %}
+                                    <span class="required" id="password-required">*</span>
+                                {% endif %}
+                            </label>
+                            <input type="password" id="password" name="password" class="form-control" 
+                                   {% if form_action == 'add' %}required{% endif %}>
+                            <div class="form-text" id="password-help">
+                                {% if form_action == 'add' %}
+                                    <span id="password-help-add">رمز عبور باید حداقل 6 کاراکتر باشد</span>
+                                    <span id="password-help-customer" style="display: none;">برای نقش مشتری، رمز عبور اختیاری است (حداقل 6 کاراکتر)</span>
+                                {% else %}
+                                    برای تغییر رمز عبور، رمز جدید را وارد کنید (اختیاری)
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- اطلاعات اضافی -->
+                    <div class="section">
+                        <h3 class="section-title">📝 اطلاعات اضافی</h3>
+                        
+                        <div class="form-group">
+                            <label for="notes" class="form-label">
+                                📝 یادداشت‌ها
+                            </label>
+                            <textarea id="notes" name="notes" class="form-control" rows="4">{{ user_obj.notes|default:'' }}</textarea>
+                            <div class="form-text">یادداشت‌ها و توضیحات اضافی درباره کاربر</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- دکمه‌های عمل -->
+                <div class="d-flex justify-content-between align-items-center mt-4">
+                    <a href="{% url 'accounts:user_list' %}" class="btn btn-secondary">
+                        🔙 انصراف
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        {% if form_action == 'add' %}
+                            ➕ ایجاد کاربر
+                        {% else %}
+                            ✏️ ذخیره تغییرات
+                        {% endif %}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+// تغییر اطلاعات نقش بر اساس انتخاب
+document.getElementById('role').addEventListener('change', function() {
+    const roleInfo = document.querySelector('.role-info');
+    const selectedRole = this.value;
+    const passwordField = document.getElementById('password');
+    const passwordRequired = document.getElementById('password-required');
+    const passwordHelpAdd = document.getElementById('password-help-add');
+    const passwordHelpCustomer = document.getElementById('password-help-customer');
+    
+    // نمایش/پنهان کردن اطلاعات نقش
+    if (selectedRole) {
+        roleInfo.style.display = 'block';
+    } else {
+        roleInfo.style.display = 'none';
+    }
+    
+    // تنظیم الزامی بودن رمز عبور بر اساس نقش
+    if (selectedRole === 'customer') {
+        // برای نقش مشتری، رمز عبور اختیاری است
+        if (passwordField) passwordField.removeAttribute('required');
+        if (passwordRequired) passwordRequired.style.display = 'none';
+        if (passwordHelpAdd) passwordHelpAdd.style.display = 'none';
+        if (passwordHelpCustomer) passwordHelpCustomer.style.display = 'block';
+    } else {
+        // برای سایر نقش‌ها، رمز عبور الزامی است
+        if (passwordField && '{{ form_action }}' === 'add') passwordField.setAttribute('required', 'required');
+        if (passwordRequired) passwordRequired.style.display = 'inline';
+        if (passwordHelpAdd) passwordHelpAdd.style.display = 'block';
+        if (passwordHelpCustomer) passwordHelpCustomer.style.display = 'none';
+    }
+});
+
+// تأیید قبل از ارسال فرم
+document.querySelector('form').addEventListener('submit', function(e) {
+    const requiredFields = ['first_name', 'last_name', 'username', 'phone', 'role', 'status'];
+    const missingFields = [];
+    
+    requiredFields.forEach(field => {
+        const element = document.getElementById(field);
+        if (!element.value.trim()) {
+            missingFields.push(element.previousElementSibling.textContent.replace('*', '').trim());
+        }
+    });
+    
+    // بررسی الزامی بودن رمز عبور بر اساس نقش
+    const roleField = document.getElementById('role');
+    const passwordField = document.getElementById('password');
+    if ('{{ form_action }}' === 'add' && roleField && passwordField) {
+        if (roleField.value !== 'customer' && !passwordField.value.trim()) {
+            missingFields.push('رمز عبور');
+        }
+    }
+    
+    if (missingFields.length > 0) {
+        e.preventDefault();
+        alert('لطفاً فیلدهای زیر را پر کنید:\n' + missingFields.join('\n'));
+        return false;
+    }
+    
+    // تأیید نهایی
+    const action = '{{ form_action }}' === 'add' ? 'ایجاد' : 'ویرایش';
+    if (!confirm(`آیا از ${action} این کاربر مطمئن هستید؟`)) {
+        e.preventDefault();
+        return false;
+    }
+});
+</script>
+{% endblock %} 

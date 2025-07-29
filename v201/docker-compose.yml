@@ -1,0 +1,125 @@
+# 🐳 Docker Compose برای HomayOMS v200
+# 🏗️ شامل Django، PostgreSQL و pgAdmin
+
+services:
+  # 🐘 PostgreSQL Database
+  db:
+    image: postgres:15-alpine
+    container_name: homayoms_v200_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: homayoms_v200_db
+      POSTGRES_USER: homayoms_user
+      POSTGRES_PASSWORD: homayoms_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+    networks:
+      - homayoms_v200_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U homayoms_user -d homayoms_v200_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # 🐘 pgAdmin - مدیریت پایگاه داده
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: homayoms_v200_pgadmin
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@homayoms.com
+      PGADMIN_DEFAULT_PASSWORD: admin123
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    ports:
+      - "5051:80"
+    networks:
+      - homayoms_v200_network
+    depends_on:
+      - db
+
+  # 🐍 Django Web Application
+  web:
+    build: .
+    container_name: homayoms_v200_web
+    restart: unless-stopped
+    environment:
+      # 🔐 تنظیمات امنیتی
+      SECRET_KEY: your-super-secret-key-change-this-in-production
+      DEBUG: 'True'
+      ALLOWED_HOSTS: localhost,127.0.0.1,0.0.0.0
+      
+      # 🗄️ تنظیمات پایگاه داده
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: homayoms_v200_db
+      DB_USER: homayoms_user
+      DB_PASSWORD: homayoms_password
+      DATABASE_URL: postgresql://homayoms_user:homayoms_password@db:5432/homayoms_v200_db
+      
+      # 🌐 تنظیمات CORS
+      CORS_ALLOWED_ORIGINS: http://localhost:9001,http://127.0.0.1:9001
+      
+      # 📧 تنظیمات ایمیل (اختیاری)
+      EMAIL_HOST: smtp.gmail.com
+      EMAIL_PORT: 587
+      EMAIL_USE_TLS: 'True'
+      EMAIL_HOST_USER: your-email@gmail.com
+      EMAIL_HOST_PASSWORD: your-app-password
+      
+      # ⏰ تنظیمات timezone
+      TIME_ZONE: Asia/Tehran
+      LANGUAGE_CODE: fa-ir
+      
+      # 📁 تنظیمات فایل‌ها
+      STATIC_URL: /static/
+      STATIC_ROOT: /app/staticfiles
+      MEDIA_URL: /media/
+      MEDIA_ROOT: /app/media
+      
+      # 🔧 تنظیمات Django
+      DJANGO_SETTINGS_MODULE: HomayOMS.settings.dev
+      TYPE: dev
+      
+      # 📱 تنظیمات SMS Server
+      SMS_SERVER_URL: http://192.168.1.60:5003
+      SMS_API_KEY: ioms_sms_server_2025
+      SMS_TIMEOUT: 30
+      SMS_RETRY_ATTEMPTS: 3
+      SMS_FALLBACK_TO_FAKE: 'True'
+      
+      # 📊 تنظیمات لاگ‌گیری و مانیتورینگ
+      LOG_LEVEL: INFO
+      LOG_FILE_PATH: /app/logs
+      ENABLE_HEALTH_CHECKS: 'True'
+      ENABLE_METRICS: 'True'
+      
+    volumes:
+      - static_volume:/app/staticfiles
+      - media_volume:/app/media
+    ports:
+      - "9001:8000"
+    networks:
+      - homayoms_v200_network
+    depends_on:
+      db:
+        condition: service_healthy
+
+# 📦 Volumes برای ذخیره داده‌ها
+volumes:
+  postgres_data:
+    driver: local
+  pgadmin_data:
+    driver: local
+  static_volume:
+    driver: local
+  media_volume:
+    driver: local
+
+# 🌐 Network برای ارتباط بین سرویس‌ها
+networks:
+  homayoms_v200_network:
+    driver: bridge 

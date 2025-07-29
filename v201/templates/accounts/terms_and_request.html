@@ -1,0 +1,444 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}📋 شرایط استفاده و ثبت درخواست مشتری{% endblock %}
+
+{% block extra_css %}
+<style>
+    .terms-container {
+        min-height: 100vh;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding: 2rem 0;
+        font-family: 'Tahoma', sans-serif;
+    }
+    
+    .terms-card {
+        max-width: 600px;
+        margin: 0 auto;
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 20px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+        backdrop-filter: blur(10px);
+        animation: slideUp 0.6s ease-out;
+    }
+    
+    @keyframes slideUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .terms-header {
+        background: linear-gradient(135deg, #28a745, #20c997);
+        color: white;
+        padding: 2rem;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .terms-header::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+        animation: rotate 20s linear infinite;
+    }
+    
+    @keyframes rotate {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+    
+    .terms-header h1 {
+        margin: 0;
+        font-size: 1.8rem;
+        font-weight: 600;
+        position: relative;
+        z-index: 1;
+    }
+    
+    .terms-header p {
+        margin: 0.5rem 0 0 0;
+        opacity: 0.9;
+        font-size: 1rem;
+        position: relative;
+        z-index: 1;
+    }
+    
+    .terms-content {
+        padding: 2rem;
+    }
+    
+    .phone-display {
+        background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+        border: 2px solid #e9ecef;
+        border-radius: 12px;
+        padding: 1rem;
+        text-align: center;
+        margin-bottom: 1.5rem;
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #495057;
+        direction: ltr;
+    }
+    
+    .terms-intro {
+        background: #fff3cd;
+        border: 1px solid #ffeaa7;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        font-size: 1rem;
+        color: #856404;
+        text-align: center;
+        font-weight: 500;
+    }
+    
+    .terms-list {
+        background: #f8f9fa;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    
+    .terms-list h3 {
+        color: #2c3e50;
+        font-size: 1.2rem;
+        margin-bottom: 1rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .terms-list ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    
+    .terms-list li {
+        padding: 0.8rem 0;
+        border-bottom: 1px solid #e9ecef;
+        font-size: 1rem;
+        line-height: 1.6;
+        color: #495057;
+        position: relative;
+        padding-right: 2rem;
+    }
+    
+    .terms-list li:last-child {
+        border-bottom: none;
+    }
+    
+    .terms-list li::before {
+        content: '✓';
+        position: absolute;
+        right: 0;
+        top: 0.8rem;
+        color: #28a745;
+        font-weight: bold;
+        font-size: 1.1rem;
+    }
+    
+    .checkbox-container {
+        background: #e8f5e8;
+        border: 2px solid #28a745;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        transition: all 0.3s ease;
+    }
+    
+    .checkbox-container:hover {
+        background: #d4edda;
+        transform: translateY(-2px);
+    }
+    
+    .custom-checkbox {
+        display: flex;
+        align-items: flex-start;
+        gap: 1rem;
+        cursor: pointer;
+    }
+    
+    .custom-checkbox input[type="checkbox"] {
+        width: 20px;
+        height: 20px;
+        margin: 0;
+        cursor: pointer;
+        flex-shrink: 0;
+        margin-top: 2px;
+    }
+    
+    .custom-checkbox label {
+        font-size: 1.1rem;
+        font-weight: 500;
+        color: #2c3e50;
+        cursor: pointer;
+        line-height: 1.5;
+        margin: 0;
+    }
+    
+    .submit-btn {
+        width: 100%;
+        padding: 1rem 2rem;
+        background: linear-gradient(135deg, #28a745, #20c997);
+        color: white;
+        border: none;
+        border-radius: 12px;
+        font-size: 1.2rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        margin-bottom: 1rem;
+        box-shadow: 0 4px 15px rgba(40, 167, 69, 0.2);
+    }
+    
+    .submit-btn:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(40, 167, 69, 0.3);
+        background: linear-gradient(135deg, #218838, #1ea085);
+    }
+    
+    .submit-btn:active {
+        transform: translateY(-1px);
+    }
+    
+    .submit-btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+        background: #6c757d !important;
+        color: white !important;
+    }
+    
+    .submit-btn:focus {
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(40, 167, 69, 0.4);
+    }
+    
+    .back-link {
+        display: block;
+        text-align: center;
+        padding: 0.8rem;
+        color: #6c757d;
+        text-decoration: none;
+        font-size: 1rem;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        border-radius: 8px;
+    }
+    
+    .back-link:hover {
+        color: #495057;
+        background: #f8f9fa;
+        text-decoration: none;
+    }
+    
+    .back-link i {
+        margin-left: 0.5rem;
+    }
+    
+    /* Mobile Responsive */
+    @media (max-width: 768px) {
+        .terms-container {
+            padding: 1rem;
+        }
+        
+        .terms-card {
+            margin: 0 0.5rem;
+        }
+        
+        .terms-header {
+            padding: 1.5rem;
+        }
+        
+        .terms-header h1 {
+            font-size: 1.5rem;
+        }
+        
+        .terms-content {
+            padding: 1.5rem;
+        }
+        
+        .terms-list li {
+            padding: 0.6rem 0;
+            padding-right: 1.5rem;
+            font-size: 0.95rem;
+        }
+        
+        .custom-checkbox label {
+            font-size: 1rem;
+        }
+        
+        .submit-btn {
+            font-size: 1.1rem;
+            padding: 0.9rem 1.5rem;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .terms-header h1 {
+            font-size: 1.3rem;
+        }
+        
+        .terms-header p {
+            font-size: 0.9rem;
+        }
+        
+        .terms-content {
+            padding: 1rem;
+        }
+        
+        .phone-display {
+            font-size: 1rem;
+        }
+        
+        .terms-intro {
+            font-size: 0.9rem;
+            padding: 1rem;
+        }
+        
+        .terms-list li {
+            font-size: 0.9rem;
+            padding-right: 1.2rem;
+        }
+        
+        .custom-checkbox {
+            gap: 0.7rem;
+        }
+        
+        .custom-checkbox input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="terms-container">
+    <div class="terms-card">
+        <div class="terms-header">
+            <h1>📋 شرایط استفاده از سامانه</h1>
+            <p>کارخانه کاغذ و مقوای همایون</p>
+        </div>
+        
+        <div class="terms-content">
+            <!-- Messages -->
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+            
+            <!-- Phone Display -->
+            <div class="phone-display">
+                📱 شماره موبایل: {{ phone }}
+            </div>
+            
+            <!-- Introduction -->
+            <div class="terms-intro">
+                ⚠️ لطفاً قبل از ثبت درخواست، شرایط زیر را با دقت مطالعه و تأیید نمایید
+            </div>
+            
+            <!-- Terms List -->
+            <div class="terms-list">
+                <h3>
+                    📜 شرایط استفاده
+                </h3>
+                <ul>
+                    <li>اطلاعات وارد شده باید صحیح و متعلق به شما باشد</li>
+                    <li>پس از ثبت درخواست، مدیریت اطلاعات شما را بررسی و در صورت تأیید، ثبت‌نام تکمیل خواهد شد</li>
+                    <li>در صورت نیاز به پیگیری، با پشتیبانی تماس بگیرید</li>
+                    <li>استفاده از سامانه به معنای پذیرش کامل این شرایط است</li>
+                    <li>اطلاعات شما محفوظ بوده و برای اهداف تجاری استفاده نخواهد شد</li>
+                </ul>
+            </div>
+            
+            <!-- Form -->
+            <form method="post" id="termsForm">
+                {% csrf_token %}
+                <input type="hidden" name="phone" value="{{ phone }}">
+                
+                <!-- Checkbox -->
+                <div class="checkbox-container">
+                    <div class="custom-checkbox">
+                        <input type="checkbox" id="accept_terms" name="accept_terms" required>
+                        <label for="accept_terms">
+                            ✅ شرایط فوق را مطالعه کرده‌ام و می‌پذیرم
+                        </label>
+                    </div>
+                </div>
+                
+                <!-- Submit Button -->
+                <button type="submit" class="submit-btn" id="submitBtn">
+                    🚀 ثبت درخواست مشتری
+                </button>
+            </form>
+            
+            <!-- Back Link -->
+            <a href="{% url 'accounts:customer_sms_login' %}" class="back-link">
+                <i>↩️</i> بازگشت به صفحه ورود
+            </a>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const checkbox = document.getElementById('accept_terms');
+    const submitBtn = document.getElementById('submitBtn');
+    const form = document.getElementById('termsForm');
+    
+    // Initially disable submit button
+    submitBtn.disabled = true;
+    
+    // Enable/disable submit button based on checkbox
+    checkbox.addEventListener('change', function() {
+        submitBtn.disabled = !this.checked;
+        
+        if (this.checked) {
+            submitBtn.style.opacity = '1';
+            submitBtn.style.cursor = 'pointer';
+        } else {
+            submitBtn.style.opacity = '0.6';
+            submitBtn.style.cursor = 'not-allowed';
+        }
+    });
+    
+    // Form submission handling
+    form.addEventListener('submit', function(e) {
+        if (!checkbox.checked) {
+            e.preventDefault();
+            alert('⚠️ لطفاً ابتدا شرایط استفاده را تایید نمایید');
+            return false;
+        }
+        
+        // Show loading state
+        submitBtn.innerHTML = '⏳ در حال ثبت درخواست...';
+        submitBtn.disabled = true;
+    });
+    
+    // Smooth scroll for mobile
+    window.addEventListener('load', function() {
+        document.body.scrollTop = 0;
+        document.documentElement.scrollTop = 0;
+    });
+});
+</script>
+{% endblock %} 

@@ -1,0 +1,376 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ form_title }} - HomayOMS{% endblock %}
+
+{% block extra_css %}
+<style>
+    .delete-container {
+        background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+        min-height: 100vh;
+        padding: 2rem 0;
+        font-family: 'Tahoma', sans-serif;
+    }
+    
+    .delete-card {
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 20px;
+        padding: 2rem;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        backdrop-filter: blur(10px);
+        margin-bottom: 2rem;
+        max-width: 600px;
+        margin: 0 auto;
+    }
+    
+    .delete-header {
+        text-align: center;
+        margin-bottom: 2rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid #ffebee;
+    }
+    
+    .delete-title {
+        color: #c62828;
+        font-size: 2rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+    
+    .delete-icon {
+        font-size: 4rem;
+        color: #e74c3c;
+        margin-bottom: 1rem;
+    }
+    
+    .warning-message {
+        background: #ffebee;
+        border: 2px solid #ffcdd2;
+        border-radius: 15px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        text-align: center;
+    }
+    
+    .warning-message h5 {
+        color: #c62828;
+        margin-bottom: 1rem;
+        font-weight: 600;
+    }
+    
+    .warning-message p {
+        color: #b71c1c;
+        margin-bottom: 0;
+        font-size: 1.1rem;
+    }
+    
+    .user-info {
+        background: #f5f5f5;
+        border-radius: 15px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        border: 1px solid #e0e0e0;
+    }
+    
+    .user-info h4 {
+        color: #2c3e50;
+        margin-bottom: 1rem;
+        font-weight: 600;
+    }
+    
+    .info-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.75rem 0;
+        border-bottom: 1px solid #e0e0e0;
+    }
+    
+    .info-item:last-child {
+        border-bottom: none;
+    }
+    
+    .info-label {
+        color: #555;
+        font-weight: 500;
+    }
+    
+    .info-value {
+        color: #2c3e50;
+        font-weight: 600;
+    }
+    
+    .role-badge {
+        font-size: 0.875rem;
+        padding: 0.25rem 0.75rem;
+        border-radius: 0.375rem;
+        font-weight: 500;
+    }
+    
+    .status-badge {
+        font-size: 0.875rem;
+        padding: 0.25rem 0.75rem;
+        border-radius: 0.375rem;
+        font-weight: 500;
+    }
+    
+    .btn-danger {
+        background: linear-gradient(45deg, #e74c3c, #c0392b);
+        border: none;
+        color: white !important;
+        padding: 0.75rem 2rem;
+        border-radius: 10px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+    }
+    
+    .btn-danger:hover {
+        background: linear-gradient(45deg, #c0392b, #a93226);
+        color: white !important;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);
+    }
+    
+    .btn-secondary {
+        background: #6c757d;
+        border: none;
+        color: white !important;
+        padding: 0.75rem 2rem;
+        border-radius: 10px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+    }
+    
+    .btn-secondary:hover {
+        background: #5a6268;
+        color: white !important;
+        transform: translateY(-2px);
+    }
+    
+    .back-button {
+        background: linear-gradient(45deg, #95a5a6, #7f8c8d);
+        color: white !important;
+        text-decoration: none;
+        padding: 0.5rem 1rem;
+        border-radius: 10px;
+        font-weight: 500;
+        margin-bottom: 2rem;
+        display: inline-block;
+        transition: all 0.3s ease;
+        text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+    }
+    
+    .back-button:hover {
+        background: linear-gradient(45deg, #7f8c8d, #6c7b7d);
+        color: white !important;
+        text-decoration: none !important;
+        transform: translateY(-2px);
+    }
+    
+    /* Bootstrap Button Override for Text Visibility */
+    .btn.btn-danger {
+        color: white !important;
+        background-color: #dc3545 !important;
+        border-color: #dc3545 !important;
+        text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+    }
+    
+    .btn.btn-danger:hover, 
+    .btn.btn-danger:focus, 
+    .btn.btn-danger:active {
+        color: white !important;
+        background-color: #bb2d3b !important;
+        border-color: #b02a37 !important;
+    }
+    
+    .btn.btn-secondary {
+        color: white !important;
+        background-color: #6c757d !important;
+        border-color: #6c757d !important;
+        text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+    }
+    
+    .btn.btn-secondary:hover, 
+    .btn.btn-secondary:focus, 
+    .btn.btn-secondary:active {
+        color: white !important;
+        background-color: #5c636a !important;
+        border-color: #565e64 !important;
+    }
+    
+    .action-buttons {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 2rem;
+    }
+    
+    @media (max-width: 768px) {
+        .action-buttons {
+            flex-direction: column;
+            gap: 1rem;
+        }
+        
+        .action-buttons .btn {
+            width: 100%;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="delete-container">
+    <div class="container">
+        <a href="{% url 'accounts:user_list' %}" class="back-button">
+            ⬅️ بازگشت به لیست کاربران
+        </a>
+
+        <div class="delete-card">
+            <div class="delete-header">
+                <div class="delete-icon">⚠️</div>
+                <h1 class="delete-title">{{ form_title }}</h1>
+            </div>
+
+            <!-- پیام‌های سیستم -->
+            {% if messages %}
+                <div class="mb-4">
+                    {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            <!-- پیام هشدار -->
+            <div class="warning-message">
+                <h5>🚨 هشدار امنیتی</h5>
+                <p>
+                    شما در حال حذف کاربر هستید. این عملیات <strong>غیرقابل بازگشت</strong> است و تمام اطلاعات و فعالیت‌های مرتبط با این کاربر حذف خواهد شد.
+                </p>
+            </div>
+
+            <!-- اطلاعات کاربر -->
+            <div class="user-info">
+                <h4>📋 اطلاعات کاربر مورد نظر برای حذف:</h4>
+                
+                <div class="info-item">
+                    <span class="info-label">👤 نام کامل:</span>
+                    <span class="info-value">{{ user_obj.get_full_name|default:user_obj.username }}</span>
+                </div>
+                
+                <div class="info-item">
+                    <span class="info-label">🆔 نام کاربری:</span>
+                    <span class="info-value">{{ user_obj.username }}</span>
+                </div>
+                
+                <div class="info-item">
+                    <span class="info-label">📧 ایمیل:</span>
+                    <span class="info-value">{{ user_obj.email|default:"ندارد" }}</span>
+                </div>
+                
+                <div class="info-item">
+                    <span class="info-label">📱 شماره تلفن:</span>
+                    <span class="info-value">{{ user_obj.phone }}</span>
+                </div>
+                
+                <div class="info-item">
+                    <span class="info-label">🎭 نقش:</span>
+                    <span class="info-value">
+                        {% if user_obj.role == 'super_admin' %}
+                            <span class="badge bg-danger role-badge">🔴 Super Admin</span>
+                        {% elif user_obj.role == 'admin' %}
+                            <span class="badge bg-warning role-badge">🟡 Admin</span>
+                        {% elif user_obj.role == 'finance' %}
+                            <span class="badge bg-success role-badge">🟢 Finance</span>
+                        {% elif user_obj.role == 'customer' %}
+                            <span class="badge bg-info role-badge">🔵 Customer</span>
+                        {% endif %}
+                    </span>
+                </div>
+                
+                <div class="info-item">
+                    <span class="info-label">📊 وضعیت:</span>
+                    <span class="info-value">
+                        {% if user_obj.status == 'active' %}
+                            <span class="badge bg-success status-badge">✅ فعال</span>
+                        {% elif user_obj.status == 'inactive' %}
+                            <span class="badge bg-danger status-badge">❌ غیرفعال</span>
+                        {% elif user_obj.status == 'suspended' %}
+                            <span class="badge bg-warning status-badge">⏸️ معلق</span>
+                        {% elif user_obj.status == 'pending' %}
+                            <span class="badge bg-secondary status-badge">⏳ در انتظار</span>
+                        {% endif %}
+                    </span>
+                </div>
+                
+                <div class="info-item">
+                    <span class="info-label">🏢 بخش:</span>
+                    <span class="info-value">{{ user_obj.department|default:"ندارد" }}</span>
+                </div>
+                
+                <div class="info-item">
+                    <span class="info-label">⏰ تاریخ عضویت:</span>
+                    <span class="info-value"><span class="jalali-date" data-date="{{ user_obj.date_joined|date:'Y-m-d H:i:s' }}">{{ user_obj.date_joined|date:"Y/m/d H:i" }}</span></span>
+                </div>
+                
+                {% if user_obj.notes %}
+                    <div class="info-item">
+                        <span class="info-label">📝 یادداشت‌ها:</span>
+                        <span class="info-value">{{ user_obj.notes }}</span>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- فرم تأیید حذف -->
+            <form method="post" id="deleteForm">
+                {% csrf_token %}
+                
+                <div class="action-buttons">
+                    <a href="{% url 'accounts:user_list' %}" class="btn btn-secondary">
+                        🔙 انصراف
+                    </a>
+                    <button type="submit" class="btn btn-danger" id="confirmDeleteBtn">
+                        🗑️ تأیید حذف
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+// تأیید حذف با دو مرحله
+document.getElementById('deleteForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const userName = '{{ user_obj.get_full_name|default:user_obj.username }}';
+    const confirmMessage = `آیا از حذف کاربر "${userName}" مطمئن هستید؟\n\nاین عملیات غیرقابل بازگشت است!`;
+    
+    if (confirm(confirmMessage)) {
+        const secondConfirm = `برای تأیید نهایی، کلمه "حذف" را تایپ کنید:`;
+        const userInput = prompt(secondConfirm);
+        
+        if (userInput && userInput.toLowerCase() === 'حذف') {
+            // ارسال فرم
+            this.submit();
+        } else if (userInput !== null) {
+            alert('❌ کلمه تأیید اشتباه است. عملیات لغو شد.');
+        }
+    }
+});
+
+// تغییر رنگ دکمه حذف برای تأکید بر خطر
+const deleteBtn = document.getElementById('confirmDeleteBtn');
+deleteBtn.addEventListener('mouseenter', function() {
+    this.style.background = 'linear-gradient(45deg, #b71c1c, #d32f2f)';
+});
+
+deleteBtn.addEventListener('mouseleave', function() {
+    this.style.background = 'linear-gradient(45deg, #e74c3c, #c0392b)';
+});
+</script>
+{% endblock %} 

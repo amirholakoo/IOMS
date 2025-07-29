@@ -1,0 +1,373 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}تنظیمات همگام‌سازی - همگام‌سازی موجودی{% endblock %}
+
+{% block extra_css %}
+<style>
+    .config-card {
+        background: white;
+        border-radius: 15px;
+        padding: 30px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        border-left: 5px solid #667eea;
+    }
+    
+    .btn-save {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white !important;
+        border: none;
+        padding: 12px 30px;
+        border-radius: 8px;
+        font-weight: 600;
+        text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+        transition: all 0.3s ease;
+    }
+    
+    .btn-save:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        color: white !important;
+    }
+    
+    .form-control:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+    }
+    
+    .form-switch .form-check-input:checked {
+        background-color: #667eea;
+        border-color: #667eea;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h3 mb-0">
+                    <i class="fas fa-cog me-2"></i>
+                    تنظیمات همگام‌سازی
+                </h1>
+                <a href="{% url 'inventory_sync:sync_dashboard' %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-1"></i> بازگشت به داشبورد
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="config-card">
+                <h4 class="mb-4">
+                    <i class="fas fa-clock me-2"></i>
+                    تنظیمات همگام‌سازی خودکار
+                </h4>
+                
+                <form id="configForm">
+                    {% csrf_token %}
+                    
+                    <div class="mb-4">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="autoSyncEnabled" 
+                                   {% if config.is_auto_sync_enabled %}checked{% endif %}>
+                            <label class="form-check-label" for="autoSyncEnabled">
+                                <strong>فعال‌سازی همگام‌سازی خودکار</strong>
+                            </label>
+                        </div>
+                        <small class="text-muted">
+                            وقتی فعال باشد، سیستم به طور خودکار موجودی را در فواصل زمانی مشخص شده همگام‌سازی می‌کند.
+                        </small>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="syncInterval" class="form-label">
+                            <strong>فاصله همگام‌سازی خودکار (دقیقه)</strong>
+                        </label>
+                        <input type="number" class="form-control" id="syncInterval" 
+                               value="{{ config.auto_sync_interval_minutes }}" min="1" max="10080">
+                        <small class="text-muted">
+                            هر چند وقت یکبار همگام‌سازی خودکار اجرا شود. حداقل: 1 دقیقه، حداکثر: 10080 دقیقه (1 هفته).
+                            <br>تنظیم فعلی: {{ config.auto_sync_interval_minutes }} دقیقه
+                        </small>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="form-label"><strong>وضعیت فعلی</strong></label>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="card bg-light">
+                                    <div class="card-body">
+                                        <h6 class="card-title">آخرین همگام‌سازی خودکار</h6>
+                                        {% if config.last_auto_sync %}
+                                            <p class="mb-1"><strong>{{ config.last_auto_sync|date:"M d, Y H:i" }}</strong></p>
+                                            <small class="text-muted">{{ config.last_auto_sync|timesince }} پیش</small>
+                                        {% else %}
+                                            <p class="text-muted mb-0">هرگز</p>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card bg-light">
+                                    <div class="card-body">
+                                        <h6 class="card-title">همگام‌سازی خودکار بعدی</h6>
+                                        {% if config.last_auto_sync %}
+                                            <p class="mb-1"><strong>محاسبه می‌شود...</strong></p>
+                                            <small class="text-muted">بر اساس تنظیمات فعلی</small>
+                                        {% else %}
+                                            <p class="text-muted mb-0">برنامه‌ریزی نشده</p>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between align-items-center">
+                        <button type="submit" class="btn btn-save">
+                            <i class="fas fa-save me-2"></i>
+                            ذخیره تنظیمات
+                        </button>
+                        <button type="button" class="btn btn-outline-primary" onclick="testAutoSync()">
+                            <i class="fas fa-play me-2"></i>
+                            تست همگام‌سازی خودکار
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Loading Modal -->
+<div class="modal fade" id="loadingModal" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-header border-0 pb-0">
+                <button type="button" class="btn-close" onclick="hideLoading()" title="بستن"></button>
+            </div>
+            <div class="modal-body text-center">
+                <div class="spinner-border text-primary mb-3" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mb-0" id="loadingMessage">در حال ذخیره تنظیمات...</p>
+                <small class="text-muted mt-2 d-block">در صورت طولانی شدن عملیات، می‌توانید این پنجره را ببندید</small>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let loadingModal = null;
+
+function showLoading(message = 'در حال پردازش...') {
+    document.getElementById('loadingMessage').textContent = message;
+    
+    // Hide any existing modal first
+    if (loadingModal) {
+        try {
+            loadingModal.hide();
+        } catch (e) {
+            console.log('Error hiding existing modal:', e);
+        }
+    }
+    
+    try {
+        loadingModal = new bootstrap.Modal(document.getElementById('loadingModal'));
+        loadingModal.show();
+    } catch (e) {
+        console.log('Error showing modal:', e);
+    }
+}
+
+function hideLoading() {
+    try {
+        if (loadingModal) {
+            loadingModal.hide();
+            loadingModal = null;
+        } else {
+            // Fallback: try to hide using getInstance
+            const modal = bootstrap.Modal.getInstance(document.getElementById('loadingModal'));
+            if (modal) {
+                modal.hide();
+            }
+        }
+    } catch (e) {
+        console.log('Error hiding modal:', e);
+        // Force hide by removing modal backdrop and classes
+        const modalElement = document.getElementById('loadingModal');
+        if (modalElement) {
+            modalElement.classList.remove('show');
+            modalElement.style.display = 'none';
+            const backdrop = document.querySelector('.modal-backdrop');
+            if (backdrop) {
+                backdrop.remove();
+            }
+        }
+    }
+}
+
+function showAlert(message, type = 'success') {
+    // Remove any existing alerts first
+    const existingAlerts = document.querySelectorAll('.alert');
+    existingAlerts.forEach(alert => alert.remove());
+    
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+    alertDiv.innerHTML = `
+        <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'danger' ? 'exclamation-triangle' : 'info-circle'} me-2"></i>
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    // Insert at the top of the container
+    const container = document.querySelector('.container-fluid');
+    container.insertBefore(alertDiv, container.firstChild);
+    
+    // Scroll to top to show the alert
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    
+    // Auto-dismiss after 8 seconds for success, 10 seconds for errors
+    const dismissTime = type === 'success' ? 8000 : 10000;
+    setTimeout(() => {
+        if (alertDiv.parentNode) {
+            alertDiv.remove();
+        }
+    }, dismissTime);
+}
+
+async function saveConfiguration() {
+    const autoSyncEnabled = document.getElementById('autoSyncEnabled').checked;
+    const syncInterval = parseInt(document.getElementById('syncInterval').value);
+    
+    // Additional validation
+    if (syncInterval < 1 || syncInterval > 10080) {
+        showAlert('فاصله همگام‌سازی باید بین 1 تا 10080 دقیقه باشد.', 'danger');
+        return;
+    }
+    
+    showLoading('در حال ذخیره تنظیمات...');
+    
+    try {
+        const response = await fetch('{% url "inventory_sync:sync_config" %}', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                is_auto_sync_enabled: autoSyncEnabled,
+                auto_sync_interval_minutes: syncInterval
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            const hours = (syncInterval / 60).toFixed(1);
+            const successMessage = autoSyncEnabled 
+                ? `تنظیمات با موفقیت ذخیره شد! همگام‌سازی خودکار فعال و هر ${syncInterval} دقیقه (${hours} ساعت) اجرا می‌شود.`
+                : `تنظیمات با موفقیت ذخیره شد! همگام‌سازی خودکار غیرفعال است.`;
+            
+            showAlert(successMessage, 'success');
+            setTimeout(() => {
+                window.location.reload();
+            }, 2000);
+        } else {
+            showAlert('خطا در ذخیره تنظیمات: ' + (data.message || 'خطای نامشخص'), 'danger');
+        }
+    } catch (error) {
+        showAlert('خطا در ذخیره تنظیمات: ' + error.message, 'danger');
+    } finally {
+        hideLoading();
+    }
+}
+
+async function testAutoSync() {
+    if (!confirm('تست همگام‌سازی خودکار اکنون اجرا شود؟ این کار همان عملیات همگام‌سازی برنامه‌ریزی شده را انجام می‌دهد.')) {
+        return;
+    }
+    
+    showLoading('در حال اجرای تست همگام‌سازی خودکار...');
+    
+    try {
+        const response = await fetch('{% url "inventory_sync:perform_full_sync" %}', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/json',
+            },
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showAlert('تست همگام‌سازی خودکار با موفقیت تکمیل شد! ' + data.message, 'success');
+        } else {
+            showAlert('تست همگام‌سازی خودکار ناموفق بود: ' + data.message, 'danger');
+        }
+    } catch (error) {
+        showAlert('خطا در اجرای تست همگام‌سازی خودکار: ' + error.message, 'danger');
+    } finally {
+        hideLoading();
+    }
+}
+
+// Event listeners
+document.addEventListener('DOMContentLoaded', function() {
+    
+    // Update interval display when changed
+    document.getElementById('syncInterval').addEventListener('input', function() {
+        const minutes = parseInt(this.value) || 0;
+        const hours = (minutes / 60).toFixed(1);
+        const helpText = this.nextElementSibling;
+        
+        // Validate the input
+        if (minutes < 1) {
+            helpText.innerHTML = `<span class="text-danger">فاصله همگام‌سازی باید حداقل 1 دقیقه باشد.</span>`;
+            this.classList.add('is-invalid');
+        } else if (minutes > 10080) {
+            helpText.innerHTML = `<span class="text-danger">فاصله همگام‌سازی نمی‌تواند بیشتر از 10080 دقیقه (1 هفته) باشد.</span>`;
+            this.classList.add('is-invalid');
+        } else {
+            helpText.innerHTML = `هر چند وقت یکبار همگام‌سازی خودکار اجرا شود. حداقل: 1 دقیقه، حداکثر: 10080 دقیقه (1 هفته).<br>تنظیم فعلی: <strong>${minutes} دقیقه (${hours} ساعت)</strong>`;
+            this.classList.remove('is-invalid');
+            this.classList.add('is-valid');
+        }
+    });
+    
+    // Add validation on form submission
+    document.getElementById('configForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const syncInterval = parseInt(document.getElementById('syncInterval').value);
+        const autoSyncEnabled = document.getElementById('autoSyncEnabled').checked;
+        
+        // Clear previous validation states
+        document.getElementById('syncInterval').classList.remove('is-invalid', 'is-valid');
+        
+        // Validate
+        if (syncInterval < 1 || syncInterval > 10080) {
+            showAlert('لطفاً فاصله همگام‌سازی را بین 1 تا 10080 دقیقه تنظیم کنید.', 'danger');
+            document.getElementById('syncInterval').classList.add('is-invalid');
+            document.getElementById('syncInterval').focus();
+            return;
+        }
+        
+        // Show confirmation for auto sync toggle
+        if (autoSyncEnabled) {
+            showAlert('تنظیمات در حال ذخیره...', 'info');
+        } else {
+            showAlert('همگام‌سازی خودکار غیرفعال شد. تنظیمات در حال ذخیره...', 'warning');
+        }
+        
+        saveConfiguration();
+    });
+});
+</script>
+{% endblock %} 

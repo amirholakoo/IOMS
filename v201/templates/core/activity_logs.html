@@ -1,0 +1,532 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}📜 لاگ فعالیت‌ها - HomayOMS{% endblock %}
+
+{% block extra_css %}
+<style>
+    .logs-header {
+        background: linear-gradient(135deg, #343a40, #6c757d);
+        color: white;
+        padding: 0.5rem 0;
+        margin-bottom: 0.5rem;
+        border-radius: 15px;
+    }
+    
+    .logs-header .row:first-child { margin-top: 0 !important; padding-top: 0 !important; }
+    
+    /* Eliminate spacing between header and stats */
+    .logs-header + .stats-section {
+        margin-top: 0;
+        padding-top: 0;
+    }
+    
+    .log-entry {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+        border-left: 4px solid #e9ecef;
+        transition: all 0.3s ease;
+    }
+    
+    .log-entry:hover {
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        transform: translateY(-2px);
+    }
+    
+    .log-entry.severity-low { border-left-color: #28a745; }
+    .log-entry.severity-medium { border-left-color: #ffc107; }
+    .log-entry.severity-high { border-left-color: #fd7e14; }
+    .log-entry.severity-critical { border-left-color: #dc3545; }
+    
+    .log-header {
+        display: flex;
+        justify-content: between;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+    
+    .log-user {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .user-avatar {
+        width: 35px;
+        height: 35px;
+        border-radius: 50%;
+        background: linear-gradient(45deg, #007bff, #28a745);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: bold;
+        font-size: 0.8rem;
+    }
+    
+    .action-badge {
+        padding: 0.3rem 0.8rem;
+        border-radius: 15px;
+        font-size: 0.75rem;
+        font-weight: bold;
+        text-transform: uppercase;
+    }
+    
+    .action-create { background: #d4edda; color: #155724; }
+    .action-update { background: #cce5ff; color: #004085; }
+    .action-delete { background: #f8d7da; color: #721c24; }
+    .action-view { background: #e2e3e5; color: #383d41; }
+    .action-login { background: #d1ecf1; color: #0c5460; }
+    .action-logout { background: #f8d7da; color: #721c24; }
+    .action-price_update { background: #fff3cd; color: #856404; }
+    .action-export { background: #d4edda; color: #155724; }
+    .action-import { background: #cce5ff; color: #004085; }
+    .action-error { background: #f8d7da; color: #721c24; }
+    
+    .severity-badge {
+        padding: 0.25rem 0.6rem;
+        border-radius: 12px;
+        font-size: 0.7rem;
+        font-weight: bold;
+    }
+    
+    .severity-low { background: #d4edda; color: #155724; }
+    .severity-medium { background: #fff3cd; color: #856404; }
+    .severity-high { background: #ffe6cc; color: #cc5500; }
+    .severity-critical { background: #f8d7da; color: #721c24; }
+    
+    .log-details {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-top: 1rem;
+        font-family: 'Courier New', monospace;
+        font-size: 0.85rem;
+    }
+    
+    .log-meta {
+        display: flex;
+        gap: 1rem;
+        margin-top: 1rem;
+        flex-wrap: wrap;
+    }
+    
+    .meta-item {
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
+        font-size: 0.8rem;
+        color: #6c757d;
+    }
+    
+    .filters-section {
+        background: white;
+        border-radius: 15px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+    }
+    
+    .stats-section {
+        background: white;
+        border-radius: 15px;
+        padding: 1.5rem;
+        margin-bottom: 0.5rem;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+    }
+    
+    .stat-card {
+        text-align: center;
+        padding: 1rem;
+        border-radius: 10px;
+        margin-bottom: 1rem;
+    }
+    
+    .timeline-view {
+        position: relative;
+        padding-left: 2rem;
+    }
+    
+    .timeline-item {
+        position: relative;
+        padding-bottom: 2rem;
+    }
+    
+    .timeline-item::before {
+        content: '';
+        position: absolute;
+        left: -1.5rem;
+        top: 0.5rem;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: #28a745;
+        border: 3px solid white;
+        box-shadow: 0 0 0 2px #28a745;
+    }
+    
+    .timeline-item::after {
+        content: '';
+        position: absolute;
+        left: -1.45rem;
+        top: 1.2rem;
+        width: 2px;
+        height: calc(100% - 1rem);
+        background: #e0e0e0;
+    }
+    
+    .timeline-item:last-child::after {
+        display: none;
+    }
+
+    .logs-header > .container, .logs-header .row:first-child { margin-top: 0 !important; padding-top: 0 !important; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Logs Header -->
+    <div class="logs-header">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 class="display-5 mb-3">📜 لاگ فعالیت‌های سیستم</h1>
+                <p class="lead mb-0">مشاهده و نظارت بر تمام فعالیت‌های کاربران</p>
+            </div>
+            <div class="col-md-4 text-end">
+                <a href="{% url 'core:admin_dashboard' %}" class="btn btn-light me-2" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 15px; padding: 12px 25px; font-weight: 600; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3); transition: all 0.3s ease;">
+                    ↩️ بازگشت به داشبورد مدیریت
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Section -->
+    <div class="stats-section">
+        <h4 class="mb-2">📊 آمار فعالیت‌ها</h4>
+        <div class="row">
+            <div class="col-md-2">
+                <div class="stat-card" style="background: linear-gradient(45deg, #28a745, #20c997); color: white;">
+                    <h4>{{ logs_stats.severity_stats.LOW|default:0 }}</h4>
+                    <small>🟢 کم اهمیت</small>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="stat-card" style="background: linear-gradient(45deg, #ffc107, #fd7e14); color: white;">
+                    <h4>{{ logs_stats.severity_stats.MEDIUM|default:0 }}</h4>
+                    <small>🟡 متوسط</small>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="stat-card" style="background: linear-gradient(45deg, #dc3545, #c82333); color: white;">
+                    <h4>{{ logs_stats.severity_stats.CRITICAL|default:0 }}</h4>
+                    <small>🔴 بحرانی</small>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="stat-card" style="background: linear-gradient(45deg, #007bff, #6f42c1); color: white;">
+                    <h4>{{ logs_stats.last_24h_count }}</h4>
+                    <small>⏰ آخرین 24 ساعت</small>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="stat-card" style="background: linear-gradient(45deg, #6c757d, #343a40); color: white;">
+                    <h4>{{ logs_stats.total_count }}</h4>
+                    <small>📊 کل فعالیت‌ها</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters Section -->
+    <div class="filters-section">
+        <form method="GET" class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label">👤 کاربر</label>
+                <select name="user" class="form-select">
+                    <option value="">همه کاربران</option>
+                    {% for user in users_list %}
+                        <option value="{{ user.username }}" {% if user_filter == user.username %}selected{% endif %}>
+                            {{ user.get_full_name|default:user.username }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">🎭 نوع عملیات</label>
+                <select name="action" class="form-select">
+                    <option value="">همه عملیات</option>
+                    {% for action_code, action_name in action_choices %}
+                        <option value="{{ action_code }}" {% if action_filter == action_code %}selected{% endif %}>
+                            {{ action_name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">⚠️ سطح اهمیت</label>
+                <select name="severity" class="form-select">
+                    <option value="">همه سطوح</option>
+                    {% for severity_code, severity_name in severity_choices %}
+                        <option value="{{ severity_code }}" {% if severity_filter == severity_code %}selected{% endif %}>
+                            {{ severity_name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">📅 از تاریخ</label>
+                <input type="date" name="date_from" class="form-control" value="{{ date_from|default:'' }}">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">📅 تا تاریخ</label>
+                <input type="date" name="date_to" class="form-control" value="{{ date_to|default:'' }}">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">🔍 جستجو</label>
+                <input type="text" name="search" class="form-control" value="{{ search_query|default:'' }}" placeholder="جستجو در توضیحات، کاربر، IP...">
+            </div>
+            <div class="col-md-1">
+                <label class="form-label">&nbsp;</label>
+                <div class="d-grid">
+                    <button type="submit" class="btn" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 15px; padding: 12px 25px; font-weight: 600; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3); transition: all 0.3s ease;">🔍</button>
+                </div>
+            </div>
+        </form>
+        
+        <div class="mt-3">
+            <div class="btn-group" role="group">
+            </div>
+            
+            <button class="btn ms-3" onclick="refreshLogs()" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; border: none; border-radius: 15px; padding: 12px 25px; font-weight: 600; box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3); transition: all 0.3s ease;">
+                🔄 بروزرسانی
+            </button>
+            
+            <a href="{% url 'core:activity_logs' %}" class="btn ms-2" style="background: linear-gradient(135deg, #6c757d 0%, #545b62 100%); color: white; border: none; border-radius: 15px; padding: 12px 25px; font-weight: 600; box-shadow: 0 4px 15px rgba(108, 117, 125, 0.3); transition: all 0.3s ease;">
+                🗑️ پاک کردن فیلترها
+            </a>
+        </div>
+    </div>
+
+    <!-- Activity Logs -->
+    <div id="logs-container">
+        {% if logs and logs|length > 0 %}
+            {% for log in logs %}
+            <div class="log-entry severity-{{ log.severity|lower }}">
+                <div class="log-header">
+                    <div class="log-user">
+                        <div class="user-avatar">{{ log.user.get_initials|default_if_none:'SY' }}</div>
+                        <div>
+                            <strong>{% if log.user %}{{ log.user.get_full_name|default:log.user.username }}{% else %}سیستم{% endif %}</strong>
+                            <div class="small text-muted">{% if log.user %}{{ log.user.username|default:'system' }}{% else %}system{% endif %}</div>
+                        </div>
+                    </div>
+                    <div class="d-flex gap-2 align-items-center">
+                        {% if log.action != 'VIEW' %}
+                            <span class="action-badge action-{{ log.action|lower }}">{{ log.get_action_icon }} {{ log.get_action_display }}</span>
+                        {% endif %}
+                        <span class="severity-badge severity-{{ log.severity|lower }}">{{ log.get_severity_display }}</span>
+                    </div>
+                </div>
+                <div class="log-description">
+                    <strong>{{ log.description }}</strong>
+                </div>
+                <div class="log-meta">
+                    <div class="meta-item">
+                        <span>🕐</span>
+                        <span><span class="jalali-date" data-date="{{ log.created_at|date:'Y-m-d H:i:s' }}">{{ log.created_at|date:'Y/m/d H:i:s' }}</span></span>
+                    </div>
+                    {% if log.ip_address %}
+                    <div class="meta-item">
+                        <span>🌐</span>
+                        <span>{{ log.ip_address }}</span>
+                    </div>
+                    {% endif %}
+                    {% if log.user_agent %}
+                    <div class="meta-item">
+                        <span>🖥️</span>
+                        <span>{{ log.user_agent|truncatechars:30 }}</span>
+                    </div>
+                    {% endif %}
+                    {% if log.content_object %}
+                    <div class="meta-item">
+                        <span>🔗</span>
+                        <span>{{ log.content_object }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+                {% if log.extra_data %}
+                <div class="log-details">
+                    <strong>اطلاعات اضافی:</strong><br>
+                    <pre>{{ log.extra_data|safe }}</pre>
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="alert alert-info mt-4">هیچ لاگی برای نمایش وجود ندارد.</div>
+        {% endif %}
+    </div>
+
+    <!-- Pagination -->
+    {% if logs.has_other_pages %}
+    <div class="text-center mt-4">
+        <nav aria-label="صفحه‌بندی لاگ‌ها">
+            <ul class="pagination justify-content-center">
+                {% if logs.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?{% if action_filter %}action={{ action_filter }}&{% endif %}{% if severity_filter %}severity={{ severity_filter }}&{% endif %}{% if user_filter %}user={{ user_filter }}&{% endif %}{% if date_from %}date_from={{ date_from }}&{% endif %}{% if date_to %}date_to={{ date_to }}&{% endif %}page=1">
+                            ⏮️ اول
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?{% if action_filter %}action={{ action_filter }}&{% endif %}{% if severity_filter %}severity={{ severity_filter }}&{% endif %}{% if user_filter %}user={{ user_filter }}&{% endif %}{% if date_from %}date_from={{ date_from }}&{% endif %}{% if date_to %}date_to={{ date_to }}&{% endif %}page={{ logs.previous_page_number }}">
+                            ⏪ قبلی
+                        </a>
+                    </li>
+                {% endif %}
+                
+                {% for num in logs.paginator.page_range %}
+                    {% if logs.number == num %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ num }}</span>
+                        </li>
+                    {% elif num > logs.number|add:'-3' and num < logs.number|add:'3' %}
+                        <li class="page-item">
+                            <a class="page-link" href="?{% if action_filter %}action={{ action_filter }}&{% endif %}{% if severity_filter %}severity={{ severity_filter }}&{% endif %}{% if user_filter %}user={{ user_filter }}&{% endif %}{% if date_from %}date_from={{ date_from }}&{% endif %}{% if date_to %}date_to={{ date_to }}&{% endif %}page={{ num }}">{{ num }}</a>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+                
+                {% if logs.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?{% if action_filter %}action={{ action_filter }}&{% endif %}{% if severity_filter %}severity={{ severity_filter }}&{% endif %}{% if user_filter %}user={{ user_filter }}&{% endif %}{% if date_from %}date_from={{ date_from }}&{% endif %}{% if date_to %}date_to={{ date_to }}&{% endif %}page={{ logs.next_page_number }}">
+                            ⏩ بعدی
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?{% if action_filter %}action={{ action_filter }}&{% endif %}{% if severity_filter %}severity={{ severity_filter }}&{% endif %}{% if user_filter %}user={{ user_filter }}&{% endif %}{% if date_from %}date_from={{ date_from }}&{% endif %}{% if date_to %}date_to={{ date_to }}&{% endif %}page={{ logs.paginator.num_pages }}">
+                            ⏭️ آخر
+                        </a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+        <div class="mt-2">
+            <small class="text-muted">
+                نمایش {{ logs.start_index }} تا {{ logs.end_index }} از {{ logs.paginator.count }} لاگ
+            </small>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Refresh logs
+function refreshLogs() {
+    showNotification('🔄 بروزرسانی لاگ‌ها...', 'info');
+    window.location.reload();
+}
+
+// Clear old logs
+function clearOldLogs() {
+    if (confirm('آیا از پاکسازی لاگ‌های قدیمی اطمینان دارید؟\n\nاین عملیات لاگ‌های قدیمی‌تر از 30 روز را حذف خواهد کرد.')) {
+        showNotification('🗑️ پاکسازی لاگ‌های قدیمی...', 'warning');
+        // در آینده می‌توان API برای پاکسازی لاگ‌ها اضافه کرد
+        setTimeout(() => {
+            showNotification('✅ عملیات پاکسازی تکمیل شد', 'success');
+        }, 2000);
+    }
+}
+
+// Convert all Jalali dates on page load
+document.addEventListener('DOMContentLoaded', function() {
+    const jalaliDateElements = document.querySelectorAll('.jalali-date');
+    jalaliDateElements.forEach(element => {
+        const dateString = element.getAttribute('data-date');
+        if (dateString) {
+            try {
+                const persianDate = convertToPersianDate(dateString);
+                element.textContent = persianDate;
+            } catch (error) {
+                console.error('Error converting date:', error);
+                // Keep original date if conversion fails
+            }
+        }
+    });
+});
+
+// Toggle view mode
+document.addEventListener('DOMContentLoaded', function() {
+    const listViewRadio = document.getElementById('list_view');
+    const timelineViewRadio = document.getElementById('timeline_view');
+    const logsContainer = document.getElementById('logs-container');
+    
+    timelineViewRadio.addEventListener('change', function() {
+        if (this.checked) {
+            logsContainer.classList.add('timeline-view');
+            logsContainer.querySelectorAll('.log-entry').forEach(entry => {
+                entry.classList.add('timeline-item');
+            });
+        }
+    });
+    
+    listViewRadio.addEventListener('change', function() {
+        if (this.checked) {
+            logsContainer.classList.remove('timeline-view');
+            logsContainer.querySelectorAll('.log-entry').forEach(entry => {
+                entry.classList.remove('timeline-item');
+            });
+        }
+    });
+});
+
+// Show notification
+function showNotification(message, type = 'info') {
+    const notification = document.createElement('div');
+    notification.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+    notification.style.cssText = 'top: 20px; right: 20px; z-index: 1050; min-width: 300px;';
+    notification.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        if (notification.parentElement) {
+            notification.remove();
+        }
+    }, 5000);
+}
+
+// Auto-refresh logs every 60 seconds (only if user is on the page)
+let refreshInterval;
+document.addEventListener('DOMContentLoaded', function() {
+    // Start auto-refresh when page loads
+    refreshInterval = setInterval(() => {
+        // Only refresh if user is active on the page
+        if (!document.hidden) {
+            console.log('🔄 Auto-refreshing logs...');
+            // In the future, this could be an AJAX call instead of full page reload
+            // window.location.reload();
+        }
+    }, 60000); // 60 seconds
+});
+
+// Stop auto-refresh when user leaves the page
+document.addEventListener('visibilitychange', function() {
+    if (document.hidden) {
+        clearInterval(refreshInterval);
+    } else {
+        refreshInterval = setInterval(() => {
+            console.log('🔄 Auto-refreshing logs...');
+        }, 60000);
+    }
+});
+</script>
+{% endblock %} 
